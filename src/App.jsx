@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, createContext, useContext } from "react";
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation, useParams } from "react-router-dom";
 
 /* ══════════════════════════════════════════════════════════════
    🌿 TERRA EATS — Full Food Delivery Platform
@@ -2543,101 +2544,87 @@ function DishRecommendationsPage({ go, goRestaurant, addToCart, dishName }) {
   );
 }
 
-/* ─── APP ─────────────────────────────────────────────────── */
-export default function App() {
-  const [page, setPage] = useState('home');
-  const [pageParams, setPageParams] = useState({});
-  const [cart, setCart] = useState(DEFAULT_CART);
-  const [toast, setToast] = useState(null);
-  const [activeRestaurant, setActiveRestaurant] = useState(null);
-  const [user, setUser] = useState(null);
+/* ─── ROUTE WRAPPER COMPONENTS ────────────────────────────── */
+function RestaurantRoute({ cart, addToCart, go }) {
+  const { id } = useParams();
+  const restaurant = RESTAURANTS.find(r => r.id === Number(id));
+  return restaurant ? <RestaurantMenuPage restaurant={restaurant} cart={cart} addToCart={addToCart} go={go} /> : <div>Restaurant not found</div>;
+}
+
+function DishRoute({ go, goRestaurant, addToCart }) {
+  const params = new URLSearchParams(window.location.search);
+  const dishName = params.get('name');
+  return dishName ? <DishRecommendationsPage dishName={dishName} go={go} goRestaurant={goRestaurant} addToCart={addToCart} /> : <div>Dish not found</div>;
+}
+
+function AppContent({ cart, setCart, user, setUser, addToCart, toast }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isLoginPage = location.pathname === '/login';
+  const page = location.pathname === '/' ? 'home' : location.pathname.split('/')[1] || 'home';
   const cnt = cart.reduce((s,c)=>s+c.qty,0);
 
-  const addToCart = useCallback((item)=>{
-    if (item._remove) {
-      setCart(p => p.map(c => c.id === item.id ? {...c, qty: Math.max(0, c.qty - 1)} : c).filter(c => c.qty > 0));
-      return;
-    }
-    setCart(p=>{ const ex=p.find(c=>c.id===item.id); return ex?p.map(c=>c.id===item.id?{...c,qty:c.qty+1}:c):[...p,{...item,qty:1}]; });
-    setToast(`${item.name} added to cart 🌿`);
-    setTimeout(()=>setToast(null),2200);
-  },[]);
-
-  const go = useCallback((p, params={})=>{
-    setPage(p);
-    setPageParams(params);
+  const go = useCallback((p) => {
+    navigate(`/${p === 'home' ? '' : p}`);
     window.scrollTo({top:0,behavior:'smooth'});
-  },[]);
+  }, [navigate]);
 
-  const goRestaurant = useCallback((restId)=>{
-    const rest = RESTAURANTS.find(r => r.id === restId);
-    if (rest) {
-      setActiveRestaurant(rest);
-      setPage('restaurant');
-      window.scrollTo({top:0,behavior:'smooth'});
-    }
-  },[]);
-
-  const goDish = useCallback((dishName)=>{
-    setPageParams({ dishName });
-    setPage('dish');
+  const goRestaurant = useCallback((restId) => {
+    navigate(`/restaurant/${restId}`);
     window.scrollTo({top:0,behavior:'smooth'});
-  },[]);
+  }, [navigate]);
 
-  // Restaurant menu page
-  if (page === 'restaurant' && activeRestaurant) {
-    return (
-      <AuthContext.Provider value={{ user, setUser }}>
-        <style>{CSS}</style>
-        <Navbar page={page} go={go} cnt={cnt} user={user} />
-        <div key={`rest-${activeRestaurant.id}`}>
-          <RestaurantMenuPage restaurant={activeRestaurant} cart={cart} addToCart={addToCart} go={go} />
-        </div>
-        <MobNav page={page} go={go} cnt={cnt} />
-        {toast && <div className="toast">{toast}</div>}
-      </AuthContext.Provider>
-    );
-  }
-
-  // Dish recommendations page
-  if (page === 'dish' && pageParams.dishName) {
-    return (
-      <AuthContext.Provider value={{ user, setUser }}>
-        <style>{CSS}</style>
-        <Navbar page={page} go={go} cnt={cnt} user={user} />
-        <div key={`dish-${pageParams.dishName}`}>
-          <DishRecommendationsPage dishName={pageParams.dishName} go={go} goRestaurant={goRestaurant} addToCart={addToCart} />
-        </div>
-        <MobNav page={page} go={go} cnt={cnt} />
-        {toast && <div className="toast">{toast}</div>}
-      </AuthContext.Provider>
-    );
-  }
-
-  const PAGES = {
-    home: (props) => <HomePage {...props} goRestaurant={goRestaurant} goDish={goDish} />,
-    restaurants: (props) => <RestaurantsPage {...props} goRestaurant={goRestaurant} />,
-    explore: (props) => <ExplorePage {...props} goRestaurant={goRestaurant} initCat={pageParams.catFilter} />,
-    about: AboutPage,
-    cart: CartPage,
-    checkout: (props) => <CheckoutPage {...props} />,
-    track: TrackPage,
-    offers: OffersPage,
-    help: HelpPage,
-    login: LoginPage,
-  };
-
-  const PageComp = PAGES[page] || PAGES.home;
+  const goDish = useCallback((dishName) => {
+    navigate(`/dish?name=${encodeURIComponent(dishName)}`);
+    window.scrollTo({top:0,behavior:'smooth'});
+  }, [navigate]);
 
   return (
     <AuthContext.Provider value={{ user, setUser }}>
       <style>{CSS}</style>
-      {page !== 'login' && <Navbar page={page} go={go} cnt={cnt} user={user} />}
-      <div key={page}>
-        <PageComp go={go} cart={cart} setCart={setCart} addToCart={addToCart} />
-      </div>
-      {page !== 'login' && <MobNav page={page} go={go} cnt={cnt} />}
+      {!isLoginPage && <Navbar page={page} go={go} cnt={cnt} user={user} />}
+      <Routes>
+        <Route path="/" element={<HomePage go={go} addToCart={addToCart} goRestaurant={goRestaurant} goDish={goDish} />} />
+        <Route path="/restaurants" element={<RestaurantsPage go={go} goRestaurant={goRestaurant} />} />
+        <Route path="/explore" element={<ExplorePage go={go} addToCart={addToCart} goRestaurant={goRestaurant} initCat={new URLSearchParams(window.location.search).get('cat')} />} />
+        <Route path="/restaurant/:id" element={<RestaurantRoute cart={cart} addToCart={addToCart} go={go} />} />
+        <Route path="/dish" element={<DishRoute go={go} goRestaurant={goRestaurant} addToCart={addToCart} />} />
+        <Route path="/about" element={<AboutPage go={go} />} />
+        <Route path="/cart" element={<CartPage cart={cart} setCart={setCart} go={go} />} />
+        <Route path="/checkout" element={<CheckoutPage cart={cart} setCart={setCart} go={go} />} />
+        <Route path="/track" element={<TrackPage go={go} />} />
+        <Route path="/offers" element={<OffersPage go={go} />} />
+        <Route path="/help" element={<HelpPage go={go} />} />
+        <Route path="/login" element={<LoginPage go={go} />} />
+      </Routes>
+      {!isLoginPage && <MobNav page={page} go={go} cnt={cnt} />}
       {toast && <div className="toast">{toast}</div>}
     </AuthContext.Provider>
+  );
+}
+
+/* ─── APP ─────────────────────────────────────────────────── */
+export default function App() {
+  const [cart, setCart] = useState(DEFAULT_CART);
+  const [toast, setToast] = useState(null);
+  const [user, setUser] = useState(null);
+
+  const addToCart = useCallback((item) => {
+    if (item._remove) {
+      setCart(p => p.map(c => c.id === item.id ? {...c, qty: Math.max(0, c.qty - 1)} : c).filter(c => c.qty > 0));
+      return;
+    }
+    setCart(p => {
+      const ex = p.find(c => c.id === item.id);
+      return ex ? p.map(c => c.id === item.id ? {...c, qty: c.qty + 1} : c) : [...p, {...item, qty: 1}];
+    });
+    setToast(`${item.name} added to cart 🌿`);
+    setTimeout(() => setToast(null), 2200);
+  }, []);
+
+  return (
+    <Router>
+      <AppContent cart={cart} setCart={setCart} user={user} setUser={setUser} addToCart={addToCart} toast={toast} />
+    </Router>
   );
 }
