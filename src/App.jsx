@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback, createContext, useContext } from "react";
-import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation, useParams } from "react-router-dom";
 
 /* ══════════════════════════════════════════════════════════════
    🌿 TERRA EATS — Full Food Delivery Platform
@@ -27,138 +26,138 @@ const T = {
 
 /* ─── DATA ───────────────────────────────────────────────────── */
 const RESTAURANTS = [
-  { id:1, name:"Spice Garden",    cuisine:"North Indian",  rating:4.5, time:"25-30", price:"₹₹",   discount:"30% off",      img:"https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=500&q=85", badge:"Popular",    tags:["Biryani","Starters","Mains"] },
-  { id:2, name:"Burger Republic", cuisine:"American",      rating:4.3, time:"20-25", price:"₹₹",   discount:"₹50 off",      img:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&q=85", badge:"Fast",       tags:["Burger","Wraps"] },
-  { id:3, name:"Pasta Palace",    cuisine:"Italian",       rating:4.7, time:"30-35", price:"₹₹₹",  discount:"20% off",      img:"https://images.unsplash.com/photo-1551183053-bf91798d792b?w=500&q=85", badge:"Chef's Pick",tags:["Pizza","Noodles","Salads"] },
-  { id:4, name:"Dragon Wok",      cuisine:"Chinese",       rating:4.1, time:"25-30", price:"₹",    discount:"₹75 off",      img:"https://images.unsplash.com/photo-1563245372-f21724e3856d?w=500&q=85", badge:null,         tags:["Noodles","Rolls","Seafood"] },
-  { id:5, name:"Pizza Volcano",   cuisine:"Italian",       rating:4.6, time:"15-20", price:"₹₹",   discount:"Buy 1 Get 1",  img:"https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&q=85", badge:"New",        tags:["Pizza"] },
-  { id:6, name:"Sushi Bay",       cuisine:"Japanese",      rating:4.8, time:"35-40", price:"₹₹₹₹", discount:"Free Delivery",img:"https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=500&q=85", badge:"Top Rated",  tags:["Sushi","Seafood"] },
-  { id:7, name:"Dosa Junction",   cuisine:"South Indian",  rating:4.4, time:"15-20", price:"₹",    discount:"Free Delivery",img:"https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=500&q=85", badge:null,         tags:["Coffee","Tacos"] },
-  { id:8, name:"Sweet Tooth",     cuisine:"Desserts",      rating:4.9, time:"20-25", price:"₹₹",   discount:"15% off",      img:"https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=500&q=85", badge:"Fan Fav",    tags:["Desserts","Coffee"] },
+  { id:1, name:"Spice Garden",    cuisine:"North Indian",  rating:4.5, time:"25-30", price:"₹₹",   discount:"30% off",      img:"https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=600&q=90", badge:"Popular",    tags:["Biryani","Starters","Mains"] },
+  { id:2, name:"Burger Republic", cuisine:"American",      rating:4.3, time:"20-25", price:"₹₹",   discount:"₹50 off",      img:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&q=90", badge:"Fast",       tags:["Burger","Wraps"] },
+  { id:3, name:"Pasta Palace",    cuisine:"Italian",       rating:4.7, time:"30-35", price:"₹₹₹",  discount:"20% off",      img:"https://images.unsplash.com/photo-1473093226795-af9932fe5856?w=600&q=90", badge:"Chef's Pick",tags:["Pizza","Noodles","Salads"] },
+  { id:4, name:"Dragon Wok",      cuisine:"Chinese",       rating:4.1, time:"25-30", price:"₹",    discount:"₹75 off",      img:"https://images.unsplash.com/photo-1563245372-f21724e3856d?w=600&q=90", badge:null,         tags:["Noodles","Rolls","Seafood"] },
+  { id:5, name:"Pizza Volcano",   cuisine:"Italian",       rating:4.6, time:"15-20", price:"₹₹",   discount:"Buy 1 Get 1",  img:"https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=90", badge:"New",        tags:["Pizza"] },
+  { id:6, name:"Sushi Bay",       cuisine:"Japanese",      rating:4.8, time:"35-40", price:"₹₹₹₹", discount:"Free Delivery",img:"https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&q=90", badge:"Top Rated",  tags:["Sushi","Seafood"] },
+  { id:7, name:"Dosa Junction",   cuisine:"South Indian",  rating:4.4, time:"15-20", price:"₹",    discount:"Free Delivery",img:"https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&q=90", badge:null,         tags:["Coffee","Tacos"] },
+  { id:8, name:"Sweet Tooth",     cuisine:"Desserts",      rating:4.9, time:"20-25", price:"₹₹",   discount:"15% off",      img:"https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=600&q=90", badge:"Fan Fav",    tags:["Desserts","Coffee"] },
 ];
 
 // Per-restaurant menus
 const RESTAURANT_MENUS = {
   1: { // Spice Garden
     Starters:[
-      {id:101,name:"Paneer Tikka",      price:249,veg:true, img:"https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=300&q=80",desc:"Chargrilled cottage cheese with tangy marinade",rating:4.6,badge:"Bestseller"},
-      {id:102,name:"Chicken Kebab",     price:299,veg:false,img:"https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=300&q=80",desc:"Juicy minced chicken kebabs on skewers",       rating:4.7,badge:"Spicy"},
-      {id:103,name:"Samosa (2 pcs)",    price:79, veg:true, img:"https://images.unsplash.com/photo-1601050690597-df0568f70950?w=300&q=80",desc:"Crispy pastry with spiced potato & peas",       rating:4.4,badge:null},
+      {id:101,name:"Paneer Tikka",      price:249,veg:true, img:"https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=400w=300&q=80q=90",desc:"Chargrilled cottage cheese with tangy marinade",rating:4.6,badge:"Bestseller"},
+      {id:102,name:"Chicken Kebab",     price:299,veg:false,img:"https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=400w=300&q=80q=90",desc:"Juicy minced chicken kebabs on skewers",       rating:4.7,badge:"Spicy"},
+      {id:103,name:"Samosa (2 pcs)",    price:79, veg:true, img:"https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400w=300&q=80q=90",desc:"Crispy pastry with spiced potato & peas",       rating:4.4,badge:null},
     ],
     Mains:[
-      {id:201,name:"Butter Chicken",    price:319,veg:false,img:"https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=300&q=80",desc:"Tender chicken in rich tomato-butter sauce",    rating:4.8,badge:"Bestseller"},
-      {id:202,name:"Dal Makhani",       price:199,veg:true, img:"https://images.unsplash.com/photo-1546833998-877b37c2e5c6?w=300&q=80",desc:"Slow-cooked black lentils with cream & butter",   rating:4.7,badge:null},
-      {id:205,name:"Veg Biryani",       price:229,veg:true, img:"https://images.unsplash.com/photo-1563379091339-03246963d96e?w=300&q=80",desc:"Fragrant basmati rice with vegetables",          rating:4.5,badge:null},
-      {id:206,name:"Chicken Biryani",   price:299,veg:false,img:"https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=300&q=80",desc:"Hyderabadi dum biryani with saffron & raita",   rating:4.8,badge:"Most Ordered"},
+      {id:201,name:"Butter Chicken",    price:319,veg:false,img:"https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=400w=300&q=80q=90",desc:"Tender chicken in rich tomato-butter sauce",    rating:4.8,badge:"Bestseller"},
+      {id:202,name:"Dal Makhani",       price:199,veg:true, img:"https://images.unsplash.com/photo-1546833998-877b37c2e5c6?w=400w=300&q=80q=90",desc:"Slow-cooked black lentils with cream & butter",   rating:4.7,badge:null},
+      {id:205,name:"Veg Biryani",       price:229,veg:true, img:"https://images.unsplash.com/photo-1563379091339-03246963d96e?w=400w=300&q=80q=90",desc:"Fragrant basmati rice with vegetables",          rating:4.5,badge:null},
+      {id:206,name:"Chicken Biryani",   price:299,veg:false,img:"https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=400w=300&q=80q=90",desc:"Hyderabadi dum biryani with saffron & raita",   rating:4.8,badge:"Most Ordered"},
     ],
     Drinks:[
-      {id:601,name:"Mango Lassi",       price:89, veg:true, img:"https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=300&q=80",desc:"Thick chilled yogurt-mango smoothie",              rating:4.7,badge:"Summer Hit"},
-      {id:603,name:"Masala Chai",       price:49, veg:true, img:"https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=300&q=80",desc:"Ginger-cardamom spiced milk tea",                  rating:4.6,badge:"Classic"},
+      {id:601,name:"Mango Lassi",       price:89, veg:true, img:"https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=400w=300&q=80q=90",desc:"Thick chilled yogurt-mango smoothie",              rating:4.7,badge:"Summer Hit"},
+      {id:603,name:"Masala Chai",       price:49, veg:true, img:"https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400w=300&q=80q=90",desc:"Ginger-cardamom spiced milk tea",                  rating:4.6,badge:"Classic"},
     ],
   },
   2: { // Burger Republic
     Burgers:[
-      {id:301,name:"Classic Beef Burger",price:199,veg:false,img:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300&q=80",desc:"Juicy beef patty with lettuce, tomato & cheese",rating:4.5,badge:"Bestseller"},
-      {id:302,name:"Chicken Crispy",     price:179,veg:false,img:"https://images.unsplash.com/photo-1550547660-d9450f859349?w=300&q=80",desc:"Crispy fried chicken with spicy mayo",             rating:4.4,badge:null},
-      {id:303,name:"Mushroom Swiss",     price:219,veg:true, img:"https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=300&q=80",desc:"Portobello mushroom with swiss cheese & aioli",  rating:4.6,badge:"New"},
+      {id:301,name:"Classic Beef Burger",price:199,veg:false,img:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400w=300&q=80q=90",desc:"Juicy beef patty with lettuce, tomato & cheese",rating:4.5,badge:"Bestseller"},
+      {id:302,name:"Chicken Crispy",     price:179,veg:false,img:"https://images.unsplash.com/photo-1550547660-d9450f859349?w=400w=300&q=80q=90",desc:"Crispy fried chicken with spicy mayo",             rating:4.4,badge:null},
+      {id:303,name:"Mushroom Swiss",     price:219,veg:true, img:"https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=400w=300&q=80q=90",desc:"Portobello mushroom with swiss cheese & aioli",  rating:4.6,badge:"New"},
     ],
     Wraps:[
-      {id:401,name:"Chicken Wrap",       price:199,veg:false,img:"https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=300&q=80",desc:"Grilled chicken in a toasted tortilla wrap",     rating:4.3,badge:null},
-      {id:402,name:"Falafel Wrap",       price:179,veg:true, img:"https://images.unsplash.com/photo-1539136788836-5699e78bfc75?w=300&q=80",desc:"Crispy falafel with hummus and fresh veggies",    rating:4.5,badge:"Veg Fav"},
+      {id:401,name:"Chicken Wrap",       price:199,veg:false,img:"https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=400w=300&q=80q=90",desc:"Grilled chicken in a toasted tortilla wrap",     rating:4.3,badge:null},
+      {id:402,name:"Falafel Wrap",       price:179,veg:true, img:"https://images.unsplash.com/photo-1539136788836-5699e78bfc75?w=400w=300&q=80q=90",desc:"Crispy falafel with hummus and fresh veggies",    rating:4.5,badge:"Veg Fav"},
     ],
     Drinks:[
-      {id:602,name:"Cold Coffee",        price:99, veg:true, img:"https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=300&q=80",desc:"Creamy blended iced coffee with chocolate",       rating:4.5,badge:null},
-      {id:604,name:"Virgin Mojito",      price:119,veg:true, img:"https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=300&q=80",desc:"Mint-lemon fizz with crushed ice & lime",           rating:4.7,badge:null},
+      {id:602,name:"Cold Coffee",        price:99, veg:true, img:"https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400w=300&q=80q=90",desc:"Creamy blended iced coffee with chocolate",       rating:4.5,badge:null},
+      {id:604,name:"Virgin Mojito",      price:119,veg:true, img:"https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400w=300&q=80q=90",desc:"Mint-lemon fizz with crushed ice & lime",           rating:4.7,badge:null},
     ],
   },
   3: { // Pasta Palace
     Pizza:[
-      {id:501,name:"Margherita",         price:299,veg:true, img:"https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=300&q=80",desc:"Classic tomato, mozzarella and fresh basil",      rating:4.7,badge:"Classic"},
-      {id:502,name:"Pepperoni",          price:349,veg:false,img:"https://images.unsplash.com/photo-1628840042765-356cda07504e?w=300&q=80",desc:"Generous pepperoni with extra cheese layer",       rating:4.8,badge:"Bestseller"},
-      {id:503,name:"BBQ Chicken",        price:379,veg:false,img:"https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=300&q=80",desc:"Smoky BBQ sauce, chicken, onions & peppers",      rating:4.6,badge:null},
+      {id:501,name:"Margherita",         price:299,veg:true, img:"https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400w=300&q=80q=90",desc:"Classic tomato, mozzarella and fresh basil",      rating:4.7,badge:"Classic"},
+      {id:502,name:"Pepperoni",          price:349,veg:false,img:"https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400w=300&q=80q=90",desc:"Generous pepperoni with extra cheese layer",       rating:4.8,badge:"Bestseller"},
+      {id:503,name:"BBQ Chicken",        price:379,veg:false,img:"https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400w=300&q=80q=90",desc:"Smoky BBQ sauce, chicken, onions & peppers",      rating:4.6,badge:null},
     ],
     Pasta:[
-      {id:504,name:"Spaghetti Arrabbiata",price:279,veg:true,img:"https://images.unsplash.com/photo-1551183053-bf91798d792b?w=300&q=80",desc:"Spicy tomato pasta with garlic and olive oil",     rating:4.5,badge:null},
-      {id:505,name:"Fettuccine Alfredo", price:319,veg:true, img:"https://images.unsplash.com/photo-1612007688814-9b19b4b3c5e3?w=300&q=80",desc:"Rich creamy sauce with parmesan",                  rating:4.6,badge:"Chef's Pick"},
+      {id:504,name:"Spaghetti Arrabbiata",price:279,veg:true,img:"https://images.unsplash.com/photo-1551183053-bf91798d792b?w=400w=300&q=80q=90",desc:"Spicy tomato pasta with garlic and olive oil",     rating:4.5,badge:null},
+      {id:505,name:"Fettuccine Alfredo", price:319,veg:true, img:"https://images.unsplash.com/photo-1612007688814-9b19b4b3c5e3?w=400w=300&q=80q=90",desc:"Rich creamy sauce with parmesan",                  rating:4.6,badge:"Chef's Pick"},
     ],
     Desserts:[
-      {id:506,name:"Tiramisu",           price:199,veg:true, img:"https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=300&q=80",desc:"Classic Italian espresso-soaked dessert",          rating:4.9,badge:"Must Try"},
+      {id:506,name:"Tiramisu",           price:199,veg:true, img:"https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400w=300&q=80q=90",desc:"Classic Italian espresso-soaked dessert",          rating:4.9,badge:"Must Try"},
     ],
   },
   4: { // Dragon Wok
     Noodles:[
-      {id:701,name:"Pad Thai",           price:229,veg:false,img:"https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=300&q=80",desc:"Stir-fried rice noodles with peanuts & lime",     rating:4.5,badge:"Popular"},
-      {id:702,name:"Hakka Noodles",      price:189,veg:true, img:"https://images.unsplash.com/photo-1585032226651-759b368d7246?w=300&q=80",desc:"Wok-tossed noodles with crispy veggies",           rating:4.3,badge:null},
-      {id:703,name:"Ramen Bowl",         price:279,veg:false,img:"https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=300&q=80",desc:"Rich broth with noodles, egg and toppings",        rating:4.7,badge:"Chef's Fav"},
+      {id:701,name:"Pad Thai",           price:229,veg:false,img:"https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=400w=300&q=80q=90",desc:"Stir-fried rice noodles with peanuts & lime",     rating:4.5,badge:"Popular"},
+      {id:702,name:"Hakka Noodles",      price:189,veg:true, img:"https://images.unsplash.com/photo-1585032226651-759b368d7246?w=400w=300&q=80q=90",desc:"Wok-tossed noodles with crispy veggies",           rating:4.3,badge:null},
+      {id:703,name:"Ramen Bowl",         price:279,veg:false,img:"https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400w=300&q=80q=90",desc:"Rich broth with noodles, egg and toppings",        rating:4.7,badge:"Chef's Fav"},
     ],
     Rolls:[
-      {id:801,name:"Egg Roll",           price:99, veg:false,img:"https://images.unsplash.com/photo-1547592166-23ac45744acd?w=300&q=80",desc:"Crispy spring roll filled with egg and veg",         rating:4.2,badge:null},
-      {id:802,name:"Chicken Roll",       price:149,veg:false,img:"https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=300&q=80",desc:"Juicy chicken wrapped in thin egg crepe",           rating:4.4,badge:"Bestseller"},
+      {id:801,name:"Egg Roll",           price:99, veg:false,img:"https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400w=300&q=80q=90",desc:"Crispy spring roll filled with egg and veg",         rating:4.2,badge:null},
+      {id:802,name:"Chicken Roll",       price:149,veg:false,img:"https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=400w=300&q=80q=90",desc:"Juicy chicken wrapped in thin egg crepe",           rating:4.4,badge:"Bestseller"},
     ],
   },
   5: { // Pizza Volcano
     Pizza:[
-      {id:901,name:"Margherita Volcano", price:349,veg:true, img:"https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=300&q=80",desc:"Extra stretchy cheese pull, volcano-style crust", rating:4.7,badge:"Signature"},
-      {id:902,name:"BBQ Overload",       price:399,veg:false,img:"https://images.unsplash.com/photo-1628840042765-356cda07504e?w=300&q=80",desc:"Double meat, triple cheese BBQ explosion",          rating:4.8,badge:"Bestseller"},
-      {id:903,name:"Garden Fresh",       price:319,veg:true, img:"https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=300&q=80",desc:"Farm-fresh veggies on herb-infused tomato base",   rating:4.5,badge:null},
+      {id:901,name:"Margherita Volcano", price:349,veg:true, img:"https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400w=300&q=80q=90",desc:"Extra stretchy cheese pull, volcano-style crust", rating:4.7,badge:"Signature"},
+      {id:902,name:"BBQ Overload",       price:399,veg:false,img:"https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400w=300&q=80q=90",desc:"Double meat, triple cheese BBQ explosion",          rating:4.8,badge:"Bestseller"},
+      {id:903,name:"Garden Fresh",       price:319,veg:true, img:"https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400w=300&q=80q=90",desc:"Farm-fresh veggies on herb-infused tomato base",   rating:4.5,badge:null},
     ],
     Sides:[
-      {id:904,name:"Garlic Knots (6)",   price:129,veg:true, img:"https://images.unsplash.com/photo-1573821663912-569905455b1c?w=300&q=80",desc:"Buttery, garlicky knotted bread rolls",             rating:4.6,badge:"Fan Fav"},
+      {id:904,name:"Garlic Knots (6)",   price:129,veg:true, img:"https://images.unsplash.com/photo-1573821663912-569905455b1c?w=400w=300&q=80q=90",desc:"Buttery, garlicky knotted bread rolls",             rating:4.6,badge:"Fan Fav"},
     ],
   },
   6: { // Sushi Bay
     Sushi:[
-      {id:1001,name:"Salmon Roll (8 pcs)",price:449,veg:false,img:"https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=300&q=80",desc:"Fresh Atlantic salmon with avocado & cucumber",   rating:4.9,badge:"Top Rated"},
-      {id:1002,name:"Dragon Roll",        price:499,veg:false,img:"https://images.unsplash.com/photo-1617196034876-91f29e3f79ea?w=300&q=80",desc:"Shrimp tempura topped with avocado slices",        rating:4.8,badge:"Chef's Pick"},
-      {id:1003,name:"Veggie Maki",        price:299,veg:true, img:"https://images.unsplash.com/photo-1617196034183-421b4040ed20?w=300&q=80",desc:"Cucumber, avocado and pickled radish rolls",        rating:4.5,badge:null},
+      {id:1001,name:"Salmon Roll (8 pcs)",price:449,veg:false,img:"https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400w=300&q=80q=90",desc:"Fresh Atlantic salmon with avocado & cucumber",   rating:4.9,badge:"Top Rated"},
+      {id:1002,name:"Dragon Roll",        price:499,veg:false,img:"https://images.unsplash.com/photo-1617196034876-91f29e3f79ea?w=400w=300&q=80q=90",desc:"Shrimp tempura topped with avocado slices",        rating:4.8,badge:"Chef's Pick"},
+      {id:1003,name:"Veggie Maki",        price:299,veg:true, img:"https://images.unsplash.com/photo-1617196034183-421b4040ed20?w=400w=300&q=80q=90",desc:"Cucumber, avocado and pickled radish rolls",        rating:4.5,badge:null},
     ],
     Sashimi:[
-      {id:1004,name:"Sashimi Platter",    price:599,veg:false,img:"https://images.unsplash.com/photo-1563245372-f21724e3856d?w=300&q=80",desc:"8 pcs of chef's finest daily cuts",                   rating:4.9,badge:"Premium"},
+      {id:1004,name:"Sashimi Platter",    price:599,veg:false,img:"https://images.unsplash.com/photo-1563245372-f21724e3856d?w=400w=300&q=80q=90",desc:"8 pcs of chef's finest daily cuts",                   rating:4.9,badge:"Premium"},
     ],
     Drinks:[
-      {id:1005,name:"Matcha Latte",       price:149,veg:true, img:"https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&q=80",desc:"Ceremonial grade matcha with oat milk",              rating:4.7,badge:"New"},
+      {id:1005,name:"Matcha Latte",       price:149,veg:true, img:"https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400w=300&q=80q=90",desc:"Ceremonial grade matcha with oat milk",              rating:4.7,badge:"New"},
     ],
   },
   7: { // Dosa Junction
     Dosas:[
-      {id:1101,name:"Masala Dosa",        price:99, veg:true, img:"https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=300&q=80",desc:"Crispy crepe with spiced potato filling",            rating:4.7,badge:"Classic"},
-      {id:1102,name:"Ghee Roast Dosa",    price:129,veg:true, img:"https://images.unsplash.com/photo-1630409351217-bc4fa6422075?w=300&q=80",desc:"Golden crisp dosa roasted in pure ghee",             rating:4.6,badge:"Bestseller"},
+      {id:1101,name:"Masala Dosa",        price:99, veg:true, img:"https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=400w=300&q=80q=90",desc:"Crispy crepe with spiced potato filling",            rating:4.7,badge:"Classic"},
+      {id:1102,name:"Ghee Roast Dosa",    price:129,veg:true, img:"https://images.unsplash.com/photo-1630409351217-bc4fa6422075?w=400w=300&q=80q=90",desc:"Golden crisp dosa roasted in pure ghee",             rating:4.6,badge:"Bestseller"},
     ],
     Snacks:[
-      {id:1103,name:"Vada Sambar",        price:79, veg:true, img:"https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=300&q=80",desc:"Crispy lentil donuts in tangy sambar",               rating:4.5,badge:null},
-      {id:1104,name:"Idli Plate (4 pcs)", price:69, veg:true, img:"https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=300&q=80",desc:"Soft steamed rice cakes with chutneys",              rating:4.4,badge:null},
+      {id:1103,name:"Vada Sambar",        price:79, veg:true, img:"https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=400w=300&q=80q=90",desc:"Crispy lentil donuts in tangy sambar",               rating:4.5,badge:null},
+      {id:1104,name:"Idli Plate (4 pcs)", price:69, veg:true, img:"https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=400w=300&q=80q=90",desc:"Soft steamed rice cakes with chutneys",              rating:4.4,badge:null},
     ],
     Drinks:[
-      {id:1105,name:"Filter Coffee",      price:39, veg:true, img:"https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=300&q=80",desc:"Authentic South Indian decoction coffee",            rating:4.8,badge:"Must Try"},
+      {id:1105,name:"Filter Coffee",      price:39, veg:true, img:"https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400w=300&q=80q=90",desc:"Authentic South Indian decoction coffee",            rating:4.8,badge:"Must Try"},
     ],
   },
   8: { // Sweet Tooth
     Desserts:[
-      {id:1201,name:"Gulab Jamun",        price:119,veg:true, img:"https://images.unsplash.com/photo-1666010149492-9bf18bfb8b13?w=300&q=80",desc:"Soft dumplings in rose sugar syrup",                 rating:4.9,badge:"Fan Fav"},
-      {id:1202,name:"Choc Lava Cake",     price:199,veg:true, img:"https://images.unsplash.com/photo-1617305855058-336d24456869?w=300&q=80",desc:"Warm cake with molten dark chocolate centre",         rating:4.8,badge:"Must Try"},
-      {id:1203,name:"Kulfi Falooda",      price:149,veg:true, img:"https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=300&q=80",desc:"Pistachio ice cream with basil seeds & rose syrup",    rating:4.7,badge:null},
-      {id:1204,name:"Brownie Sundae",     price:169,veg:true, img:"https://images.unsplash.com/photo-1564355808539-22fda35bed7e?w=300&q=80",desc:"Warm fudge brownie with vanilla ice cream",           rating:4.9,badge:"Bestseller"},
+      {id:1201,name:"Gulab Jamun",        price:119,veg:true, img:"https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=400w=300&q=80q=90",desc:"Soft dumplings in rose sugar syrup",                 rating:4.9,badge:"Fan Fav"},
+      {id:1202,name:"Choc Lava Cake",     price:199,veg:true, img:"https://images.unsplash.com/photo-1617305855058-336d24456869?w=400w=300&q=80q=90",desc:"Warm cake with molten dark chocolate centre",         rating:4.8,badge:"Must Try"},
+      {id:1203,name:"Kulfi Falooda",      price:149,veg:true, img:"https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400w=300&q=80q=90",desc:"Pistachio ice cream with basil seeds & rose syrup",    rating:4.7,badge:null},
+      {id:1204,name:"Brownie Sundae",     price:169,veg:true, img:"https://images.unsplash.com/photo-1564355808539-22fda35bed7e?w=400w=300&q=80q=90",desc:"Warm fudge brownie with vanilla ice cream",           rating:4.9,badge:"Bestseller"},
     ],
     Drinks:[
-      {id:1205,name:"Cold Coffee Shake",  price:129,veg:true, img:"https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=300&q=80",desc:"Thick blended coffee milkshake",                     rating:4.6,badge:null},
-      {id:1206,name:"Mango Milkshake",    price:109,veg:true, img:"https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=300&q=80",desc:"Fresh Alphonso mango blended thick",                   rating:4.7,badge:"Seasonal"},
+      {id:1205,name:"Cold Coffee Shake",  price:129,veg:true, img:"https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400w=300&q=80q=90",desc:"Thick blended coffee milkshake",                     rating:4.6,badge:null},
+      {id:1206,name:"Mango Milkshake",    price:109,veg:true, img:"https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=400w=300&q=80q=90",desc:"Fresh Alphonso mango blended thick",                   rating:4.7,badge:"Seasonal"},
     ],
   },
 };
 
 const CATEGORIES = [
-  {label:"Pizza",   emoji:"🍕", img:"https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=300&q=80"},
-  {label:"Burger",  emoji:"🍔", img:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300&q=80"},
-  {label:"Biryani", emoji:"🍛", img:"https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=300&q=80"},
-  {label:"Sushi",   emoji:"🍱", img:"https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=300&q=80"},
-  {label:"Desserts",emoji:"🍰", img:"https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=300&q=80"},
-  {label:"Coffee",  emoji:"☕", img:"https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=300&q=80"},
-  {label:"Salads",  emoji:"🥗", img:"https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&q=80"},
-  {label:"Noodles", emoji:"🍜", img:"https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=300&q=80"},
-  {label:"Wraps",   emoji:"🌯", img:"https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=300&q=80"},
-  {label:"Tacos",   emoji:"🌮", img:"https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=300&q=80"},
-  {label:"Seafood", emoji:"🦞", img:"https://images.unsplash.com/photo-1565380850788-f2897be34d21?w=300&q=80"},
-  {label:"Rolls",   emoji:"🥡", img:"https://images.unsplash.com/photo-1547592166-23ac45744acd?w=300&q=80"},
+  {label:"Pizza",   emoji:"🍕", img:"https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400w=300&q=80q=90"},
+  {label:"Burger",  emoji:"🍔", img:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400w=300&q=80q=90"},
+  {label:"Biryani", emoji:"🍛", img:"https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=400w=300&q=80q=90"},
+  {label:"Sushi",   emoji:"🍱", img:"https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400w=300&q=80q=90"},
+  {label:"Desserts",emoji:"🍰", img:"https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400w=300&q=80q=90"},
+  {label:"Coffee",  emoji:"☕", img:"https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400w=300&q=80q=90"},
+  {label:"Salads",  emoji:"🥗", img:"https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400w=300&q=80q=90"},
+  {label:"Noodles", emoji:"🍜", img:"https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=400w=300&q=80q=90"},
+  {label:"Wraps",   emoji:"🌯", img:"https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=400w=300&q=80q=90"},
+  {label:"Tacos",   emoji:"🌮", img:"https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=400w=300&q=80q=90"},
+  {label:"Seafood", emoji:"🦞", img:"https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400w=300&q=80q=90"},
+  {label:"Rolls",   emoji:"🥡", img:"https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400w=300&q=80q=90"},
 ];
 
 // Map categories to restaurant IDs
@@ -226,12 +225,12 @@ const DISH_RESTAURANTS = {
 };
 
 const TRENDING = [
-  {id:'t1',name:"Butter Chicken",rest:"Spice Garden",restId:1,rating:4.9,reviews:"2.4k",price:319,img:"https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=400&q=85",tag:"🔥 Trending",veg:false},
-  {id:'t2',name:"Dragon Sushi Platter",rest:"Sushi Bay",restId:6,rating:4.8,reviews:"1.8k",price:599,img:"https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400&q=85",tag:"⭐ Top Rated",veg:false},
-  {id:'t3',name:"Gulab Jamun Sundae",rest:"Sweet Tooth",restId:8,rating:4.9,reviews:"3.1k",price:189,img:"https://images.unsplash.com/photo-1666010149492-9bf18bfb8b13?w=400&q=85",tag:"💛 Fan Fav",veg:true},
-  {id:'t4',name:"Margherita Volcano",rest:"Pizza Volcano",restId:5,rating:4.7,reviews:"1.2k",price:349,img:"https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400&q=85",tag:"🆕 New",veg:true},
-  {id:'t5',name:"Chicken Dum Biryani",rest:"Spice Garden",restId:1,rating:4.8,reviews:"4.7k",price:299,img:"https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=400&q=85",tag:"🔥 Trending",veg:false},
-  {id:'t6',name:"Mango Lassi",rest:"Dosa Junction",restId:7,rating:4.7,reviews:"3.1k",price:89,img:"https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=400&q=85",tag:"☀️ Summer Hit",veg:true},
+  {id:'t1',name:"Butter Chicken",rest:"Spice Garden",restId:1,rating:4.9,reviews:"2.4k",price:319,img:"https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=600&q=90",tag:"🔥 Trending",veg:false},
+  {id:'t2',name:"Dragon Sushi Platter",rest:"Sushi Bay",restId:6,rating:4.8,reviews:"1.8k",price:599,img:"https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&q=90",tag:"⭐ Top Rated",veg:false},
+  {id:'t3',name:"Gulab Jamun Sundae",rest:"Sweet Tooth",restId:8,rating:4.9,reviews:"3.1k",price:189,img:"https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=600&q=90",tag:"💛 Fan Fav",veg:true},
+  {id:'t4',name:"Margherita Volcano",rest:"Pizza Volcano",restId:5,rating:4.7,reviews:"1.2k",price:349,img:"https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=600&q=90",tag:"🆕 New",veg:true},
+  {id:'t5',name:"Chicken Dum Biryani",rest:"Spice Garden",restId:1,rating:4.8,reviews:"4.7k",price:299,img:"https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=600&q=90",tag:"🔥 Trending",veg:false},
+  {id:'t6',name:"Mango Lassi",rest:"Dosa Junction",restId:7,rating:4.7,reviews:"3.1k",price:89,img:"https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=600&q=90",tag:"☀️ Summer Hit",veg:true},
 ];
 
 const CHEFS = [
@@ -261,12 +260,6 @@ const TRACK_STEPS = [
   {label:"Preparing",       icon:"👨‍🍳",desc:"Chef is crafting your meal"},
   {label:"Out for Delivery",icon:"🛵",desc:"Rider heading your way"},
   {label:"Delivered",       icon:"🎉",desc:"Enjoy your meal!"},
-];
-
-const ROUTE_POINTS = [
-  {x:12,y:75}, {x:22,y:68}, {x:30,y:58}, {x:38,y:52},
-  {x:48,y:47}, {x:56,y:40}, {x:64,y:35}, {x:72,y:28},
-  {x:80,y:22}, {x:88,y:18},
 ];
 
 /* ─── DEFAULT CART ITEMS ─────────────────────────────────────── */
@@ -357,12 +350,12 @@ button, input, textarea, select { font-family: inherit; }
 .navbar {
   position: fixed; top: 0; left: 0; right: 0; z-index: 500;
   height: 70px;
-  background: rgba(247,243,236,0.92);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-bottom: 1px solid rgba(107,158,122,0.18);
+  background: rgba(247,243,236,0.0);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  border-bottom: 1px solid rgba(107,158,122,0.0);
   display: flex; align-items: center;
-  transition: transform 0.38s cubic-bezier(0.4,0,0.2,1), background 0.3s, box-shadow 0.3s, opacity 0.3s;
+  transition: transform 0.38s cubic-bezier(0.4,0,0.2,1), background 0.4s ease, box-shadow 0.4s ease, backdrop-filter 0.4s ease, border-color 0.4s ease;
   animation: navSlideDown 0.5s cubic-bezier(0.4,0,0.2,1) both;
 }
 @keyframes navSlideDown {
@@ -370,9 +363,21 @@ button, input, textarea, select { font-family: inherit; }
   to { transform: translateY(0); opacity: 1; }
 }
 .navbar.scrolled {
-  background: rgba(247,243,236,0.98);
-  box-shadow: 0 4px 30px ${T.shadow};
+  background: rgba(247,243,236,0.97);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 4px 30px rgba(26,58,42,0.12);
+  border-bottom: 1px solid rgba(107,158,122,0.18);
 }
+.navbar:not(.scrolled) .nav-link { color: rgba(200,223,197,0.9); }
+.navbar:not(.scrolled) .nav-link:hover { color: white; background: rgba(255,255,255,0.1); }
+.navbar:not(.scrolled) .nav-link.active { color: white; }
+.navbar:not(.scrolled) .nav-logo { color: white; }
+.navbar:not(.scrolled) .nav-logo em { color: rgba(200,223,197,0.9); }
+.navbar:not(.scrolled) .logo-leaf { box-shadow: 0 4px 14px rgba(0,0,0,0.3); }
+.navbar:not(.scrolled) .nav-btn-sm { border-color: rgba(255,255,255,0.3); color: rgba(255,255,255,0.9); }
+.navbar:not(.scrolled) .nav-btn-sm:hover { background: rgba(255,255,255,0.15); color: white; border-color: rgba(255,255,255,0.5); }
+.navbar:not(.scrolled) .dark-toggle { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.25); }
 .navbar.nav-hidden {
   transform: translateY(-100%);
 }
@@ -480,12 +485,14 @@ button, input, textarea, select { font-family: inherit; }
 }
 .video-fallback {
   position: absolute; inset: 0;
-  background-image: url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1600&q=85');
-  background-size: cover; background-position: center;
+  background-image: url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1920&q=95');
+  background-size: cover; background-position: center 40%;
 }
 .video-overlay {
   position: absolute; inset: 0; z-index: 1;
-  background: linear-gradient(to right, rgba(26,58,42,0.82) 0%, rgba(26,58,42,0.55) 50%, rgba(26,58,42,0.25) 100%);
+  background: 
+    linear-gradient(to bottom, rgba(10,30,18,0.35) 0%, transparent 30%, transparent 60%, rgba(10,30,18,0.5) 100%),
+    linear-gradient(to right, rgba(10,30,18,0.80) 0%, rgba(26,58,42,0.50) 50%, rgba(10,30,18,0.20) 100%);
 }
 .video-hero-content { position: relative; z-index: 2; width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 28px; }
 .hero-h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(40px,6vw,88px); font-weight: 700; line-height: 1.05; color: white; margin-bottom: 20px; text-shadow: 0 2px 20px rgba(0,0,0,0.3); }
@@ -505,7 +512,7 @@ button, input, textarea, select { font-family: inherit; }
 
 /* ─── CATEGORY CAROUSEL ─── */
 .cat-carousel-wrap { position: relative; overflow: hidden; margin: 0 -28px; padding: 0 28px; user-select: none; }
-.cat-carousel-track { display: flex; gap: 14px; transition: transform 0.6s cubic-bezier(0.4,0,0.2,1); will-change: transform; }
+.cat-carousel-track { display: flex; gap: 14px; transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94); will-change: transform; }
 .cat-carousel-track.dragging { transition: none; cursor: grabbing; }
 .cat-item { flex-shrink: 0; width: 110px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 10px; transition: transform 0.25s; }
 .cat-item:hover { transform: translateY(-4px); }
@@ -519,39 +526,56 @@ button, input, textarea, select { font-family: inherit; }
 .cat-carousel-btn.prev { left: 6px; }
 .cat-carousel-btn.next { right: 6px; }
 
+/* ─── BANNER CAROUSEL ─── */
+.banner-carousel { position: relative; overflow: hidden; border-radius: 0; }
+.banner-slides { display: flex; transition: transform 0.7s cubic-bezier(0.25,0.46,0.45,0.94); will-change: transform; }
+.banner-slide { min-width: 100%; position: relative; height: 480px; overflow: hidden; }
+@media (max-width: 768px) { .banner-slide { height: 300px; } }
+.banner-slide img { width: 100%; height: 100%; object-fit: cover; transition: transform 8s ease; }
+.banner-slide.active img { transform: scale(1.04); }
+.banner-overlay { position: absolute; inset: 0; background: linear-gradient(to right, rgba(10,30,20,0.80) 0%, rgba(26,58,42,0.45) 55%, rgba(10,30,20,0.15) 100%); display: flex; align-items: center; padding: 0 56px; }
+.banner-content { color: white; max-width: 460px; }
+.banner-dots { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; }
+.banner-dot { width: 8px; height: 8px; border-radius: 4px; background: rgba(255,255,255,0.4); border: none; cursor: pointer; transition: all 0.3s; padding: 0; }
+.banner-dot.active { background: white; width: 28px; }
+.banner-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3); color: white; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; z-index: 10; }
+.banner-arrow:hover { background: rgba(255,255,255,0.3); transform: translateY(-50%) scale(1.1); }
+.banner-arrow.prev { left: 20px; }
+.banner-arrow.next { right: 20px; }
+
 /* ─── TRENDING ─── */
-.trending-scroll { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
-.trending-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px ${T.shadow}; border: 1px solid rgba(107,158,122,0.1); cursor: pointer; position: relative; transition: all 0.35s cubic-bezier(0.4,0,0.2,1); }
-.trending-card:hover { transform: translateY(-8px) scale(1.01); box-shadow: 0 24px 60px ${T.shadowD}; border-color: ${T.fern}; }
-.trending-img { position: relative; height: 200px; overflow: hidden; }
-.trending-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
-.trending-card:hover .trending-img img { transform: scale(1.08); }
-.trending-tag { position: absolute; top: 12px; left: 12px; background: rgba(26,58,42,0.85); backdrop-filter: blur(8px); color: white; font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 20px; letter-spacing: 0.04em; }
-.trending-veg { position: absolute; top: 12px; right: 12px; width: 22px; height: 22px; border-radius: 4px; border: 2px solid; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 900; background: white; }
-.trending-body { padding: 18px 20px 14px; }
+.trending-scroll { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.trending-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 2px 16px rgba(26,58,42,0.08), 0 1px 4px rgba(26,58,42,0.04); border: 1px solid rgba(107,158,122,0.1); cursor: pointer; position: relative; transition: all 0.35s cubic-bezier(0.4,0,0.2,1); }
+.trending-card:hover { transform: translateY(-10px) scale(1.01); box-shadow: 0 28px 64px rgba(26,58,42,0.18); border-color: ${T.fern}; }
+.trending-img { position: relative; height: 220px; overflow: hidden; }
+.trending-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.4,0,0.2,1); }
+.trending-card:hover .trending-img img { transform: scale(1.1); }
+.trending-tag { position: absolute; top: 12px; left: 12px; background: rgba(10,30,18,0.82); backdrop-filter: blur(10px); color: white; font-size: 10px; font-weight: 700; padding: 5px 12px; border-radius: 20px; letter-spacing: 0.05em; border: 1px solid rgba(255,255,255,0.15); }
+.trending-veg { position: absolute; top: 12px; right: 12px; width: 22px; height: 22px; border-radius: 4px; border: 2px solid; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 900; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+.trending-body { padding: 18px 18px 12px; }
 .trending-name { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 700; color: ${T.forest}; margin-bottom: 2px; }
 .trending-rest { font-size: 11px; color: ${T.moss}; margin-bottom: 12px; cursor: pointer; transition: color 0.2s; }
 .trending-rest:hover { color: ${T.sage}; text-decoration: underline; }
 .trending-meta { display: flex; align-items: center; justify-content: space-between; }
-.trending-price { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 700; color: ${T.leaf}; }
+.trending-price { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 700; color: ${T.leaf}; }
 .trending-rating { display: flex; align-items: center; gap: 5px; font-size: 12px; color: ${T.moss}; }
 .trending-stars { color: ${T.amber}; font-size: 12px; }
-.trending-add-btn { flex: 1; background: linear-gradient(135deg, ${T.sage}, ${T.leaf}); color: white; border: none; cursor: pointer; padding: 11px; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; border-radius: 10px; transition: all 0.25s; }
-.trending-add-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.trending-add-btn { flex: 1; background: linear-gradient(135deg, ${T.sage}, ${T.leaf}); color: white; border: none; cursor: pointer; padding: 12px; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; border-radius: 10px; transition: all 0.25s; }
+.trending-add-btn:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(45,90,61,0.3); }
 
 /* ─── RESTAURANT CARDS ─── */
-.rest-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 22px; }
-.rest-card { background: white; border-radius: 18px; overflow: hidden; box-shadow: 0 4px 20px ${T.shadow}; cursor: pointer; transition: all 0.35s cubic-bezier(0.4,0,0.2,1); border: 1px solid rgba(107,158,122,0.1); }
-.rest-card:hover { transform: translateY(-6px); box-shadow: 0 20px 50px ${T.shadowD}; border-color: ${T.fern}; }
-.rest-img { position: relative; height: 180px; overflow: hidden; }
-.rest-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
-.rest-card:hover .rest-img img { transform: scale(1.07); }
-.rest-badge { position: absolute; top: 12px; left: 12px; background: ${T.forest}; color: white; font-size: 9px; font-weight: 700; padding: 4px 9px; border-radius: 6px; letter-spacing: 0.06em; text-transform: uppercase; }
-.rest-discount { position: absolute; top: 12px; right: 12px; background: linear-gradient(135deg, ${T.sunset}, ${T.dusk}); color: white; font-size: 9px; font-weight: 700; padding: 4px 9px; border-radius: 6px; letter-spacing: 0.05em; }
-.rest-body { padding: 16px 18px 18px; }
-.rest-name { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 700; color: ${T.forest}; margin-bottom: 2px; }
-.rest-cuisine { font-size: 12px; color: ${T.moss}; margin-bottom: 12px; }
-.rest-meta { display: flex; align-items: center; gap: 14px; font-size: 12px; }
+.rest-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 24px; }
+.rest-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 2px 16px rgba(26,58,42,0.08), 0 1px 4px rgba(26,58,42,0.04); cursor: pointer; transition: all 0.35s cubic-bezier(0.4,0,0.2,1); border: 1px solid rgba(107,158,122,0.1); }
+.rest-card:hover { transform: translateY(-8px); box-shadow: 0 24px 56px rgba(26,58,42,0.16); border-color: ${T.fern}; }
+.rest-img { position: relative; height: 200px; overflow: hidden; }
+.rest-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s cubic-bezier(0.4,0,0.2,1); }
+.rest-card:hover .rest-img img { transform: scale(1.09); }
+.rest-badge { position: absolute; top: 12px; left: 12px; background: rgba(10,30,18,0.82); backdrop-filter: blur(8px); color: white; font-size: 9px; font-weight: 700; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.06em; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.15); }
+.rest-discount { position: absolute; top: 12px; right: 12px; background: linear-gradient(135deg, ${T.sunset}, ${T.dusk}); color: white; font-size: 9px; font-weight: 700; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.05em; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+.rest-body { padding: 16px 18px 20px; }
+.rest-name { font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 700; color: ${T.forest}; margin-bottom: 3px; line-height: 1.2; }
+.rest-cuisine { font-size: 12px; color: ${T.moss}; margin-bottom: 12px; font-weight: 400; }
+.rest-meta { display: flex; align-items: center; gap: 12px; font-size: 12px; }
 .star { color: ${T.amber}; font-size: 12px; }
 .rating { font-weight: 700; color: ${T.forest}; }
 .rest-time { color: ${T.moss}; }
@@ -702,23 +726,26 @@ button, input, textarea, select { font-family: inherit; }
 .track-map-svg { width: 100%; height: 260px; display: block; }
 
 /* ─── COMPACT FOOTER ─── */
-.footer { background: ${T.forest}; color: rgba(200,223,197,0.8); padding: 60px 0 40px; position: relative; }
-.footer-grid { display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
-.footer-col { display: flex; flex-direction: column; }
-.footer-brand { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 700; color: white; margin-bottom: 16px; }
-.footer-contact { font-size: 13px; font-weight: 400; color: rgba(200,223,197,0.8); line-height: 1.6; margin-bottom: 20px; }
-.footer-contact div { margin-bottom: 4px; }
-.footer-title { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: ${T.fern}; margin-bottom: 16px; }
-.footer-links { display: flex; flex-direction: column; gap: 8px; }
-.footer-link { font-size: 13px; font-weight: 400; color: rgba(200,223,197,0.7); cursor: pointer; transition: all 0.2s ease; padding: 2px 0; }
-.footer-link:hover { color: white; transform: translateX(2px); }
-.footer-socials { display: flex; gap: 12px; margin-top: 8px; }
-.footer-social-link { font-size: 16px; color: rgba(200,223,197,0.6); transition: all 0.2s ease; padding: 8px; border-radius: 6px; text-decoration: none; }
-.footer-social-link:hover { color: white; background: rgba(200,223,197,0.1); transform: translateY(-1px); }
-.footer-eco { background: rgba(200,223,197,0.05); border: 1px solid rgba(200,223,197,0.1); border-radius: 10px; padding: 16px; margin-top: 20px; }
-.footer-eco-title { font-size: 11px; font-weight: 700; color: ${T.fern}; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
-.footer-eco p { font-size: 12px; font-weight: 400; line-height: 1.5; color: rgba(200,223,197,0.8); margin: 0; }
-.footer-bar { border-top: 1px solid rgba(200,223,197,0.15); padding: 20px 0; display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 400; color: rgba(200,223,197,0.6); }
+.footer { background: ${T.forest}; color: rgba(200,223,197,0.8); padding: 48px 0 0; position: relative; overflow: hidden; margin-bottom: 0; }
+.footer-leaves { position: absolute; inset: 0; pointer-events: none; overflow: hidden; opacity: 0.04; }
+.footer-leaf { position: absolute; animation: footerFloat linear infinite; }
+@keyframes footerFloat { 0% { transform: translateY(0) rotate(0deg); opacity: 0.06; } 50% { opacity: 0.1; } 100% { transform: translateY(-80px) rotate(20deg); opacity: 0; } }
+.footer-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 32px; padding-bottom: 32px; align-items: start; }
+.footer-brand { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 700; color: white; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.footer-title { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: ${T.fern}; margin-bottom: 14px; }
+.footer-link { display: block; font-size: 12.5px; font-weight: 300; margin-bottom: 9px; cursor: pointer; transition: color 0.2s; }
+.footer-link:hover { color: white; }
+.footer-nav-inline { display: flex; flex-direction: column; gap: 0; margin-bottom: 0; }
+.footer-nav-inline span { font-size: 12.5px; font-weight: 300; cursor: pointer; color: rgba(200,223,197,0.75); transition: color 0.2s; margin-bottom: 9px; }
+.footer-nav-inline span:hover { color: white; }
+.footer-socials { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.social-btn { width: 36px; height: 36px; border-radius: 9px; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; font-size: 15px; cursor: pointer; transition: all 0.2s; border: 1px solid rgba(200,223,197,0.12); text-decoration: none; }
+.social-btn:hover { background: rgba(255,255,255,0.18); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
+.footer-map-embed { border-radius: 10px; overflow: hidden; border: 1px solid rgba(200,223,197,0.12); background: rgba(255,255,255,0.06); height: 120px; margin-top: 10px; position: relative; }
+.footer-map-embed iframe { width: 100%; height: 100%; border: none; filter: brightness(0.85) saturate(0.8); }
+.footer-map-label { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(26,58,42,0.9), transparent); padding: 14px 10px 7px; font-size: 10px; color: ${T.fern}; font-weight: 600; letter-spacing: 0.04em; }
+.footer-bar { border-top: 1px solid rgba(200,223,197,0.1); padding: 16px 0; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1; flex-wrap: wrap; gap: 8px; }
+.page { padding-bottom: 0 !important; }
 
 /* ─── TOAST ─── */
 .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: ${T.forest}; color: white; padding: 12px 24px; border-radius: 30px; font-size: 13px; font-weight: 600; z-index: 9999; box-shadow: 0 8px 30px ${T.shadowD}; animation: toastIn 0.3s cubic-bezier(0.4,0,0.2,1) both; white-space: nowrap; }
@@ -729,7 +756,10 @@ button, input, textarea, select { font-family: inherit; }
 .chip:hover, .chip.active { border-color: ${T.sage}; background: rgba(107,158,122,0.1); color: ${T.forest}; }
 
 /* ─── EXPLORE HERO ─── */
-.explore-hero { background: linear-gradient(135deg, ${T.sand} 0%, ${T.cream} 100%); padding: 56px 0 48px; border-bottom: 1px solid rgba(107,158,122,0.1); }
+.explore-hero { position: relative; overflow: hidden; padding: 72px 0 56px; border-bottom: 1px solid rgba(107,158,122,0.1); }
+.explore-hero-bg { position: absolute; inset: 0; z-index: 0; }
+.explore-hero-bg img { width: 100%; height: 100%; object-fit: cover; object-position: center 40%; }
+.explore-hero-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(247,243,236,0.97) 0%, rgba(237,230,214,0.93) 60%, rgba(200,223,197,0.7) 100%); }
 
 /* ─── LOGIN ─── */
 .login-page { display: grid; grid-template-columns: 1fr 1fr; min-height: 100vh; }
@@ -751,11 +781,140 @@ button, input, textarea, select { font-family: inherit; }
 
 /* ─── RESPONSIVE ─── */
 @media (min-width: 1024px) { .nav-links { display: flex; } .mob-nav { display: none; } }
-@media (max-width: 1200px) { .rest-grid { grid-template-columns: repeat(3,1fr); } .trending-scroll { grid-template-columns: repeat(2,1fr); } .cart-layout { grid-template-columns: 1fr 320px; } }
-@media (max-width: 900px) { .rest-grid { grid-template-columns: repeat(2,1fr); } .chefs-grid { grid-template-columns: 1fr; } .story-grid { grid-template-columns: 1fr; } .cart-layout { grid-template-columns: 1fr; } .trending-scroll { grid-template-columns: repeat(2,1fr); } .video-hero { height: 75vh; } .hero-stat-bar { gap: 20px; } .menu-items-grid { grid-template-columns: 1fr; } .footer-grid { grid-template-columns: 1fr 1fr; gap: 30px; } .offers-grid { grid-template-columns: 1fr; } }
-@media (max-width: 768px) { .track-steps { gap: 4px; } .track-label { font-size: 9px; } .footer-grid { grid-template-columns: 1fr; gap: 30px; } .login-page { grid-template-columns: 1fr; } .login-art { display: none; } .login-form-side { padding: 40px 28px; } .dish-grid { grid-template-columns: repeat(2,1fr); } .video-hero { height: 70vh; min-height: 480px; } }
-@media (max-width: 600px) { .video-container iframe { width: 100vw; min-width: unset; height: 56.25vw; min-height: unset; top: 50%; } .video-hero { height: 90vw; min-height: 380px; } .rest-grid { grid-template-columns: 1fr; } .dish-grid { grid-template-columns: 1fr; } .trending-scroll { grid-template-columns: 1fr; } .hero-stat-bar { display: none; } .hero-pills { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; } .cat-item { width: 88px; } .cat-img-ring { width: 70px; height: 70px; } .menu-item-card { flex-direction: column; } .menu-item-img { width: 100%; height: 160px; min-width: unset; } .menu-hero-info { flex-direction: column; gap: 14px; } .footer-grid { grid-template-columns: 1fr; } }
+@media (max-width: 1200px) { .rest-grid { grid-template-columns: repeat(3,1fr); } .trending-scroll { grid-template-columns: repeat(2,1fr); } .footer-grid { grid-template-columns: 1.2fr 1fr 1fr; gap: 24px; } .cart-layout { grid-template-columns: 1fr 320px; } }
+@media (max-width: 900px) { .rest-grid { grid-template-columns: repeat(2,1fr); } .chefs-grid { grid-template-columns: 1fr; } .story-grid { grid-template-columns: 1fr; } .cart-layout { grid-template-columns: 1fr; } .trending-scroll { grid-template-columns: repeat(2,1fr); } .video-hero { height: 75vh; } .hero-stat-bar { gap: 20px; } .menu-items-grid { grid-template-columns: 1fr; } .footer-grid { grid-template-columns: 1fr 1fr; gap: 20px; } .offers-grid { grid-template-columns: 1fr; } }
+@media (max-width: 768px) { .track-steps { gap: 4px; } .track-label { font-size: 9px; } .footer-grid { grid-template-columns: 1fr 1fr; } .login-page { grid-template-columns: 1fr; } .login-art { display: none; } .login-form-side { padding: 40px 28px; } .dish-grid { grid-template-columns: repeat(2,1fr); } .video-hero { height: 70vh; min-height: 480px; } }
+/* ─── DARK MODE ─── */
+body.dark-mode {
+  --bg: #0f1f18;
+  --surface: #192d22;
+  --surface2: #1e3628;
+  --border: rgba(143,186,153,0.12);
+  --text: #e8f0e8;
+  --text-muted: #7aab8a;
+  background: var(--bg) !important;
+  color: var(--text) !important;
+}
+body.dark-mode .navbar { background: rgba(15,31,24,0.0) !important; border-color: transparent !important; }
+body.dark-mode .navbar.scrolled { background: rgba(10,21,16,0.97) !important; border-color: rgba(143,186,153,0.14) !important; box-shadow: 0 4px 30px rgba(0,0,0,0.5) !important; }
+body.dark-mode .nav-logo { color: #e8f5e8 !important; }
+body.dark-mode .nav-logo em { color: #8FBA99 !important; }
+body.dark-mode .logo-leaf { background: linear-gradient(135deg, #4A7C59, #8FBA99) !important; box-shadow: 0 4px 14px rgba(143,186,153,0.5) !important; border: 1.5px solid rgba(143,186,153,0.3) !important; }
+body.dark-mode .nav-link { color: rgba(200,223,197,0.85) !important; }
+body.dark-mode .nav-link:hover, body.dark-mode .nav-link.active { color: #e8f5e8 !important; background: rgba(143,186,153,0.1) !important; }
+body.dark-mode .page { background: var(--bg); }
+body.dark-mode .section { background: var(--bg); }
+body.dark-mode .rest-card, body.dark-mode .trending-card, body.dark-mode .chef-card,
+body.dark-mode .offer-card, body.dark-mode .cart-item, body.dark-mode .cart-summary,
+body.dark-mode .checkout-section, body.dark-mode .faq-item, body.dark-mode .menu-item-card {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+body.dark-mode .explore-hero h1, body.dark-mode .explore-hero p, body.dark-mode .explore-hero span { color: #c8dfc5 !important; }
+body.dark-mode .page { background: var(--bg); }
+body.dark-mode .section { background: var(--bg); }
+body.dark-mode .rest-card, body.dark-mode .trending-card, body.dark-mode .chef-card,
+body.dark-mode .cart-item, body.dark-mode .faq-item, body.dark-mode .menu-item-card {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+body.dark-mode .explore-hero { background: transparent !important; }
+body.dark-mode .explore-hero .explore-hero-bg { opacity: 0.55; }
+body.dark-mode .field { background: var(--surface2) !important; color: var(--text) !important; border-color: var(--border) !important; }
+body.dark-mode h1, body.dark-mode h2, body.dark-mode h3, body.dark-mode .rest-name,
+body.dark-mode .trending-name, body.dark-mode .menu-item-name, body.dark-mode .chef-name { color: #d4ebd4 !important; }
+body.dark-mode .section-title { color: #c8dfc5 !important; }
+body.dark-mode .rest-cuisine, body.dark-mode .section-sub, body.dark-mode .trending-rest,
+body.dark-mode .menu-item-desc { color: #7aab8a !important; }
+body.dark-mode .mob-nav { background: rgba(10,21,16,0.97) !important; border-color: rgba(143,186,153,0.15) !important; }
+body.dark-mode .chip { background: var(--surface) !important; color: #8fba99 !important; border-color: var(--border) !important; }
+body.dark-mode .chip.active { background: rgba(74,124,89,0.25) !important; border-color: rgba(74,124,89,0.4) !important; }
+body.dark-mode .payment-option { border-color: var(--border) !important; background: var(--surface) !important; }
+body.dark-mode .payment-option:hover, body.dark-mode .payment-option.selected { background: rgba(74,124,89,0.12) !important; }
+body.dark-mode .nature-divider { background: var(--surface2) !important; }
+body.dark-mode .cart-summary { background: var(--surface) !important; border-color: var(--border) !important; }
+body.dark-mode .checkout-section { background: var(--surface) !important; border-color: var(--border) !important; color: var(--text) !important; }
+body.dark-mode .checkout-section h3 { color: #d4ebd4 !important; }
+body.dark-mode .form-group label { color: #7aab8a !important; }
+body.dark-mode .trending-price, body.dark-mode .menu-item-price { color: #8fba99 !important; }
+body.dark-mode .rest-price { color: #d4a017 !important; }
+body.dark-mode .footer { background: #070f0b !important; }
+body.dark-mode .offer-card { background: var(--surface) !important; border-color: var(--border) !important; }
+body.dark-mode .offer-code { background: var(--surface2) !important; color: #c8dfc5 !important; border-color: rgba(143,186,153,0.25) !important; }
+body.dark-mode .addr-modal-bg { background: rgba(0,0,0,0.7) !important; }
+body.dark-mode .addr-modal { background: var(--surface) !important; border: 1px solid var(--border); }
+body.dark-mode .addr-modal h2, body.dark-mode .addr-modal p { color: #d4ebd4 !important; }
+body.dark-mode .menu-hero { background: linear-gradient(135deg, #0a150f, #192d22) !important; }
+body.dark-mode .login-form-side { background: var(--surface2) !important; }
+body.dark-mode .login-form div[style*="color:"] { color: var(--text) !important; }
+body.dark-mode .cart-item { background: var(--surface) !important; }
+body.dark-mode .banner-carousel .banner-slide::after { content: ''; }
+
+/* ─── DARK MODE TOGGLE ─── */
+.dark-toggle { position: relative; width: 44px; height: 24px; background: rgba(107,158,122,0.25); border-radius: 12px; border: 1px solid rgba(107,158,122,0.3); cursor: pointer; transition: background 0.3s; }
+.dark-toggle.on { background: ${T.leaf}; }
+.dark-toggle-ball { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: white; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+.dark-toggle.on .dark-toggle-ball { transform: translateX(20px); }
+
+/* ─── COUPON SYSTEM ─── */
+.coupon-banner { background: linear-gradient(135deg, ${T.leaf}, ${T.forest}); border-radius: 12px; padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 12; }
+.coupon-input-row { display: flex; gap: 8px; }
+.coupon-msg-success { color: #4CAF50; font-size: 12px; font-weight: 600; margin-top: 8px; display: flex; align-items: center; gap: 5px; }
+.coupon-msg-error { color: #E53E3E; font-size: 12px; font-weight: 600; margin-top: 8px; display: flex; align-items: center; gap: 5px; }
+
+/* ─── REALISTIC MAP ─── */
+.realistic-map { border-radius: 20px; overflow: hidden; border: 1px solid rgba(107,158,122,0.15); margin-bottom: 24px; position: relative; box-shadow: 0 8px 32px rgba(26,58,42,0.15); height: 360px; }
+.map-rider-pin { position: absolute; transform: translate(-50%, -50%); font-size: 28px; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.3)); transition: left 1.2s cubic-bezier(0.4,0,0.2,1), top 1.2s cubic-bezier(0.4,0,0.2,1); z-index: 10; }
+.map-dest-pin { position: absolute; transform: translate(-50%, -100%); font-size: 28px; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.3)); z-index: 10; }
+.map-origin-pin { position: absolute; transform: translate(-50%, -100%); font-size: 24px; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.3)); z-index: 10; }
+.map-label { position: absolute; background: white; border-radius: 6px; padding: 4px 8px; font-size: 11px; font-weight: 600; color: ${T.forest}; box-shadow: 0 2px 8px rgba(0,0,0,0.15); white-space: nowrap; z-index: 11; }
+.map-eta-chip { position: absolute; top: 14px; right: 14px; background: ${T.forest}; color: white; border-radius: 20px; padding: 8px 16px; font-size: 13px; font-weight: 700; z-index: 12; box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
+
+/* ─── OFFERS CLAIM ─── */
+.offer-claim-btn { display: block; margin-top: 16px; background: linear-gradient(135deg, ${T.sage}, ${T.leaf}); color: white; border: none; border-radius: 8px; padding: 10px 18px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; width: 100%; letter-spacing: 0.04em; }
+.offer-claim-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.offer-claim-btn.claimed { background: #4CAF50; cursor: default; }
+.offer-copy { display: block; margin-top: 8px; background: none; border: 1.5px solid rgba(107,158,122,0.3); color: ${T.sage}; border-radius: 8px; padding: 9px 18px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; width: 100%; }
+.offer-copy:hover { background: ${T.forest}; color: white; border-color: ${T.forest}; }
+
+/* ─── FAQ CURSOR FIX ─── */
+.faq-item { cursor: pointer !important; }
+.faq-q { cursor: pointer !important; }
+.faq-q span:first-child { cursor: pointer !important; }
+
+/* ─── GLOBAL UI CONSISTENCY ─── */
+/* Consistent section backgrounds alternating */
+.section-alt { background: ${T.snow}; }
+/* Better focus states */
+button:focus-visible { outline: 2px solid ${T.sage}; outline-offset: 3px; }
+input:focus-visible { outline: none; }
+/* Smoother image rendering */
+img { image-rendering: -webkit-optimize-contrast; }
+/* Consistent card border radius */
+.rest-card, .trending-card, .offer-card, .menu-item-card { border-radius: 20px !important; }
+/* Consistent shadows */
+.rest-card, .trending-card { box-shadow: 0 2px 16px rgba(26,58,42,0.08), 0 1px 4px rgba(26,58,42,0.04) !important; }
+.rest-card:hover, .trending-card:hover { box-shadow: 0 20px 50px rgba(26,58,42,0.18) !important; }
+/* Gradient shimmer on active slide images */
+@keyframes kenBurns { from { transform: scale(1); } to { transform: scale(1.06); } }
+.banner-slide.active img { animation: kenBurns 6s ease forwards; }
+/* Smooth page transitions */
+.page > * { animation: pageFadeIn 0.4s ease both; }
+@keyframes pageFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+/* Better mobile spacing */
+@media (max-width: 600px) {
+  .container { padding: 0 16px; }
+  .section { padding: 56px 0; }
+  .hero-stat-bar { gap: 16px; }
+  .hero-stat-n { font-size: 24px; }
+  .banner-overlay { padding: 0 24px; }
+  .footer-grid { grid-template-columns: 1fr !important; gap: 28px !important; }
+  .footer-bar { flex-direction: column; text-align: center; gap: 6px; }
+}
 `;
+
 
 /* ─── HELPERS ─────────────────────────────────────────────── */
 function Stars({ r }) {
@@ -784,16 +943,30 @@ function Rv({ children, delay=0 }) {
   );
 }
 
+/* ─── DARK MODE HOOK ──────────────────────────────────────── */
+function useDarkMode() {
+  const [dark, setDark] = useState(() => {
+    try { return localStorage.getItem('terraeats-dark') === '1'; } catch { return false; }
+  });
+  useEffect(() => {
+    document.body.classList.toggle('dark-mode', dark);
+    try { localStorage.setItem('terraeats-dark', dark ? '1' : '0'); } catch {}
+  }, [dark]);
+  return [dark, setDark];
+}
+
 /* ─── NAVBAR ─────────────────────────────────────────────── */
 function Navbar({ page, go, cnt, user, onLogin }) {
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
   const lastScrollY = useRef(0);
+  const [dark, setDark] = useDarkMode();
 
   useEffect(()=>{
     const fn = () => {
       const y = window.scrollY;
-      setScrolled(y > 30);
+      // On home page start transparent, on other pages always solid
+      setScrolled(page !== 'home' || y > 30);
       if (y > lastScrollY.current && y > 100) {
         setHidden(true);
       } else {
@@ -801,9 +974,12 @@ function Navbar({ page, go, cnt, user, onLogin }) {
       }
       lastScrollY.current = y;
     };
+    // Trigger immediately when page changes
+    const y = window.scrollY;
+    setScrolled(page !== 'home' || y > 30);
     window.addEventListener('scroll', fn, { passive: true });
     return ()=> window.removeEventListener('scroll', fn);
-  },[]);
+  },[page]);
 
   const links = [
     {id:'home',label:'Home'},{id:'restaurants',label:'Restaurants'},{id:'explore',label:'Explore'},{id:'offers',label:'Offers'},
@@ -822,6 +998,16 @@ function Navbar({ page, go, cnt, user, onLogin }) {
           ))}
         </div>
         <div className="nav-actions">
+          {/* Dark mode toggle */}
+          <button
+            className={`dark-toggle${dark?' on':''}`}
+            onClick={()=>setDark(d=>!d)}
+            title={dark?'Switch to Light Mode':'Switch to Dark Mode'}
+            aria-label="Toggle dark mode"
+          >
+            <div className="dark-toggle-ball" />
+          </button>
+          <span style={{ fontSize:14, marginLeft:-4, marginRight:4 }}>{dark?'🌙':'☀️'}</span>
           {user ? (
             <div style={{ display:'flex', alignItems:'center', gap:8 }}>
               <div style={{ width:32, height:32, borderRadius:'50%', background:`linear-gradient(135deg,${T.sage},${T.leaf})`, display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontSize:13, fontWeight:700, cursor:'pointer' }}
@@ -864,38 +1050,61 @@ function MobNav({ page, go, cnt }) {
 
 /* ─── VIDEO HERO ─────────────────────────────────────────── */
 function VideoHero({ go }) {
+  const videoRef = useRef();
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.play().catch(()=>{});
+    }
+  }, []);
+
+  // Use a direct MP4 Unsplash video for food ambiance - autoplay, loop, muted, no controls
   return (
     <div className="video-hero">
       <div className="video-fallback" />
-      <div className="video-container">
-        <iframe
-          src="https://www.youtube.com/embed/lcU3pruVyUw?autoplay=1&mute=1&loop=1&playlist=lcU3pruVyUw&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&start=0&end=65"
-          title="Terra Eats Hero Video"
-          allow="autoplay; encrypted-media"
-          allowFullScreen={false}
-        />
+      <div className="video-container" style={{ position:'absolute', inset:0, zIndex:0, overflow:'hidden' }}>
+        <video
+          ref={videoRef}
+          autoPlay
+          loop
+          muted
+          playsInline
+          style={{
+            position: 'absolute', top: '50%', left: '50%',
+            transform: 'translate(-50%, -50%)',
+            minWidth: '100%', minHeight: '100%',
+            width: 'auto', height: 'auto',
+            objectFit: 'cover',
+            pointerEvents: 'none',
+          }}
+        >
+          {/* Multiple high-quality food videos for reliability */}
+          <source src="https://videos.pexels.com/video-files/3195394/3195394-uhd_2560_1440_25fps.mp4" type="video/mp4" />
+          <source src="https://videos.pexels.com/video-files/1437396/1437396-uhd_2560_1440_25fps.mp4" type="video/mp4" />
+          <source src="https://videos.pexels.com/video-files/2098575/2098575-hd_1920_1080_25fps.mp4" type="video/mp4" />
+        </video>
       </div>
       <div className="video-overlay" />
       <div className="video-hero-content">
-        <div style={{ maxWidth:620, animation:'fadeUp 0.8s ease both' }}>
+        <div style={{ maxWidth:640, animation:'fadeUp 0.8s ease both' }}>
           <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}`}</style>
-          <div style={{ display:'inline-flex',alignItems:'center',gap:8,background:'rgba(255,255,255,0.1)',borderRadius:20,padding:'6px 14px 6px 8px',marginBottom:22,backdropFilter:'blur(8px)' }}>
-            <span style={{ background:'rgba(232,116,42,0.85)',borderRadius:14,padding:'2px 10px',fontSize:11,fontWeight:700,color:'white',letterSpacing:'0.06em' }}>NEW</span>
-            <span style={{ fontSize:12,color:'rgba(200,223,197,0.9)',fontWeight:400 }}>Farm-to-table delivery is here 🌱</span>
+          <div style={{ display:'inline-flex',alignItems:'center',gap:8,background:'rgba(255,255,255,0.1)',borderRadius:20,padding:'6px 16px 6px 8px',marginBottom:24,backdropFilter:'blur(12px)',border:'1px solid rgba(255,255,255,0.15)' }}>
+            <span style={{ background:'linear-gradient(135deg,rgba(232,116,42,0.95),rgba(196,91,26,0.95))',borderRadius:14,padding:'2px 12px',fontSize:10,fontWeight:700,color:'white',letterSpacing:'0.08em',textTransform:'uppercase' }}>NEW</span>
+            <span style={{ fontSize:12,color:'rgba(200,223,197,0.95)',fontWeight:400,letterSpacing:'0.01em' }}>Farm-to-table delivery is here 🌱</span>
           </div>
           <h1 className="hero-h1">From nature's<br/>kitchen <em>to yours</em></h1>
-          <p className="hero-sub">Handpicked restaurants. Seasonal ingredients.<br/>Delivered with care in 30 minutes.</p>
+          <p className="hero-sub">Handpicked restaurants. Seasonal ingredients.<br/>Delivered with care in 30 minutes or less.</p>
           <div className="hero-search">
-            <input placeholder="Search for biryani, sushi, burgers…" style={{ border:'none',outline:'none',flex:1,padding:'16px 20px',fontSize:14,color:T.forest,background:'transparent' }} />
-            <button className="hero-search-btn" onClick={()=>go('explore')}>Search</button>
+            <span style={{ paddingLeft:18,fontSize:18,opacity:0.5 }}>🔍</span>
+            <input placeholder="Search biryani, sushi, burgers, pizza…" style={{ border:'none',outline:'none',flex:1,padding:'16px 14px',fontSize:14,color:T.forest,background:'transparent' }} />
+            <button className="hero-search-btn" onClick={()=>go('explore')}>Find Food</button>
           </div>
           <div className="hero-pills">
-            {['🍕 Pizza','🍔 Burger','🍛 Biryani','🍜 Noodles','🍣 Sushi'].map(p=>(
+            {['🍕 Pizza','🍔 Burger','🍛 Biryani','🍜 Noodles','🍣 Sushi','🍰 Desserts'].map(p=>(
               <button key={p} className="hero-pill" onClick={()=>go('explore')}>{p}</button>
             ))}
           </div>
           <div className="hero-stat-bar">
-            {[['500+','Restaurants'],['30min','Avg Delivery'],['4.8★','Avg Rating']].map(([n,l])=>(
+            {[['500+','Restaurants'],['30 min','Avg Delivery'],['4.8 ★','Platform Rating'],['50k+','Happy Eaters']].map(([n,l])=>(
               <div key={l} className="hero-stat">
                 <div className="hero-stat-n">{n}</div>
                 <div className="hero-stat-l">{l}</div>
@@ -967,7 +1176,72 @@ function CategoryCarousel({ activeCat, setActiveCat, go }) {
   );
 }
 
-/* ─── TOP OFFERS SECTION ─────────────────────────────────── */
+/* ─── BANNER CAROUSEL ────────────────────────────────────── */
+const BANNER_SLIDES = [
+  { img:"https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1600&q=95", title:"Authentic Indian Flavours", sub:"Biryani, Butter Chicken & More", cta:"Order Indian →", color:"#E8742A" },
+  { img:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1600&q=95", title:"Burgers Worth the Wait", sub:"Crafted with premium beef & fresh buns", cta:"Explore Burgers →", color:"#D4A017" },
+  { img:"https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=1600&q=95", title:"Sushi Night, Done Right", sub:"Premium rolls from Sushi Bay", cta:"Order Sushi →", color:"#8FBA99" },
+  { img:"https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1600&q=95", title:"Pizza Like Never Before", sub:"Wood-fired, fresh, delivered hot", cta:"Get Pizza →", color:"#C45B1A" },
+];
+
+function BannerCarousel({ go }) {
+  const [cur, setCur] = useState(0);
+  const timerRef = useRef(null);
+  const total = BANNER_SLIDES.length;
+
+  const goPrev = () => { setCur(c => (c - 1 + total) % total); resetTimer(); };
+  const goNext = useCallback(() => { setCur(c => (c + 1) % total); }, [total]);
+  const resetTimer = () => { clearInterval(timerRef.current); timerRef.current = setInterval(goNext, 4500); };
+
+  useEffect(() => {
+    timerRef.current = setInterval(goNext, 4500);
+    return () => clearInterval(timerRef.current);
+  }, [goNext]);
+
+  // Touch/drag support
+  const touchStart = useRef(null);
+  const onTouchStart = (e) => { touchStart.current = e.touches[0].clientX; };
+  const onTouchEnd = (e) => {
+    if (touchStart.current === null) return;
+    const diff = touchStart.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 40) { diff > 0 ? goNext() : goPrev(); resetTimer(); }
+    touchStart.current = null;
+  };
+
+  return (
+    <div className="banner-carousel" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      <div className="banner-slides" style={{ transform:`translateX(-${cur*100}%)` }}>
+        {BANNER_SLIDES.map((s, i) => (
+          <div key={i} className={`banner-slide${cur===i?' active':''}`}>
+            <img src={s.img} alt={s.title} loading={i===0?"eager":"lazy"} />
+            <div className="banner-overlay">
+              <div className="banner-content">
+                <div style={{ fontSize:11,fontWeight:700,letterSpacing:'0.14em',textTransform:'uppercase',color:s.color,marginBottom:10,display:'flex',alignItems:'center',gap:6 }}>
+                  <span style={{ display:'inline-block',width:20,height:2,background:s.color,borderRadius:1 }} />
+                  🍃 Terra Eats Special
+                </div>
+                <h2 style={{ fontFamily:'Cormorant Garamond,serif',fontSize:'clamp(24px,3.5vw,52px)',fontWeight:700,lineHeight:1.05,marginBottom:12,color:'white',textShadow:'0 2px 16px rgba(0,0,0,0.4)' }}>{s.title}</h2>
+                <p style={{ fontSize:14,color:'rgba(255,255,255,0.80)',fontWeight:300,marginBottom:24,lineHeight:1.6 }}>{s.sub}</p>
+                <button onClick={()=>go('explore')} style={{ background:s.color,color:'white',border:'none',borderRadius:12,padding:'13px 28px',fontSize:13,fontWeight:700,cursor:'pointer',letterSpacing:'0.04em',transition:'all 0.2s',boxShadow:`0 6px 20px rgba(0,0,0,0.25)` }}
+                  onMouseEnter={e=>{ e.currentTarget.style.filter='brightness(1.12)'; e.currentTarget.style.transform='translateY(-2px)'; }}
+                  onMouseLeave={e=>{ e.currentTarget.style.filter='none'; e.currentTarget.style.transform='none'; }}>{s.cta}</button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <button className="banner-arrow prev" onClick={()=>{goPrev();}}>‹</button>
+      <button className="banner-arrow next" onClick={()=>{goNext();resetTimer();}}>›</button>
+      <div className="banner-dots">
+        {BANNER_SLIDES.map((_,i)=>(
+          <button key={i} className={`banner-dot${cur===i?' active':''}`} onClick={()=>{setCur(i);resetTimer();}} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
 function TopOffersSection({ go, goRestaurant }) {
   const offeredRests = RESTAURANTS.filter(r => r.discount);
   return (
@@ -1089,37 +1363,50 @@ function Footer({ go }) {
     { icon:'💼', label:'LinkedIn', url:'https://linkedin.com' },
     { icon:'📘', label:'Facebook', url:'https://facebook.com' },
   ];
+  const leaves = Array.from({length:6}, (_,i) => ({
+    left:`${10+i*16}%`, size:20+Math.random()*16, dur:`${8+i*3}s`, delay:`-${i*2}s`, bot:`${Math.random()*30}%`
+  }));
 
   return (
     <footer className="footer">
+      <div className="footer-leaves">
+        {leaves.map((l,i)=>(
+          <div key={i} className="footer-leaf" style={{ left:l.left, bottom:l.bot, fontSize:l.size, animationDuration:l.dur, animationDelay:l.delay }}>🍃</div>
+        ))}
+      </div>
       <div className="container">
         <div className="footer-grid">
-          {/* Col 1: Brand */}
-          <div className="footer-col">
-            <div className="footer-brand">🌿 Terra Eats</div>
-            <div className="footer-contact">
-              <div>📍 Mysuru, Karnataka, India</div>
-              <div>📱 +91 98765 43210</div>
-              <div>📧 hello@terraeats.in</div>
+          {/* Col 1: Brand + Contact */}
+          <div>
+            <div className="footer-brand">
+              <div style={{ width:32,height:32,background:'linear-gradient(135deg,#4A7C59,#8FBA99)',borderRadius:'50% 50% 50% 10%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:15,flexShrink:0 }}>🌿</div>
+              Terra Eats
             </div>
-            <div className="footer-eco">
-              <div className="footer-eco-title">🌱 Eco Pledge</div>
-              <p>1 order = 1 tree planted. 12,000 trees so far!</p>
+            <p style={{ fontSize:12,fontWeight:300,color:'rgba(200,223,197,0.65)',marginBottom:14,lineHeight:1.7,maxWidth:220 }}>
+              Farm-fresh food delivered with care. Sustainable, local, delicious.
+            </p>
+            <div style={{ fontSize:12,fontWeight:300,color:'rgba(200,223,197,0.6)',marginBottom:14,lineHeight:1.8 }}>
+              📍 Mysuru, Karnataka, India<br/>
+              📱 +91 98765 43210<br/>
+              📧 hello@terraeats.in
+            </div>
+            <div style={{ background:'rgba(143,186,153,0.07)',border:'1px solid rgba(200,223,197,0.1)',borderRadius:9,padding:'10px 14px',maxWidth:220 }}>
+              <div style={{ fontSize:10,fontWeight:700,color:'#8FBA99',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:3 }}>🌱 Eco Pledge</div>
+              <p style={{ fontSize:11,fontWeight:300,lineHeight:1.6,color:'rgba(200,223,197,0.7)' }}>1 order = 1 tree planted. 12,000 trees so far!</p>
             </div>
           </div>
 
           {/* Col 2: Navigate */}
-          <div className="footer-col">
+          <div>
             <div className="footer-title">Navigate</div>
-            <div className="footer-links">
-              {['Home','Explore','Restaurants','Offers','Track','Help'].map(l=>(
-                <span key={l} className="footer-link" onClick={()=>go(l.toLowerCase())}>{l}</span>
+            <div className="footer-nav-inline">
+              {['Home','Restaurants','Explore','Offers','Track','Help','About'].map(l=>(
+                <span key={l} onClick={()=>go(l.toLowerCase())}>{l}</span>
               ))}
             </div>
-            <div className="footer-title" style={{ marginTop: 20 }}>Follow Us</div>
             <div className="footer-socials">
               {socials.map(s=>(
-                <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer" className="footer-social-link" title={s.label}>
+                <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer" className="social-btn" title={s.label}>
                   {s.icon}
                 </a>
               ))}
@@ -1127,29 +1414,25 @@ function Footer({ go }) {
           </div>
 
           {/* Col 3: Company */}
-          <div className="footer-col">
+          <div>
             <div className="footer-title">Company</div>
-            <div className="footer-links">
-              {['About Us','Careers','Blog','Press','Sustainability','Partners'].map(l=>(
-                <span key={l} className="footer-link">{l}</span>
-              ))}
-            </div>
+            {['About Us','Careers','Blog','Press','Sustainability','Partners','Investors'].map(l=>(
+              <span key={l} className="footer-link">{l}</span>
+            ))}
           </div>
 
-          {/* Col 4: Legal */}
-          <div className="footer-col">
-            <div className="footer-title">Legal</div>
-            <div className="footer-links">
-              {['Privacy Policy','Terms of Service','Cookie Policy','Refund Policy','Accessibility'].map(l=>(
-                <span key={l} className="footer-link">{l}</span>
-              ))}
-            </div>
+          {/* Col 4: Support */}
+          <div>
+            <div className="footer-title">Support</div>
+            {['Help Center','Track Order','Returns & Refunds','Payment Issues','Contact Us','Report a Problem','Feedback'].map(l=>(
+              <span key={l} className="footer-link">{l}</span>
+            ))}
           </div>
         </div>
 
         <div className="footer-bar">
-          <span>© 2026 Terra Eats · All rights reserved</span>
-          <span>Made with 🌿 in Mysuru, India</span>
+          <span style={{ fontSize:11,fontWeight:300 }}>© 2026 Terra Eats · All rights reserved</span>
+          <span style={{ fontSize:11,fontWeight:300 }}>Made with 🌿 in Mysuru, India</span>
         </div>
       </div>
     </footer>
@@ -1291,54 +1574,44 @@ function RestaurantMenuPage({ restaurant, cart, addToCart, go }) {
 
 /* ─── LIVE TRACK MAP ─────────────────────────────────────── */
 function LiveTrackMap({ step }) {
-  const progress = step / 3;
-  const pts = ROUTE_POINTS;
-  const riderIdx = Math.floor(progress * (pts.length - 1));
-  const riderFrac = (progress * (pts.length - 1)) - riderIdx;
-  const p1 = pts[Math.min(riderIdx, pts.length-1)];
-  const p2 = pts[Math.min(riderIdx+1, pts.length-1)];
-  const riderX = p1.x + (p2.x - p1.x) * riderFrac;
-  const riderY = p1.y + (p2.y - p1.y) * riderFrac;
-  const pathD = pts.map((p,i)=>`${i===0?'M':'L'} ${p.x} ${p.y}`).join(' ');
+  const etaMin = step >= 3 ? 0 : 18 - step * 5;
+
+  // Real Google Maps embed showing Mysuru with route-style view
+  // Origin: Spice Garden area (MG Road, Mysuru)
+  // Destination: Central Mysuru residential area
+  const mapSrc = "https://www.google.com/maps/embed?pb=!1m28!1m12!1m3!1d15626.14!2d76.6488!3d12.3053!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!4m13!3e0!4m5!1s0x3baf6b4e6b5d5555%3A0x1!2sMG+Road%2C+Mysuru%2C+Karnataka!3m2!1d12.3075!2d76.6552!4m5!1s0x3baf6b4e6b5d5555%3A0x2!2sDevaraja+Mohalla%2C+Mysuru%2C+Karnataka!3m2!1d12.2999!2d76.6394!5e0!3m2!1sen!2sin!4v1710000000000!5m2!1sen!2sin";
 
   return (
-    <div className="track-live-map">
-      <svg className="track-map-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
-        <rect width="100" height="100" fill="#E8F5E4" />
-        {[10,20,30,40,50,60,70,80,90].map(v=>(
-          <g key={v}>
-            <line x1={v} y1="0" x2={v} y2="100" stroke="rgba(107,158,122,0.15)" strokeWidth="0.3"/>
-            <line x1="0" y1={v} x2="100" y2={v} stroke="rgba(107,158,122,0.15)" strokeWidth="0.3"/>
-          </g>
-        ))}
-        <rect x="5" y="55" width="30" height="18" rx="1.5" fill="rgba(107,158,122,0.08)" stroke="rgba(107,158,122,0.15)" strokeWidth="0.3"/>
-        <rect x="40" y="35" width="22" height="16" rx="1.5" fill="rgba(107,158,122,0.08)" stroke="rgba(107,158,122,0.15)" strokeWidth="0.3"/>
-        <rect x="68" y="10" width="20" height="16" rx="1.5" fill="rgba(107,158,122,0.08)" stroke="rgba(107,158,122,0.15)" strokeWidth="0.3"/>
-        <path d={pathD} fill="none" stroke="rgba(107,158,122,0.25)" strokeWidth="1.5" strokeDasharray="2,1.5"/>
-        {step > 0 && (
-          <path d={pts.slice(0, riderIdx+2).map((p,i)=>`${i===0?'M':'L'} ${p.x} ${p.y}`).join(' ')} fill="none" stroke={T.sage} strokeWidth="2" strokeLinecap="round"/>
-        )}
-        <circle cx={pts[0].x} cy={pts[0].y} r="3.5" fill={T.leaf} stroke="white" strokeWidth="1"/>
-        <text x={pts[0].x+4} y={pts[0].y+1} fontSize="3" fill={T.forest} fontWeight="bold">🏪 Restaurant</text>
-        <circle cx={pts[pts.length-1].x} cy={pts[pts.length-1].y} r="3.5" fill={T.sunset} stroke="white" strokeWidth="1"/>
-        <text x={pts[pts.length-1].x-14} y={pts[pts.length-1].y+1} fontSize="3" fill={T.forest} fontWeight="bold">📍 You</text>
-        {step >= 2 && (
-          <>
-            <circle cx={riderX} cy={riderY} r="5" fill="white" stroke={T.sage} strokeWidth="1.5" style={{ filter:'drop-shadow(0 2px 4px rgba(0,0,0,0.15))' }}/>
-            <text x={riderX} y={riderY+1.5} fontSize="4.5" textAnchor="middle">🛵</text>
-          </>
-        )}
-        {step < 2 && <text x="50" y="50" fontSize="5" textAnchor="middle" fill={T.sage} opacity="0.6">🗺️ Preparing order…</text>}
-      </svg>
-      <div style={{ position:'absolute',top:14,right:14,background:'rgba(255,255,255,0.92)',backdropFilter:'blur(8px)',borderRadius:10,padding:'8px 14px',boxShadow:'0 4px 16px rgba(0,0,0,0.1)' }}>
-        <div style={{ fontSize:11,fontWeight:700,color:T.forest,marginBottom:2 }}>Order #TE28741</div>
-        <div style={{ fontSize:10,color:T.moss }}>🏪 Spice Garden → 📍 Your Location</div>
-        {step >= 2 && <div style={{ fontSize:10,fontWeight:700,color:T.sage,marginTop:3 }}>🛵 Rider on the way!</div>}
+    <div className="realistic-map">
+      {/* Real Google Maps iframe */}
+      <iframe
+        src={mapSrc}
+        width="100%"
+        height="100%"
+        style={{ border:'none', display:'block' }}
+        allowFullScreen=""
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+        title="Live delivery tracking map"
+      />
+
+      {/* ETA chip overlaid on top of map */}
+      <div className="map-eta-chip">
+        {step >= 3 ? '✅ Delivered!' : `🛵 ETA: ${etaMin} min`}
       </div>
-      <div style={{ position:'absolute',bottom:14,left:14,background:'rgba(255,255,255,0.92)',backdropFilter:'blur(8px)',borderRadius:8,padding:'6px 12px' }}>
-        <div style={{ fontSize:10,color:T.moss }}>
-          <span style={{ display:'inline-block',width:8,height:8,borderRadius:'50%',background:T.sage,marginRight:5 }}/>Route: MG Road → Ashoka Rd → Your Door
-        </div>
+
+      {/* Status overlay badge */}
+      <div style={{
+        position: 'absolute', bottom: 14, left: 14, zIndex: 12,
+        background: 'white', borderRadius: 12, padding: '8px 14px',
+        boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
+        display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, fontWeight: 600, color: T.forest
+      }}>
+        <div style={{ width: 10, height: 10, borderRadius: '50%', background: step >= 2 ? '#4CAF50' : '#FFC107', animation: step >= 2 && step < 3 ? 'trackPulse 1.5s infinite' : 'none' }} />
+        {step === 0 && '📋 Order confirmed'}
+        {step === 1 && '👨‍🍳 Chef is preparing'}
+        {step === 2 && '🛵 Rider is on the way'}
+        {step === 3 && '🎉 Delivered!'}
       </div>
     </div>
   );
@@ -1359,6 +1632,9 @@ function HomePage({ go, addToCart, goRestaurant, goDish }) {
   return (
     <div style={{ paddingTop:70, minHeight:'100vh' }}>
       <VideoHero go={go} />
+
+      {/* Promo Banner Carousel */}
+      <BannerCarousel go={go} />
 
       {/* Categories */}
       <section className="section" style={{ background:T.snow, paddingBottom:60 }}>
@@ -1454,17 +1730,41 @@ function HomePage({ go, addToCart, goRestaurant, goDish }) {
         </div>
       </div>
 
-      {/* CTA */}
-      <section style={{ background:`linear-gradient(135deg, ${T.forest} 0%, ${T.leaf} 100%)`, padding:'80px 0', position:'relative', overflow:'hidden' }}>
-        <div style={{ position:'absolute',inset:0,background:'url("data:image/svg+xml,%3Csvg width=\'80\' height=\'80\' viewBox=\'0 0 80 80\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M40 4 C24 20 16 36 40 52 C64 36 56 20 40 4Z\' fill=\'%238FBA99\' fill-opacity=\'0.06\'/%3E%3C/svg%3E") repeat', opacity:1 }} />
-        <div className="container" style={{ textAlign:'center', position:'relative', zIndex:1 }}>
+      {/* CTA - Nature Banner */}
+      <section style={{ position:'relative', overflow:'hidden', minHeight:480, display:'flex', alignItems:'center' }}>
+        {/* High-quality nature background image */}
+        <div style={{ position:'absolute', inset:0, zIndex:0 }}>
+          <img
+            src="https://images.unsplash.com/photo-1448375240586-882707db888b?w=1600&q=90"
+            alt="Forest nature"
+            style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center' }}
+          />
+          {/* Strong gradient overlay for text readability */}
+          <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(10,35,20,0.88) 0%, rgba(26,58,42,0.72) 50%, rgba(10,35,20,0.65) 100%)' }} />
+        </div>
+        <div className="container" style={{ textAlign:'center', position:'relative', zIndex:1, padding:'96px 28px' }}>
           <Rv>
-            <div style={{ fontSize:48,marginBottom:16 }}>🌱</div>
-            <h2 style={{ fontFamily:'Cormorant Garamond,serif',fontSize:'clamp(32px,4vw,56px)',fontWeight:700,color:'white',marginBottom:14,lineHeight:1.1 }}>
-              Order today,<br/>save the planet tomorrow
+            <div style={{ fontSize:52, marginBottom:16, filter:'drop-shadow(0 4px 12px rgba(0,0,0,0.4))' }}>🌱</div>
+            <h2 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:'clamp(34px,4.5vw,64px)', fontWeight:700, color:'white', marginBottom:16, lineHeight:1.05, textShadow:'0 3px 24px rgba(0,0,0,0.5)' }}>
+              Order today,<br/><em style={{ fontStyle:'italic', color:T.fern }}>save the planet tomorrow</em>
             </h2>
-            <p style={{ color:T.mist,fontSize:16,fontWeight:300,marginBottom:32,maxWidth:480,margin:'0 auto 32px' }}>We plant one tree for every 10 orders. Join 50,000+ eco-conscious food lovers.</p>
-            <button className="btn-nature" style={{ fontSize:15,padding:'16px 36px' }} onClick={()=>go('explore')}>Start Ordering 🍃</button>
+            <p style={{ color:'rgba(220,240,220,0.92)', fontSize:17, fontWeight:300, marginBottom:36, maxWidth:520, margin:'0 auto 36px', lineHeight:1.7, textShadow:'0 1px 8px rgba(0,0,0,0.4)' }}>We plant one tree for every 10 orders. Join 50,000+ eco-conscious food lovers making a difference.</p>
+            <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap' }}>
+              <button className="btn-nature" style={{ fontSize:15, padding:'16px 40px', boxShadow:'0 8px 32px rgba(0,0,0,0.3)' }} onClick={()=>go('explore')}>Start Ordering 🍃</button>
+              <button onClick={()=>go('about')} style={{ background:'rgba(255,255,255,0.12)', backdropFilter:'blur(10px)', border:'1.5px solid rgba(255,255,255,0.3)', color:'white', borderRadius:12, padding:'16px 32px', fontSize:14, fontWeight:600, cursor:'pointer', transition:'all 0.25s' }}
+                onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.22)'}
+                onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.12)'}>
+                Our Pledge →
+              </button>
+            </div>
+            <div style={{ marginTop:40, display:'flex', gap:40, justifyContent:'center', flexWrap:'wrap' }}>
+              {[['12,000+','Trees Planted'],['50k+','Eco Members'],['100%','Biodegradable Packs']].map(([n,l])=>(
+                <div key={l} style={{ textAlign:'center' }}>
+                  <div style={{ fontFamily:'Cormorant Garamond,serif', fontSize:32, fontWeight:700, color:'white', lineHeight:1 }}>{n}</div>
+                  <div style={{ fontSize:11, color:'rgba(200,223,197,0.75)', textTransform:'uppercase', letterSpacing:'0.1em', marginTop:4 }}>{l}</div>
+                </div>
+              ))}
+            </div>
           </Rv>
         </div>
       </section>
@@ -1492,7 +1792,11 @@ function ExplorePage({ go, addToCart, goRestaurant, initCat }) {
   return (
     <div className="page">
       <div className="explore-hero">
-        <div className="container">
+        <div className="explore-hero-bg">
+          <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1400&q=85" alt="Food spread" loading="eager" />
+          <div style={{ position:'absolute',inset:0,background:'linear-gradient(135deg, rgba(247,243,236,0.96) 0%, rgba(237,230,214,0.90) 55%, rgba(200,223,197,0.55) 100%)' }} />
+        </div>
+        <div className="container" style={{ position:'relative',zIndex:1 }}>
           <Rv>
             <span className="section-label">Discover</span>
             <h1 className="serif" style={{ fontSize:'clamp(36px,5vw,60px)',fontWeight:700,color:T.forest,lineHeight:1.1,marginBottom:8 }}>Explore Restaurants</h1>
@@ -1568,8 +1872,13 @@ function ExplorePage({ go, addToCart, goRestaurant, initCat }) {
 function AboutPage({ go }) {
   return (
     <div className="page">
-      <div style={{ background:`linear-gradient(135deg, ${T.forest}, ${T.leaf})`, padding:'80px 0 100px', position:'relative', overflow:'hidden' }}>
-        <div style={{ position:'absolute',inset:0,backgroundImage:`url("data:image/svg+xml,%3Csvg width='80' height='80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 4 C20 24 12 44 40 60 C68 44 60 24 40 4Z' fill='%238FBA99' fill-opacity='0.07'/%3E%3C/svg%3E")`,backgroundSize:'80px' }} />
+      <div style={{ position:'relative', overflow:'hidden', minHeight:460, display:'flex', alignItems:'center' }}>
+        {/* Banner image */}
+        <div style={{ position:'absolute', inset:0, zIndex:0 }}>
+          <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1400&q=90" alt="Restaurant kitchen" style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 50%' }} />
+          <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(10,35,20,0.88) 0%, rgba(26,58,42,0.70) 50%, rgba(10,35,20,0.55) 100%)' }} />
+        </div>
+        <div style={{ padding:'80px 0 100px', position:'relative', zIndex:1, width:'100%' }}>
         <div className="container" style={{ position:'relative',zIndex:1 }}>
           <Rv>
             <span className="section-label" style={{ color:T.fern }}>Our Story</span>
@@ -1580,6 +1889,7 @@ function AboutPage({ go }) {
               Terra Eats was born from a simple belief: that food should nourish both body and planet. We partner with responsible restaurants and local farmers to bring you meals that feel good — truly good.
             </p>
           </Rv>
+        </div>
         </div>
       </div>
 
@@ -1657,12 +1967,39 @@ function CartPage({ cart, setCart, go }) {
   const [msg, setMsg] = useState('');
   const [showAddrModal, setShowAddrModal] = useState(false);
   const { setUser } = useAuth();
-  const CODES = {TERRA30:1,FIRST100:1,FREEDEL:1,NIGHT20:1};
+  const CODES = {TERRA30:'percent30',FIRST100:'flat100',FREEDEL:'delivery',NIGHT20:'percent20',FLAT50:'flat50',FIRSTORDER:'percent15'};
   const chQ = (id,d) => setCart(p=>p.map(c=>c.id===id?{...c,qty:c.qty+d}:c).filter(c=>c.qty>0));
   const sub = cart.reduce((s,c)=>s+c.price*c.qty,0);
   const del = sub>299?0:29; const tax=Math.round(sub*.05);
-  const disc=applied?Math.round(sub*.1):0; const total=sub+del+tax-disc;
-  const applyP=()=>{ if(CODES[promo.toUpperCase()]){setApplied(true);setMsg('✓ 10% discount applied!');}else{setMsg('Invalid code. Try TERRA30');setApplied(false);}};
+  const getDiscount = () => {
+    if (!applied || !CODES[promo.toUpperCase()]) return 0;
+    const type = CODES[promo.toUpperCase()];
+    if (type==='percent30') return Math.round(sub*0.30);
+    if (type==='flat100') return 100;
+    if (type==='delivery') return del;
+    if (type==='percent20') return Math.round(sub*0.20);
+    if (type==='flat50') return 50;
+    if (type==='percent15') return Math.round(sub*0.15);
+    return 0;
+  };
+  const disc = getDiscount();
+  const total = Math.max(0, sub + (applied && CODES[promo.toUpperCase()]==='delivery' ? 0 : del) + tax - disc);
+  const applyP=()=>{
+    const code = promo.toUpperCase();
+    if(CODES[code]){
+      setApplied(true);
+      const type = CODES[code];
+      if(type==='percent30') setMsg('✅ 30% discount applied! You\'re saving big.');
+      else if(type==='flat100') setMsg('✅ ₹100 off applied! Welcome to Terra Eats.');
+      else if(type==='delivery') setMsg('✅ Free delivery unlocked! No delivery charge.');
+      else if(type==='percent20') setMsg('✅ 20% night owl discount applied!');
+      else if(type==='flat50') setMsg('✅ ₹50 flat discount applied!');
+      else if(type==='percent15') setMsg('✅ 15% first order discount applied!');
+    } else {
+      setMsg('❌ Invalid code. Try TERRA30, FLAT50, or FIRSTORDER');
+      setApplied(false);
+    }
+  };;
 
   const placeO = () => {
     if (!user) { go('login'); return; }
@@ -1688,11 +2025,17 @@ function CartPage({ cart, setCart, go }) {
       />
     )}
     <div className="page">
-      <div className="explore-hero">
-        <div className="container">
-          <span className="section-label">Checkout</span>
-          <h1 className="serif" style={{ fontSize:'clamp(30px,4vw,52px)',fontWeight:700,color:T.forest }}>Your Cart</h1>
-          <p style={{ color:T.moss,fontSize:14,marginTop:6 }}>{cart.reduce((s,c)=>s+c.qty,0)} item{cart.reduce((s,c)=>s+c.qty,0)!==1?'s':''} ready to order</p>
+      <div style={{ position:'relative', overflow:'hidden' }}>
+        <div style={{ position:'absolute', inset:0, zIndex:0 }}>
+          <img src="https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=1400&q=85" alt="Food cart" style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 55%' }} />
+          <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(247,243,236,0.97) 0%, rgba(237,230,214,0.93) 60%, rgba(200,223,197,0.60) 100%)' }} />
+        </div>
+        <div className="explore-hero" style={{ background:'transparent', borderBottom:'none', position:'relative', zIndex:1 }}>
+          <div className="container">
+            <span className="section-label">Checkout</span>
+            <h1 className="serif" style={{ fontSize:'clamp(30px,4vw,52px)',fontWeight:700,color:T.forest }}>Your Cart</h1>
+            <p style={{ color:T.moss,fontSize:14,marginTop:6 }}>{cart.reduce((s,c)=>s+c.qty,0)} item{cart.reduce((s,c)=>s+c.qty,0)!==1?'s':''} ready to order</p>
+          </div>
         </div>
       </div>
       <section className="section" style={{ paddingTop:40 }}>
@@ -1725,7 +2068,7 @@ function CartPage({ cart, setCart, go }) {
                   <input className="field" placeholder="e.g. TERRA30" value={promo} onChange={e=>setPromo(e.target.value.toUpperCase())} />
                   <button className="btn-primary" style={{ padding:'0 18px',whiteSpace:'nowrap',borderRadius:12 }} onClick={applyP}>Apply</button>
                 </div>
-                {msg&&<p style={{ marginTop:9,fontSize:12,color:applied?T.leaf:'#E53E3E',fontWeight:600 }}>{msg}</p>}
+                {msg&&<p style={{ marginTop:9,fontSize:12,color:applied?'#4CAF50':'#E53E3E',fontWeight:600 }}>{msg}</p>}
               </div>
               <div className="cart-summary">
                 <h3 className="serif" style={{ fontSize:22,fontWeight:700,color:T.forest,marginBottom:20 }}>Bill Summary</h3>
@@ -1783,11 +2126,17 @@ function TrackPage({ go }) {
 
   return (
     <div className="page">
-      <div className="explore-hero">
-        <div className="container">
-          <span className="section-label">Live Tracking</span>
-          <h1 className="serif" style={{ fontSize:'clamp(30px,4vw,52px)',fontWeight:700,color:T.forest }}>Order Tracking</h1>
-          <p style={{ color:T.moss,fontSize:14,marginTop:6 }}>Order #TE28741 · Spice Garden · Estimated {step===3?'Delivered ✓':'18 min'}</p>
+      <div style={{ position:'relative', overflow:'hidden' }}>
+        <div style={{ position:'absolute', inset:0, zIndex:0 }}>
+          <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1400&q=90" alt="Delivery tracking" style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 60%' }} />
+          <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(247,243,236,0.97) 0%, rgba(237,230,214,0.92) 60%, rgba(200,223,197,0.65) 100%)' }} />
+        </div>
+        <div className="explore-hero" style={{ background:'transparent', borderBottom:'none', position:'relative', zIndex:1 }}>
+          <div className="container">
+            <span className="section-label">Live Tracking</span>
+            <h1 className="serif" style={{ fontSize:'clamp(30px,4vw,52px)',fontWeight:700,color:T.forest }}>Order Tracking</h1>
+            <p style={{ color:T.moss,fontSize:14,marginTop:6 }}>Order #TE28741 · Spice Garden · Estimated {step===3?'Delivered ✓':'18 min'}</p>
+          </div>
         </div>
       </div>
       <section className="section" style={{ paddingTop:40 }}>
@@ -1847,40 +2196,135 @@ function TrackPage({ go }) {
 }
 
 /* ─── OFFERS PAGE ─────────────────────────────────────────── */
+const COUPON_DETAILS = {
+  TERRA30:   { discount:'30% off', type:'percent', value:30, minOrder:500,  desc:'30% off on orders above ₹500', saving:'Save up to ₹180' },
+  FIRST100:  { discount:'₹100 off', type:'flat', value:100, minOrder:0,    desc:'₹100 off on your very first order', saving:'Save ₹100' },
+  FREEDEL:   { discount:'Free Delivery', type:'delivery', value:29, minOrder:0, desc:'Zero delivery charges on any order', saving:'Save ₹29' },
+  NIGHT20:   { discount:'20% off', type:'percent', value:20, minOrder:0,   desc:'20% off on orders after 9 PM', saving:'Save up to ₹120' },
+  FLAT50:    { discount:'₹50 off', type:'flat', value:50, minOrder:199,    desc:'Flat ₹50 off on any order above ₹199', saving:'Save ₹50' },
+  FIRSTORDER:{ discount:'15% off', type:'percent', value:15, minOrder:0,   desc:'15% off for first time app users', saving:'Save up to ₹90' },
+};
+
+const OFFERS_FULL = [
+  {code:"TERRA30",   title:"Weekend Feast",   expires:"Valid this weekend", color:T.sage},
+  {code:"FIRST100",  title:"Welcome Gift",    expires:"New users only",     color:T.earth},
+  {code:"FREEDEL",   title:"Free Delivery",   expires:"This week",          color:T.moss},
+  {code:"NIGHT20",   title:"Night Owl",       expires:"Daily 9PM–1AM",      color:T.dusk},
+  {code:"FLAT50",    title:"Flash Deal",      expires:"Limited time",       color:T.sunset},
+  {code:"FIRSTORDER",title:"First Timer",     expires:"One-time use",       color:T.amber},
+];
+
 function OffersPage({ go }) {
   const [copied, setCopied] = useState(null);
-  const copy = (code) => { setCopied(code); setTimeout(()=>setCopied(null),2000); };
+  const [claimed, setClaimed] = useState({});
+  const [claimMsg, setClaimMsg] = useState('');
+
+  const copy = (code) => {
+    navigator.clipboard?.writeText(code).catch(()=>{});
+    setCopied(code);
+    setTimeout(()=>setCopied(null),2000);
+  };
+
+  const claim = (code) => {
+    if (claimed[code]) return;
+    setClaimed(c=>({...c,[code]:true}));
+    setClaimMsg(`✅ Coupon "${code}" claimed! Use it at checkout.`);
+    setTimeout(()=>setClaimMsg(''),3500);
+  };
 
   return (
     <div className="page">
-      <div style={{ background:`linear-gradient(135deg, ${T.leaf}, ${T.forest})`, padding:'70px 0 80px', position:'relative', overflow:'hidden' }}>
-        <div style={{ position:'absolute',inset:0,background:'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M30 2 L36 18 L54 18 L40 28 L46 46 L30 36 L14 46 L20 28 L6 18 L24 18Z\' fill=\'%238FBA99\' fill-opacity=\'0.07\'/%3E%3C/svg%3E") repeat' }} />
+      <div style={{ position:'relative', overflow:'hidden' }}>
+        {/* Offers banner image */}
+        <div style={{ position:'absolute', inset:0, zIndex:0 }}>
+          <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1400&q=90" alt="Food offers" style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 55%' }} />
+          <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(10,35,20,0.90) 0%, rgba(45,90,61,0.78) 50%, rgba(10,35,20,0.70) 100%)' }} />
+        </div>
+        <div style={{ padding:'70px 0 88px', position:'relative', zIndex:1 }}>
         <div className="container" style={{ textAlign:'center',position:'relative',zIndex:1 }}>
           <Rv>
-            <div style={{ fontSize:48,marginBottom:14 }}>🏷️</div>
+            <div style={{ fontSize:52,marginBottom:14, filter:'drop-shadow(0 4px 12px rgba(0,0,0,0.4))' }}>🏷️</div>
             <h1 style={{ fontFamily:'Cormorant Garamond,serif',fontSize:'clamp(36px,5vw,64px)',fontWeight:700,color:'white',lineHeight:1.1,marginBottom:12 }}>Exclusive Offers</h1>
-            <p style={{ color:T.mist,fontSize:15,fontWeight:300 }}>Save more, eat better — click to copy any code</p>
+            <p style={{ color:T.mist,fontSize:15,fontWeight:300,marginBottom:16 }}>Claim a coupon, then apply it at checkout for instant savings</p>
+            <div style={{ display:'flex',gap:10,justifyContent:'center',flexWrap:'wrap' }}>
+              {['FLAT50','FIRSTORDER'].map(code=>(
+                <div key={code} style={{ background:'rgba(255,255,255,0.12)',backdropFilter:'blur(8px)',borderRadius:10,padding:'8px 18px',display:'inline-flex',alignItems:'center',gap:8,border:'1px solid rgba(255,255,255,0.2)' }}>
+                  <span style={{ fontSize:11,color:T.mist }}>Try:</span>
+                  <span style={{ fontWeight:800,letterSpacing:'0.1em',color:'white',fontSize:13 }}>{code}</span>
+                </div>
+              ))}
+            </div>
           </Rv>
         </div>
+        </div>
       </div>
+
+      {/* Global claim message */}
+      {claimMsg && (
+        <div style={{ position:'fixed',top:84,left:'50%',transform:'translateX(-50%)',background:T.leaf,color:'white',padding:'12px 24px',borderRadius:30,fontSize:13,fontWeight:600,zIndex:9999,boxShadow:`0 8px 30px rgba(0,0,0,0.2)`,whiteSpace:'nowrap',animation:'toastIn 0.3s ease both' }}>
+          {claimMsg}
+        </div>
+      )}
+
       <section className="section" style={{ paddingTop:48 }}>
         <div className="container">
-          <div className="offers-grid">
-            {OFFERS.map((o,i)=>(
-              <Rv key={o.code} delay={i*.07}>
-                <div className="offer-card" style={{ borderLeft:`4px solid ${o.color}` }}>
-                  <span className="offer-code">{o.code}</span>
-                  <h3 style={{ fontFamily:'Cormorant Garamond,serif',fontSize:24,fontWeight:700,color:T.forest,marginBottom:8 }}>{o.title}</h3>
-                  <p style={{ color:T.moss,fontSize:14,fontWeight:300,lineHeight:1.6,marginBottom:8 }}>{o.desc}</p>
-                  <p style={{ color:o.color,fontSize:13,fontWeight:700 }}>{o.saving}</p>
-                  <p style={{ color:T.moss,fontSize:11,marginTop:6 }}>{o.expires}</p>
-                  <button className="offer-copy" onClick={()=>copy(o.code)} style={{ background:copied===o.code?o.color:undefined,color:copied===o.code?'white':undefined,borderColor:copied===o.code?o.color:undefined }}>
-                    {copied===o.code?'✓ Copied!':'Copy Code'}
-                  </button>
+          {/* How it works */}
+          <Rv>
+            <div style={{ background:'linear-gradient(135deg, rgba(74,124,89,0.08), rgba(107,158,122,0.05))',borderRadius:16,padding:'20px 24px',marginBottom:40,border:`1px solid rgba(107,158,122,0.2)`,display:'flex',gap:32,flexWrap:'wrap',justifyContent:'center' }}>
+              {[['1️⃣','Claim','Click "Claim Coupon" on any offer below'],['2️⃣','Copy Code','Copy the coupon code to your clipboard'],['3️⃣','Apply','Paste it in the promo field at Cart/Checkout']].map(([num,title,desc])=>(
+                <div key={title} style={{ textAlign:'center',flex:'1',minWidth:160 }}>
+                  <div style={{ fontSize:24,marginBottom:6 }}>{num}</div>
+                  <div style={{ fontWeight:700,color:T.forest,fontSize:14,marginBottom:4 }}>{title}</div>
+                  <div style={{ color:T.moss,fontSize:12,fontWeight:300 }}>{desc}</div>
                 </div>
-              </Rv>
-            ))}
+              ))}
+            </div>
+          </Rv>
+
+          <div className="offers-grid">
+            {OFFERS_FULL.map((o,i)=>{
+              const det = COUPON_DETAILS[o.code] || {};
+              const isClaimed = claimed[o.code];
+              return (
+                <Rv key={o.code} delay={i*.07}>
+                  <div className="offer-card" style={{ borderLeft:`4px solid ${o.color}`, position:'relative', overflow:'hidden' }}>
+                    {isClaimed && (
+                      <div style={{ position:'absolute',top:12,right:12,background:'#4CAF50',color:'white',fontSize:9,fontWeight:700,padding:'3px 9px',borderRadius:10,letterSpacing:'0.06em' }}>✓ CLAIMED</div>
+                    )}
+                    <span className="offer-code">{o.code}</span>
+                    <h3 style={{ fontFamily:'Cormorant Garamond,serif',fontSize:24,fontWeight:700,color:T.forest,marginBottom:8 }}>{o.title}</h3>
+                    <p style={{ color:T.moss,fontSize:14,fontWeight:300,lineHeight:1.6,marginBottom:6 }}>{det.desc}</p>
+                    <p style={{ color:o.color,fontSize:13,fontWeight:700,marginBottom:4 }}>{det.saving}</p>
+                    {det.minOrder > 0 && <p style={{ color:T.moss,fontSize:11,marginBottom:4 }}>Min order: ₹{det.minOrder}</p>}
+                    <p style={{ color:T.moss,fontSize:11,marginBottom:12 }}>⏱ {o.expires}</p>
+
+                    <button
+                      className={`offer-claim-btn${isClaimed?' claimed':''}`}
+                      onClick={()=>claim(o.code)}
+                      style={{ background:isClaimed?'#4CAF50':`linear-gradient(135deg, ${o.color}, ${T.leaf})` }}
+                      disabled={isClaimed}
+                    >
+                      {isClaimed ? '✅ Coupon Claimed!' : '🎁 Claim Coupon'}
+                    </button>
+
+                    <button className="offer-copy" onClick={()=>copy(o.code)} style={{ background:copied===o.code?o.color:undefined,color:copied===o.code?'white':undefined,borderColor:copied===o.code?o.color:undefined }}>
+                      {copied===o.code?'✓ Copied to clipboard!':'📋 Copy Code'}
+                    </button>
+                  </div>
+                </Rv>
+              );
+            })}
           </div>
+
+          {/* How to apply at cart note */}
+          <Rv>
+            <div style={{ marginTop:48,background:T.snow,borderRadius:16,padding:'24px 28px',border:`1px solid rgba(107,158,122,0.15)`,textAlign:'center' }}>
+              <div style={{ fontSize:32,marginBottom:12 }}>🛒</div>
+              <h3 style={{ fontFamily:'Cormorant Garamond,serif',fontSize:24,fontWeight:700,color:T.forest,marginBottom:8 }}>Ready to save?</h3>
+              <p style={{ color:T.moss,fontSize:14,fontWeight:300,marginBottom:20,maxWidth:480,margin:'0 auto 20px' }}>Add items to your cart and enter a coupon code in the "Apply Promo" section. Active codes: <strong style={{color:T.leaf}}>TERRA30, FIRST100, FREEDEL, NIGHT20, FLAT50, FIRSTORDER</strong></p>
+              <button className="btn-nature" onClick={()=>go('explore')}>Start Ordering →</button>
+            </div>
+          </Rv>
         </div>
       </section>
       <Footer go={go} />
@@ -1900,13 +2344,19 @@ function HelpPage({ go }) {
 
   return (
     <div className="page">
-      <div style={{ background:T.sand, padding:'70px 0 80px', borderBottom:`1px solid rgba(107,158,122,0.12)` }}>
+      <div style={{ position:'relative', overflow:'hidden' }}>
+        <div style={{ position:'absolute', inset:0, zIndex:0 }}>
+          <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1400&q=85" alt="Support" style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 45%' }} />
+          <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(237,230,214,0.97) 0%, rgba(247,243,236,0.94) 60%, rgba(200,223,197,0.6) 100%)' }} />
+        </div>
+        <div style={{ background:'transparent', padding:'72px 0 80px', borderBottom:`1px solid rgba(107,158,122,0.12)`, position:'relative', zIndex:1 }}>
         <div className="container">
           <Rv>
             <span className="section-label">Support</span>
             <h1 className="serif" style={{ fontSize:'clamp(36px,5vw,60px)',fontWeight:700,color:T.forest,lineHeight:1.1,marginBottom:12 }}>How can we help?</h1>
             <p style={{ color:T.moss,fontSize:15,fontWeight:300 }}>Browse FAQs or reach out — our team responds in under 5 minutes.</p>
           </Rv>
+        </div>
         </div>
       </div>
       <section className="section" style={{ paddingTop:56 }}>
@@ -1940,7 +2390,7 @@ function HelpPage({ go }) {
                 <div key={i} className={`faq-item${hovered===i?' hovered':''}`}
                   onMouseEnter={()=>handleMouseEnter(i)} onMouseLeave={handleMouseLeave} onClick={()=>handleClick(i)}>
                   <div className="faq-highlight-bar" />
-                  <button className="faq-q" style={{ cursor:'default' }}>
+                  <button className="faq-q" style={{ cursor:'pointer' }}>
                     <span>{faq.q}</span>
                     <span className={`faq-icon${open===i?' open':''}`}>+</span>
                   </button>
@@ -2000,11 +2450,22 @@ function LoginPage({ go }) {
       )}
       <div className="login-page" style={{ paddingTop:70, minHeight:'100vh' }}>
         <div className="login-art">
-          <div className="login-art-img"><img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=90" alt="" /></div>
+          <div className="login-art-img">
+            <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=900&q=95" alt="" />
+          </div>
+          <div style={{ position:'absolute', inset:0, background:'linear-gradient(160deg, rgba(10,35,20,0.78) 0%, rgba(26,58,42,0.55) 50%, rgba(10,35,20,0.70) 100%)' }} />
           <div className="login-art-content">
-            <div style={{ fontSize:60, marginBottom:20 }}>🌿</div>
-            <h2 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:48, fontWeight:700, lineHeight:1.1, marginBottom:16 }}>Nature's table<br/><em>awaits you</em></h2>
-            <p style={{ color:T.mist, fontSize:14, fontWeight:300, maxWidth:300, margin:'0 auto' }}>Join 50,000+ food lovers who order consciously and eat beautifully.</p>
+            <div style={{ fontSize:64, marginBottom:20, filter:'drop-shadow(0 6px 18px rgba(0,0,0,0.4))' }}>🌿</div>
+            <h2 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:52, fontWeight:700, lineHeight:1.08, marginBottom:18, textShadow:'0 3px 20px rgba(0,0,0,0.5)' }}>Nature's table<br/><em style={{ fontStyle:'italic', color:T.fern }}>awaits you</em></h2>
+            <p style={{ color:'rgba(200,223,197,0.85)', fontSize:15, fontWeight:300, maxWidth:300, margin:'0 auto 36px', lineHeight:1.75 }}>Join 50,000+ food lovers who order consciously and eat beautifully.</p>
+            <div style={{ display:'flex', gap:24, justifyContent:'center' }}>
+              {[['🌱','Eco-First'],['⚡','30-Min Delivery'],['⭐','Top Rated']].map(([icon,label])=>(
+                <div key={label} style={{ textAlign:'center' }}>
+                  <div style={{ fontSize:22, marginBottom:5, filter:'drop-shadow(0 2px 8px rgba(0,0,0,0.3))' }}>{icon}</div>
+                  <div style={{ fontSize:10, fontWeight:700, color:'rgba(200,223,197,0.8)', textTransform:'uppercase', letterSpacing:'0.08em' }}>{label}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
         <div className="login-form-side">
@@ -2108,7 +2569,12 @@ function CheckoutPage({ cart, setCart, go }) {
 
   return (
     <div className="page">
-      <div className="explore-hero">
+      <div style={{ position:'relative', overflow:'hidden' }}>
+        <div style={{ position:'absolute', inset:0, zIndex:0 }}>
+          <img src="https://images.unsplash.com/photo-1476224203421-9ac39bcb3b27?w=1400&q=85" alt="Checkout food" style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 40%' }} />
+          <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(247,243,236,0.97) 0%, rgba(237,230,214,0.93) 60%, rgba(200,223,197,0.60) 100%)' }} />
+        </div>
+        <div className="explore-hero" style={{ background:'transparent', borderBottom:'none', position:'relative', zIndex:1 }}>
         <div className="container">
           <button style={{ background:'none',border:'none',cursor:'pointer',fontSize:13,color:T.sage,fontWeight:600,padding:'0 0 12px',display:'flex',alignItems:'center',gap:6 }} onClick={()=>go('cart')}>
             ← Back to Cart
@@ -2116,6 +2582,7 @@ function CheckoutPage({ cart, setCart, go }) {
           <span className="section-label">Final Step</span>
           <h1 className="serif" style={{ fontSize:'clamp(30px,4vw,52px)',fontWeight:700,color:T.forest }}>Checkout</h1>
           <p style={{ color:T.moss,fontSize:14,marginTop:6 }}>Review your order and enter delivery details</p>
+        </div>
         </div>
       </div>
 
@@ -2242,9 +2709,14 @@ function RestaurantsPage({ go, goRestaurant }) {
 
   return (
     <div className="page">
-      {/* Hero */}
-      <div style={{ background: `linear-gradient(135deg, ${T.forest}, ${T.leaf})`, padding: '80px 0 90px', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 4 C20 24 12 44 40 60 C68 44 60 24 40 4Z' fill='%238FBA99' fill-opacity='0.07'/%3E%3C/svg%3E")`, backgroundSize: '80px' }} />
+      {/* Hero with banner image */}
+      <div style={{ position: 'relative', overflow: 'hidden' }}>
+        {/* Banner image */}
+        <div style={{ position:'absolute', inset:0, zIndex:0 }}>
+          <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1400&q=90" alt="Restaurant" style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 60%' }} />
+          <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(10,35,20,0.88) 0%, rgba(26,58,42,0.75) 50%, rgba(10,35,20,0.60) 100%)' }} />
+        </div>
+        <div style={{ padding: '88px 0 96px', position: 'relative', zIndex:1 }}>
         <div className="container" style={{ position: 'relative', zIndex: 1 }}>
           <Rv>
             <span className="section-label" style={{ color: T.fern }}>🏪 All Restaurants</span>
@@ -2255,7 +2727,7 @@ function RestaurantsPage({ go, goRestaurant }) {
           </Rv>
           {/* Search bar */}
           <Rv delay={0.08}>
-            <div style={{ background: 'white', borderRadius: 16, padding: '6px 6px 6px 18px', display: 'flex', alignItems: 'center', gap: 10, maxWidth: 640, boxShadow: `0 12px 40px rgba(0,0,0,0.15)` }}>
+            <div style={{ background: 'white', borderRadius: 16, padding: '6px 6px 6px 18px', display: 'flex', alignItems: 'center', gap: 10, maxWidth: 640, boxShadow: `0 12px 40px rgba(0,0,0,0.25)` }}>
               <span style={{ fontSize: 20 }}>🔍</span>
               <input
                 value={search} onChange={e => setSearch(e.target.value)}
@@ -2266,6 +2738,7 @@ function RestaurantsPage({ go, goRestaurant }) {
               <button className="btn-nature" style={{ padding: '12px 24px', fontSize: 13, borderRadius: 12 }}>Search</button>
             </div>
           </Rv>
+        </div>
         </div>
       </div>
 
@@ -2392,23 +2865,32 @@ function DishRecommendationsPage({ go, goRestaurant, addToCart, dishName }) {
 
   return (
     <div className="page">
-      {/* Hero */}
-      <div style={{ background: `linear-gradient(135deg, ${T.earth}, ${T.bark})`, padding: '80px 0 90px', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='20' fill='%23D4A017' fill-opacity='0.07'/%3E%3C/svg%3E")`, backgroundSize: '60px' }} />
+      {/* Hero with banner */}
+      <div style={{ position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position:'absolute', inset:0, zIndex:0 }}>
+          <img
+            src={dishItems[0]?.img || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1400&q=85"}
+            alt={dishName}
+            style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 50%' }}
+          />
+          <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(10,35,20,0.86) 0%, rgba(45,90,61,0.72) 50%, rgba(10,35,20,0.55) 100%)' }} />
+        </div>
+        <div style={{ padding: '88px 0 100px', position: 'relative', zIndex: 1 }}>
         <div className="container" style={{ position: 'relative', zIndex: 1 }}>
           <Rv>
             <button
-              style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', color: 'white', borderRadius: 10, padding: '8px 18px', fontSize: 13, cursor: 'pointer', marginBottom: 20, fontWeight: 600 }}
+              style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)', color: 'white', borderRadius: 10, padding: '8px 18px', fontSize: 13, cursor: 'pointer', marginBottom: 20, fontWeight: 600, backdropFilter:'blur(8px)' }}
               onClick={() => go('home')}
             >← Back to Home</button>
-            <span style={{ display: 'inline-block', background: 'rgba(232,116,42,0.85)', color: 'white', fontSize: 10, fontWeight: 700, padding: '4px 12px', borderRadius: 6, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>🍽️ Dish Finder</span>
-            <h1 style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: 'clamp(36px,5vw,68px)', fontWeight: 700, color: 'white', lineHeight: 1.1, marginBottom: 10 }}>
+            <span style={{ display: 'inline-block', background: 'rgba(232,116,42,0.9)', color: 'white', fontSize: 10, fontWeight: 700, padding: '4px 12px', borderRadius: 6, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>🍽️ Dish Finder</span>
+            <h1 style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: 'clamp(36px,5vw,68px)', fontWeight: 700, color: 'white', lineHeight: 1.1, marginBottom: 10, textShadow:'0 2px 20px rgba(0,0,0,0.4)' }}>
               {dishName}
             </h1>
-            <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 15, fontWeight: 300 }}>
+            <p style={{ color: 'rgba(220,240,220,0.88)', fontSize: 15, fontWeight: 300 }}>
               {restaurants.length > 0 ? `Available at ${restaurants.length} restaurant${restaurants.length !== 1 ? 's' : ''} near you` : 'Searching across our partner restaurants'}
             </p>
           </Rv>
+        </div>
         </div>
       </div>
 
@@ -2544,87 +3026,107 @@ function DishRecommendationsPage({ go, goRestaurant, addToCart, dishName }) {
   );
 }
 
-/* ─── ROUTE WRAPPER COMPONENTS ────────────────────────────── */
-function RestaurantRoute({ cart, addToCart, go }) {
-  const { id } = useParams();
-  const restaurant = RESTAURANTS.find(r => r.id === Number(id));
-  return restaurant ? <RestaurantMenuPage restaurant={restaurant} cart={cart} addToCart={addToCart} go={go} /> : <div>Restaurant not found</div>;
-}
-
-function DishRoute({ go, goRestaurant, addToCart }) {
-  const params = new URLSearchParams(window.location.search);
-  const dishName = params.get('name');
-  return dishName ? <DishRecommendationsPage dishName={dishName} go={go} goRestaurant={goRestaurant} addToCart={addToCart} /> : <div>Dish not found</div>;
-}
-
-function AppContent({ cart, setCart, user, setUser, addToCart, toast }) {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const isLoginPage = location.pathname === '/login';
-  const page = location.pathname === '/' ? 'home' : location.pathname.split('/')[1] || 'home';
-  const cnt = cart.reduce((s,c)=>s+c.qty,0);
-
-  const go = useCallback((p) => {
-    navigate(`/${p === 'home' ? '' : p}`);
-    window.scrollTo({top:0,behavior:'smooth'});
-  }, [navigate]);
-
-  const goRestaurant = useCallback((restId) => {
-    navigate(`/restaurant/${restId}`);
-    window.scrollTo({top:0,behavior:'smooth'});
-  }, [navigate]);
-
-  const goDish = useCallback((dishName) => {
-    navigate(`/dish?name=${encodeURIComponent(dishName)}`);
-    window.scrollTo({top:0,behavior:'smooth'});
-  }, [navigate]);
-
-  return (
-    <AuthContext.Provider value={{ user, setUser }}>
-      <style>{CSS}</style>
-      {!isLoginPage && <Navbar page={page} go={go} cnt={cnt} user={user} />}
-      <Routes>
-        <Route path="/" element={<HomePage go={go} addToCart={addToCart} goRestaurant={goRestaurant} goDish={goDish} />} />
-        <Route path="/restaurants" element={<RestaurantsPage go={go} goRestaurant={goRestaurant} />} />
-        <Route path="/explore" element={<ExplorePage go={go} addToCart={addToCart} goRestaurant={goRestaurant} initCat={new URLSearchParams(window.location.search).get('cat')} />} />
-        <Route path="/restaurant/:id" element={<RestaurantRoute cart={cart} addToCart={addToCart} go={go} />} />
-        <Route path="/dish" element={<DishRoute go={go} goRestaurant={goRestaurant} addToCart={addToCart} />} />
-        <Route path="/about" element={<AboutPage go={go} />} />
-        <Route path="/cart" element={<CartPage cart={cart} setCart={setCart} go={go} />} />
-        <Route path="/checkout" element={<CheckoutPage cart={cart} setCart={setCart} go={go} />} />
-        <Route path="/track" element={<TrackPage go={go} />} />
-        <Route path="/offers" element={<OffersPage go={go} />} />
-        <Route path="/help" element={<HelpPage go={go} />} />
-        <Route path="/login" element={<LoginPage go={go} />} />
-      </Routes>
-      {!isLoginPage && <MobNav page={page} go={go} cnt={cnt} />}
-      {toast && <div className="toast">{toast}</div>}
-    </AuthContext.Provider>
-  );
-}
-
 /* ─── APP ─────────────────────────────────────────────────── */
+// Top-level application component that manages global state and page routing.
+// It keeps the cart, current page, active restaurant, user session, and toast messages.
+// The `go`, `goRestaurant`, and `goDish` helpers control navigation from any page.
 export default function App() {
+  const [page, setPage] = useState('home');
+  const [pageParams, setPageParams] = useState({});
   const [cart, setCart] = useState(DEFAULT_CART);
   const [toast, setToast] = useState(null);
+  const [activeRestaurant, setActiveRestaurant] = useState(null);
   const [user, setUser] = useState(null);
+  const cnt = cart.reduce((s,c)=>s+c.qty,0);
 
-  const addToCart = useCallback((item) => {
+  // Add or remove items from the shared cart state.
+  // If item._remove is present, the quantity is decreased; otherwise the item is added or incremented.
+  const addToCart = useCallback((item)=>{
     if (item._remove) {
       setCart(p => p.map(c => c.id === item.id ? {...c, qty: Math.max(0, c.qty - 1)} : c).filter(c => c.qty > 0));
       return;
     }
-    setCart(p => {
-      const ex = p.find(c => c.id === item.id);
-      return ex ? p.map(c => c.id === item.id ? {...c, qty: c.qty + 1} : c) : [...p, {...item, qty: 1}];
-    });
+    setCart(p=>{ const ex=p.find(c=>c.id===item.id); return ex?p.map(c=>c.id===item.id?{...c,qty:c.qty+1}:c):[...p,{...item,qty:1}]; });
     setToast(`${item.name} added to cart 🌿`);
-    setTimeout(() => setToast(null), 2200);
-  }, []);
+    setTimeout(()=>setToast(null),2200);
+  },[]);
+
+  const go = useCallback((p, params={})=>{
+    setPage(p);
+    setPageParams(params);
+    window.scrollTo({top:0,behavior:'smooth'});
+  },[]);
+
+  // Navigate directly to a restaurant menu page by ID.
+  const goRestaurant = useCallback((restId)=>{
+    const rest = RESTAURANTS.find(r => r.id === restId);
+    if (rest) {
+      setActiveRestaurant(rest);
+      setPage('restaurant');
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+  },[]);
+
+  const goDish = useCallback((dishName)=>{
+    setPageParams({ dishName });
+    setPage('dish');
+    window.scrollTo({top:0,behavior:'smooth'});
+  },[]);
+
+  // Restaurant menu page
+  if (page === 'restaurant' && activeRestaurant) {
+    return (
+      <AuthContext.Provider value={{ user, setUser }}>
+        <style>{CSS}</style>
+        <Navbar page={page} go={go} cnt={cnt} user={user} />
+        <div key={`rest-${activeRestaurant.id}`}>
+          <RestaurantMenuPage restaurant={activeRestaurant} cart={cart} addToCart={addToCart} go={go} />
+        </div>
+        <MobNav page={page} go={go} cnt={cnt} />
+        {toast && <div className="toast">{toast}</div>}
+      </AuthContext.Provider>
+    );
+  }
+
+  // Dish recommendations page
+  if (page === 'dish' && pageParams.dishName) {
+    return (
+      <AuthContext.Provider value={{ user, setUser }}>
+        <style>{CSS}</style>
+        <Navbar page={page} go={go} cnt={cnt} user={user} />
+        <div key={`dish-${pageParams.dishName}`}>
+          <DishRecommendationsPage dishName={pageParams.dishName} go={go} goRestaurant={goRestaurant} addToCart={addToCart} />
+        </div>
+        <MobNav page={page} go={go} cnt={cnt} />
+        {toast && <div className="toast">{toast}</div>}
+      </AuthContext.Provider>
+    );
+  }
+
+  const PAGES = {
+    home: (props) => <HomePage {...props} goRestaurant={goRestaurant} goDish={goDish} />,
+    restaurants: (props) => <RestaurantsPage {...props} goRestaurant={goRestaurant} />,
+    explore: (props) => <ExplorePage {...props} goRestaurant={goRestaurant} initCat={pageParams.catFilter} />,
+    about: AboutPage,
+    cart: CartPage,
+    checkout: (props) => <CheckoutPage {...props} />,
+    track: TrackPage,
+    offers: OffersPage,
+    help: HelpPage,
+    login: LoginPage,
+  };
+
+  const PageComp = PAGES[page] || PAGES.home;
 
   return (
-    <Router>
-      <AppContent cart={cart} setCart={setCart} user={user} setUser={setUser} addToCart={addToCart} toast={toast} />
-    </Router>
+    <AuthContext.Provider value={{ user, setUser }}>
+      <style>{CSS}</style>
+      {page !== 'login' && <Navbar page={page} go={go} cnt={cnt} user={user} />}
+      <div key={page}>
+        <PageComp go={go} cart={cart} setCart={setCart} addToCart={addToCart} />
+      </div>
+      {page !== 'login' && <MobNav page={page} go={go} cnt={cnt} />}
+      {toast && <div className="toast">{toast}</div>}
+    </AuthContext.Provider>
   );
 }
