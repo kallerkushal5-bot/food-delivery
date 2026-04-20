@@ -1,10 +1,19 @@
-import { useState, useEffect, useRef, useCallback, createContext, useContext } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, memo, createContext, useContext } from "react";
+
+/* ─── MOBILE BREAKPOINTS (JS mirrors) ────────────────────────── */
+const BP = { sm: 480, md: 768, lg: 1024, xl: 1240 };
 
 /* ══════════════════════════════════════════════════════════════
-   🌿 TERRA EATS — Full Food Delivery Platform
-   Home → Restaurants → Menu → Cart → Order Tracking
+   🌿 TERRA EATS — Premium UI Upgrade
+   + Skeleton Loaders (Restaurant List, Menu, Dish Page)
+   + Framer Motion Animations (stagger, spring, exit)
+   + Micro-interactions (hover ripple, add-to-cart bounce, etc.)
+   + Empty & Error States
+   + Sticky headers + smooth scroll
+   + UI / Logic separation
    ══════════════════════════════════════════════════════════════ */
 
+/* ─── DESIGN TOKENS ──────────────────────────────────────────── */
 const T = {
   forest:  "#1A3A2A",
   leaf:    "#2D5A3D",
@@ -36,192 +45,132 @@ const RESTAURANTS = [
   { id:8, name:"Sweet Tooth",     cuisine:"Desserts",      rating:4.9, time:"20-25", price:"₹₹",   discount:"15% off",      img:"https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=600&q=90", badge:"Fan Fav",    tags:["Desserts","Coffee"] },
 ];
 
-// Per-restaurant menus
 const RESTAURANT_MENUS = {
-  1: { // Spice Garden
+  1: {
     Starters:[
-      {id:101,name:"Paneer Tikka",      price:249,veg:true, img:"https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=400w=300&q=80q=90",desc:"Chargrilled cottage cheese with tangy marinade",rating:4.6,badge:"Bestseller"},
-      {id:102,name:"Chicken Kebab",     price:299,veg:false,img:"https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=400w=300&q=80q=90",desc:"Juicy minced chicken kebabs on skewers",       rating:4.7,badge:"Spicy"},
-      {id:103,name:"Samosa (2 pcs)",    price:79, veg:true, img:"https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400w=300&q=80q=90",desc:"Crispy pastry with spiced potato & peas",       rating:4.4,badge:null},
+      {id:101,name:"Paneer Tikka",      price:249,veg:true, img:"https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=400&q=90",desc:"Chargrilled cottage cheese with tangy marinade",rating:4.6,badge:"Bestseller"},
+      {id:102,name:"Chicken Kebab",     price:299,veg:false,img:"https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=400&q=90",desc:"Juicy minced chicken kebabs on skewers",       rating:4.7,badge:"Spicy"},
+      {id:103,name:"Samosa (2 pcs)",    price:79, veg:true, img:"https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&q=90",desc:"Crispy pastry with spiced potato & peas",       rating:4.4,badge:null},
     ],
     Mains:[
-      {id:201,name:"Butter Chicken",    price:319,veg:false,img:"https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=400w=300&q=80q=90",desc:"Tender chicken in rich tomato-butter sauce",    rating:4.8,badge:"Bestseller"},
-      {id:202,name:"Dal Makhani",       price:199,veg:true, img:"https://images.unsplash.com/photo-1546833998-877b37c2e5c6?w=400w=300&q=80q=90",desc:"Slow-cooked black lentils with cream & butter",   rating:4.7,badge:null},
-      {id:205,name:"Veg Biryani",       price:229,veg:true, img:"https://images.unsplash.com/photo-1563379091339-03246963d96e?w=400w=300&q=80q=90",desc:"Fragrant basmati rice with vegetables",          rating:4.5,badge:null},
-      {id:206,name:"Chicken Biryani",   price:299,veg:false,img:"https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=400w=300&q=80q=90",desc:"Hyderabadi dum biryani with saffron & raita",   rating:4.8,badge:"Most Ordered"},
+      {id:201,name:"Butter Chicken",    price:319,veg:false,img:"https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=400&q=90",desc:"Tender chicken in rich tomato-butter sauce",    rating:4.8,badge:"Bestseller"},
+      {id:202,name:"Dal Makhani",       price:199,veg:true, img:"https://images.unsplash.com/photo-1546833998-877b37c2e5c6?w=400&q=90",desc:"Slow-cooked black lentils with cream & butter",   rating:4.7,badge:null},
+      {id:205,name:"Veg Biryani",       price:229,veg:true, img:"https://images.unsplash.com/photo-1563379091339-03246963d96e?w=400&q=90",desc:"Fragrant basmati rice with vegetables",          rating:4.5,badge:null},
+      {id:206,name:"Chicken Biryani",   price:299,veg:false,img:"https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=400&q=90",desc:"Hyderabadi dum biryani with saffron & raita",   rating:4.8,badge:"Most Ordered"},
     ],
     Drinks:[
-      {id:601,name:"Mango Lassi",       price:89, veg:true, img:"https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=400w=300&q=80q=90",desc:"Thick chilled yogurt-mango smoothie",              rating:4.7,badge:"Summer Hit"},
-      {id:603,name:"Masala Chai",       price:49, veg:true, img:"https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400w=300&q=80q=90",desc:"Ginger-cardamom spiced milk tea",                  rating:4.6,badge:"Classic"},
+      {id:601,name:"Mango Lassi",       price:89, veg:true, img:"https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=400&q=90",desc:"Thick chilled yogurt-mango smoothie",              rating:4.7,badge:"Summer Hit"},
+      {id:603,name:"Masala Chai",       price:49, veg:true, img:"https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400&q=90",desc:"Ginger-cardamom spiced milk tea",                  rating:4.6,badge:"Classic"},
     ],
   },
-  2: { // Burger Republic
+  2: {
     Burgers:[
-      {id:301,name:"Classic Beef Burger",price:199,veg:false,img:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400w=300&q=80q=90",desc:"Juicy beef patty with lettuce, tomato & cheese",rating:4.5,badge:"Bestseller"},
-      {id:302,name:"Chicken Crispy",     price:179,veg:false,img:"https://images.unsplash.com/photo-1550547660-d9450f859349?w=400w=300&q=80q=90",desc:"Crispy fried chicken with spicy mayo",             rating:4.4,badge:null},
-      {id:303,name:"Mushroom Swiss",     price:219,veg:true, img:"https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=400w=300&q=80q=90",desc:"Portobello mushroom with swiss cheese & aioli",  rating:4.6,badge:"New"},
+      {id:301,name:"Classic Beef Burger",price:199,veg:false,img:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&q=90",desc:"Juicy beef patty with lettuce, tomato & cheese",rating:4.5,badge:"Bestseller"},
+      {id:302,name:"Chicken Crispy",     price:179,veg:false,img:"https://images.unsplash.com/photo-1550547660-d9450f859349?w=400&q=90",desc:"Crispy fried chicken with spicy mayo",             rating:4.4,badge:null},
+      {id:303,name:"Mushroom Swiss",     price:219,veg:true, img:"https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=400&q=90",desc:"Portobello mushroom with swiss cheese & aioli",  rating:4.6,badge:"New"},
     ],
     Wraps:[
-      {id:401,name:"Chicken Wrap",       price:199,veg:false,img:"https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=400w=300&q=80q=90",desc:"Grilled chicken in a toasted tortilla wrap",     rating:4.3,badge:null},
-      {id:402,name:"Falafel Wrap",       price:179,veg:true, img:"https://images.unsplash.com/photo-1539136788836-5699e78bfc75?w=400w=300&q=80q=90",desc:"Crispy falafel with hummus and fresh veggies",    rating:4.5,badge:"Veg Fav"},
+      {id:401,name:"Chicken Wrap",       price:199,veg:false,img:"https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=400&q=90",desc:"Grilled chicken in a toasted tortilla wrap",     rating:4.3,badge:null},
+      {id:402,name:"Falafel Wrap",       price:179,veg:true, img:"https://images.unsplash.com/photo-1539136788836-5699e78bfc75?w=400&q=90",desc:"Crispy falafel with hummus and fresh veggies",    rating:4.5,badge:"Veg Fav"},
     ],
     Drinks:[
-      {id:602,name:"Cold Coffee",        price:99, veg:true, img:"https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400w=300&q=80q=90",desc:"Creamy blended iced coffee with chocolate",       rating:4.5,badge:null},
-      {id:604,name:"Virgin Mojito",      price:119,veg:true, img:"https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400w=300&q=80q=90",desc:"Mint-lemon fizz with crushed ice & lime",           rating:4.7,badge:null},
+      {id:602,name:"Cold Coffee",        price:99, veg:true, img:"https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400&q=90",desc:"Creamy blended iced coffee with chocolate",       rating:4.5,badge:null},
     ],
   },
-  3: { // Pasta Palace
+  3: {
     Pizza:[
-      {id:501,name:"Margherita",         price:299,veg:true, img:"https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400w=300&q=80q=90",desc:"Classic tomato, mozzarella and fresh basil",      rating:4.7,badge:"Classic"},
-      {id:502,name:"Pepperoni",          price:349,veg:false,img:"https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400w=300&q=80q=90",desc:"Generous pepperoni with extra cheese layer",       rating:4.8,badge:"Bestseller"},
-      {id:503,name:"BBQ Chicken",        price:379,veg:false,img:"https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400w=300&q=80q=90",desc:"Smoky BBQ sauce, chicken, onions & peppers",      rating:4.6,badge:null},
+      {id:501,name:"Margherita",         price:299,veg:true, img:"https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400&q=90",desc:"Classic tomato, mozzarella and fresh basil",      rating:4.7,badge:"Classic"},
+      {id:502,name:"Pepperoni",          price:349,veg:false,img:"https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400&q=90",desc:"Generous pepperoni with extra cheese layer",       rating:4.8,badge:"Bestseller"},
     ],
     Pasta:[
-      {id:504,name:"Spaghetti Arrabbiata",price:279,veg:true,img:"https://images.unsplash.com/photo-1551183053-bf91798d792b?w=400w=300&q=80q=90",desc:"Spicy tomato pasta with garlic and olive oil",     rating:4.5,badge:null},
-      {id:505,name:"Fettuccine Alfredo", price:319,veg:true, img:"https://images.unsplash.com/photo-1612007688814-9b19b4b3c5e3?w=400w=300&q=80q=90",desc:"Rich creamy sauce with parmesan",                  rating:4.6,badge:"Chef's Pick"},
+      {id:504,name:"Spaghetti Arrabbiata",price:279,veg:true,img:"https://images.unsplash.com/photo-1551183053-bf91798d792b?w=400&q=90",desc:"Spicy tomato pasta with garlic and olive oil",     rating:4.5,badge:null},
+      {id:505,name:"Fettuccine Alfredo", price:319,veg:true, img:"https://images.unsplash.com/photo-1612007688814-9b19b4b3c5e3?w=400&q=90",desc:"Rich creamy sauce with parmesan",                  rating:4.6,badge:"Chef's Pick"},
     ],
     Desserts:[
-      {id:506,name:"Tiramisu",           price:199,veg:true, img:"https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400w=300&q=80q=90",desc:"Classic Italian espresso-soaked dessert",          rating:4.9,badge:"Must Try"},
+      {id:506,name:"Tiramisu",           price:199,veg:true, img:"https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400&q=90",desc:"Classic Italian espresso-soaked dessert",          rating:4.9,badge:"Must Try"},
     ],
   },
-  4: { // Dragon Wok
+  4: {
     Noodles:[
-      {id:701,name:"Pad Thai",           price:229,veg:false,img:"https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=400w=300&q=80q=90",desc:"Stir-fried rice noodles with peanuts & lime",     rating:4.5,badge:"Popular"},
-      {id:702,name:"Hakka Noodles",      price:189,veg:true, img:"https://images.unsplash.com/photo-1585032226651-759b368d7246?w=400w=300&q=80q=90",desc:"Wok-tossed noodles with crispy veggies",           rating:4.3,badge:null},
-      {id:703,name:"Ramen Bowl",         price:279,veg:false,img:"https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400w=300&q=80q=90",desc:"Rich broth with noodles, egg and toppings",        rating:4.7,badge:"Chef's Fav"},
+      {id:701,name:"Pad Thai",           price:229,veg:false,img:"https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=400&q=90",desc:"Stir-fried rice noodles with peanuts & lime",     rating:4.5,badge:"Popular"},
+      {id:702,name:"Hakka Noodles",      price:189,veg:true, img:"https://images.unsplash.com/photo-1585032226651-759b368d7246?w=400&q=90",desc:"Wok-tossed noodles with crispy veggies",           rating:4.3,badge:null},
     ],
     Rolls:[
-      {id:801,name:"Egg Roll",           price:99, veg:false,img:"https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400w=300&q=80q=90",desc:"Crispy spring roll filled with egg and veg",         rating:4.2,badge:null},
-      {id:802,name:"Chicken Roll",       price:149,veg:false,img:"https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=400w=300&q=80q=90",desc:"Juicy chicken wrapped in thin egg crepe",           rating:4.4,badge:"Bestseller"},
+      {id:801,name:"Egg Roll",           price:99, veg:false,img:"https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400&q=90",desc:"Crispy spring roll filled with egg and veg",         rating:4.2,badge:null},
+      {id:802,name:"Chicken Roll",       price:149,veg:false,img:"https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=400&q=90",desc:"Juicy chicken wrapped in thin egg crepe",           rating:4.4,badge:"Bestseller"},
     ],
   },
-  5: { // Pizza Volcano
+  5: {
     Pizza:[
-      {id:901,name:"Margherita Volcano", price:349,veg:true, img:"https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400w=300&q=80q=90",desc:"Extra stretchy cheese pull, volcano-style crust", rating:4.7,badge:"Signature"},
-      {id:902,name:"BBQ Overload",       price:399,veg:false,img:"https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400w=300&q=80q=90",desc:"Double meat, triple cheese BBQ explosion",          rating:4.8,badge:"Bestseller"},
-      {id:903,name:"Garden Fresh",       price:319,veg:true, img:"https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400w=300&q=80q=90",desc:"Farm-fresh veggies on herb-infused tomato base",   rating:4.5,badge:null},
+      {id:901,name:"Margherita Volcano", price:349,veg:true, img:"https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400&q=90",desc:"Extra stretchy cheese pull, volcano-style crust", rating:4.7,badge:"Signature"},
+      {id:902,name:"BBQ Overload",       price:399,veg:false,img:"https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400&q=90",desc:"Double meat, triple cheese BBQ explosion",          rating:4.8,badge:"Bestseller"},
     ],
     Sides:[
-      {id:904,name:"Garlic Knots (6)",   price:129,veg:true, img:"https://images.unsplash.com/photo-1573821663912-569905455b1c?w=400w=300&q=80q=90",desc:"Buttery, garlicky knotted bread rolls",             rating:4.6,badge:"Fan Fav"},
+      {id:904,name:"Garlic Knots (6)",   price:129,veg:true, img:"https://images.unsplash.com/photo-1573821663912-569905455b1c?w=400&q=90",desc:"Buttery, garlicky knotted bread rolls",             rating:4.6,badge:"Fan Fav"},
     ],
   },
-  6: { // Sushi Bay
+  6: {
     Sushi:[
-      {id:1001,name:"Salmon Roll (8 pcs)",price:449,veg:false,img:"https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400w=300&q=80q=90",desc:"Fresh Atlantic salmon with avocado & cucumber",   rating:4.9,badge:"Top Rated"},
-      {id:1002,name:"Dragon Roll",        price:499,veg:false,img:"https://images.unsplash.com/photo-1617196034876-91f29e3f79ea?w=400w=300&q=80q=90",desc:"Shrimp tempura topped with avocado slices",        rating:4.8,badge:"Chef's Pick"},
-      {id:1003,name:"Veggie Maki",        price:299,veg:true, img:"https://images.unsplash.com/photo-1617196034183-421b4040ed20?w=400w=300&q=80q=90",desc:"Cucumber, avocado and pickled radish rolls",        rating:4.5,badge:null},
-    ],
-    Sashimi:[
-      {id:1004,name:"Sashimi Platter",    price:599,veg:false,img:"https://images.unsplash.com/photo-1563245372-f21724e3856d?w=400w=300&q=80q=90",desc:"8 pcs of chef's finest daily cuts",                   rating:4.9,badge:"Premium"},
+      {id:1001,name:"Salmon Roll (8 pcs)",price:449,veg:false,img:"https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400&q=90",desc:"Fresh Atlantic salmon with avocado & cucumber",   rating:4.9,badge:"Top Rated"},
+      {id:1002,name:"Dragon Roll",        price:499,veg:false,img:"https://images.unsplash.com/photo-1617196034876-91f29e3f79ea?w=400&q=90",desc:"Shrimp tempura topped with avocado slices",        rating:4.8,badge:"Chef's Pick"},
+      {id:1003,name:"Veggie Maki",        price:299,veg:true, img:"https://images.unsplash.com/photo-1617196034183-421b4040ed20?w=400&q=90",desc:"Cucumber, avocado and pickled radish rolls",        rating:4.5,badge:null},
     ],
     Drinks:[
-      {id:1005,name:"Matcha Latte",       price:149,veg:true, img:"https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400w=300&q=80q=90",desc:"Ceremonial grade matcha with oat milk",              rating:4.7,badge:"New"},
+      {id:1005,name:"Matcha Latte",       price:149,veg:true, img:"https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=90",desc:"Ceremonial grade matcha with oat milk",              rating:4.7,badge:"New"},
     ],
   },
-  7: { // Dosa Junction
+  7: {
     Dosas:[
-      {id:1101,name:"Masala Dosa",        price:99, veg:true, img:"https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=400w=300&q=80q=90",desc:"Crispy crepe with spiced potato filling",            rating:4.7,badge:"Classic"},
-      {id:1102,name:"Ghee Roast Dosa",    price:129,veg:true, img:"https://images.unsplash.com/photo-1630409351217-bc4fa6422075?w=400w=300&q=80q=90",desc:"Golden crisp dosa roasted in pure ghee",             rating:4.6,badge:"Bestseller"},
+      {id:1101,name:"Masala Dosa",        price:99, veg:true, img:"https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=400&q=90",desc:"Crispy crepe with spiced potato filling",            rating:4.7,badge:"Classic"},
+      {id:1102,name:"Ghee Roast Dosa",    price:129,veg:true, img:"https://images.unsplash.com/photo-1630409351217-bc4fa6422075?w=400&q=90",desc:"Golden crisp dosa roasted in pure ghee",             rating:4.6,badge:"Bestseller"},
     ],
     Snacks:[
-      {id:1103,name:"Vada Sambar",        price:79, veg:true, img:"https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=400w=300&q=80q=90",desc:"Crispy lentil donuts in tangy sambar",               rating:4.5,badge:null},
-      {id:1104,name:"Idli Plate (4 pcs)", price:69, veg:true, img:"https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=400w=300&q=80q=90",desc:"Soft steamed rice cakes with chutneys",              rating:4.4,badge:null},
+      {id:1103,name:"Vada Sambar",        price:79, veg:true, img:"https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=400&q=90",desc:"Crispy lentil donuts in tangy sambar",               rating:4.5,badge:null},
     ],
     Drinks:[
-      {id:1105,name:"Filter Coffee",      price:39, veg:true, img:"https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400w=300&q=80q=90",desc:"Authentic South Indian decoction coffee",            rating:4.8,badge:"Must Try"},
+      {id:1105,name:"Filter Coffee",      price:39, veg:true, img:"https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400&q=90",desc:"Authentic South Indian decoction coffee",            rating:4.8,badge:"Must Try"},
     ],
   },
-  8: { // Sweet Tooth
+  8: {
     Desserts:[
-      {id:1201,name:"Gulab Jamun",        price:119,veg:true, img:"https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=400w=300&q=80q=90",desc:"Soft dumplings in rose sugar syrup",                 rating:4.9,badge:"Fan Fav"},
-      {id:1202,name:"Choc Lava Cake",     price:199,veg:true, img:"https://images.unsplash.com/photo-1617305855058-336d24456869?w=400w=300&q=80q=90",desc:"Warm cake with molten dark chocolate centre",         rating:4.8,badge:"Must Try"},
-      {id:1203,name:"Kulfi Falooda",      price:149,veg:true, img:"https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400w=300&q=80q=90",desc:"Pistachio ice cream with basil seeds & rose syrup",    rating:4.7,badge:null},
-      {id:1204,name:"Brownie Sundae",     price:169,veg:true, img:"https://images.unsplash.com/photo-1564355808539-22fda35bed7e?w=400w=300&q=80q=90",desc:"Warm fudge brownie with vanilla ice cream",           rating:4.9,badge:"Bestseller"},
+      {id:1201,name:"Gulab Jamun",        price:119,veg:true, img:"https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=400&q=90",desc:"Soft dumplings in rose sugar syrup",                 rating:4.9,badge:"Fan Fav"},
+      {id:1202,name:"Choc Lava Cake",     price:199,veg:true, img:"https://images.unsplash.com/photo-1617305855058-336d24456869?w=400&q=90",desc:"Warm cake with molten dark chocolate centre",         rating:4.8,badge:"Must Try"},
+      {id:1203,name:"Kulfi Falooda",      price:149,veg:true, img:"https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400&q=90",desc:"Pistachio ice cream with basil seeds & rose syrup",    rating:4.7,badge:null},
+      {id:1204,name:"Brownie Sundae",     price:169,veg:true, img:"https://images.unsplash.com/photo-1564355808539-22fda35bed7e?w=400&q=90",desc:"Warm fudge brownie with vanilla ice cream",           rating:4.9,badge:"Bestseller"},
     ],
     Drinks:[
-      {id:1205,name:"Cold Coffee Shake",  price:129,veg:true, img:"https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400w=300&q=80q=90",desc:"Thick blended coffee milkshake",                     rating:4.6,badge:null},
-      {id:1206,name:"Mango Milkshake",    price:109,veg:true, img:"https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=400w=300&q=80q=90",desc:"Fresh Alphonso mango blended thick",                   rating:4.7,badge:"Seasonal"},
+      {id:1205,name:"Cold Coffee Shake",  price:129,veg:true, img:"https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400&q=90",desc:"Thick blended coffee milkshake",                     rating:4.6,badge:null},
     ],
   },
 };
 
 const CATEGORIES = [
-  {label:"Pizza",   emoji:"🍕", img:"https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400w=300&q=80q=90"},
-  {label:"Burger",  emoji:"🍔", img:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400w=300&q=80q=90"},
-  {label:"Biryani", emoji:"🍛", img:"https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=400w=300&q=80q=90"},
-  {label:"Sushi",   emoji:"🍱", img:"https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400w=300&q=80q=90"},
-  {label:"Desserts",emoji:"🍰", img:"https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400w=300&q=80q=90"},
-  {label:"Coffee",  emoji:"☕", img:"https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400w=300&q=80q=90"},
-  {label:"Salads",  emoji:"🥗", img:"https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400w=300&q=80q=90"},
-  {label:"Noodles", emoji:"🍜", img:"https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=400w=300&q=80q=90"},
-  {label:"Wraps",   emoji:"🌯", img:"https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=400w=300&q=80q=90"},
-  {label:"Tacos",   emoji:"🌮", img:"https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=400w=300&q=80q=90"},
-  {label:"Seafood", emoji:"🦞", img:"https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400w=300&q=80q=90"},
-  {label:"Rolls",   emoji:"🥡", img:"https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400w=300&q=80q=90"},
+  {label:"Pizza",   emoji:"🍕", img:"https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=300&q=80"},
+  {label:"Burger",  emoji:"🍔", img:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300&q=80"},
+  {label:"Biryani", emoji:"🍛", img:"https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=300&q=80"},
+  {label:"Sushi",   emoji:"🍱", img:"https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=300&q=80"},
+  {label:"Desserts",emoji:"🍰", img:"https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=300&q=80"},
+  {label:"Coffee",  emoji:"☕", img:"https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=300&q=80"},
+  {label:"Salads",  emoji:"🥗", img:"https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&q=80"},
+  {label:"Noodles", emoji:"🍜", img:"https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=300&q=80"},
+  {label:"Wraps",   emoji:"🌯", img:"https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=300&q=80"},
+  {label:"Rolls",   emoji:"🥡", img:"https://images.unsplash.com/photo-1547592166-23ac45744acd?w=300&q=80"},
 ];
 
-// Map categories to restaurant IDs
 const CATEGORY_RESTAURANTS = {
-  Pizza:   [3,5],
-  Burger:  [2],
-  Biryani: [1],
-  Sushi:   [6],
-  Desserts:[8],
-  Coffee:  [7,8],
-  Salads:  [3],
-  Noodles: [4],
-  Wraps:   [2,4],
-  Tacos:   [7],
-  Seafood: [4,6],
-  Rolls:   [4],
+  Pizza:[3,5], Burger:[2], Biryani:[1], Sushi:[6], Desserts:[8],
+  Coffee:[7,8], Salads:[3], Noodles:[4], Wraps:[2,4], Rolls:[4],
 };
 
-// Dish → restaurants that serve it (for recommendation system)
 const DISH_RESTAURANTS = {
-  "Butter Chicken":    [1],
-  "Dal Makhani":       [1],
-  "Paneer Tikka":      [1],
-  "Chicken Kebab":     [1],
-  "Veg Biryani":       [1],
-  "Chicken Biryani":   [1],
-  "Classic Beef Burger":[2],
-  "Chicken Crispy":    [2],
-  "Mushroom Swiss":    [2],
-  "Chicken Wrap":      [2,4],
-  "Falafel Wrap":      [2],
-  "Margherita":        [3,5],
-  "Pepperoni":         [3,5],
-  "BBQ Chicken":       [3,5],
-  "Spaghetti Arrabbiata":[3],
-  "Fettuccine Alfredo":[3],
-  "Tiramisu":          [3,8],
-  "Pad Thai":          [4],
-  "Hakka Noodles":     [4],
-  "Ramen Bowl":        [4,6],
-  "Egg Roll":          [4],
-  "Chicken Roll":      [4,2],
-  "Margherita Volcano":[5],
-  "BBQ Overload":      [5],
-  "Garden Fresh":      [5],
-  "Garlic Knots (6)":  [5],
-  "Salmon Roll (8 pcs)":[6],
-  "Dragon Roll":       [6],
-  "Veggie Maki":       [6],
-  "Sashimi Platter":   [6],
-  "Masala Dosa":       [7],
-  "Ghee Roast Dosa":   [7],
-  "Vada Sambar":       [7],
-  "Idli Plate (4 pcs)":[7],
-  "Gulab Jamun":       [8],
-  "Choc Lava Cake":    [8],
-  "Kulfi Falooda":     [8],
-  "Brownie Sundae":    [8],
-  "Mango Lassi":       [1,7],
-  "Cold Coffee":       [2,7,8],
-  "Masala Chai":       [1,7],
-  "Filter Coffee":     [7],
-  "Matcha Latte":      [6],
-  "Virgin Mojito":     [2],
+  "Butter Chicken":[1],"Dal Makhani":[1],"Paneer Tikka":[1],"Chicken Biryani":[1],
+  "Classic Beef Burger":[2],"Chicken Crispy":[2],"Mushroom Swiss":[2],"Chicken Wrap":[2,4],
+  "Margherita":[3,5],"Pepperoni":[3,5],"Spaghetti Arrabbiata":[3],"Tiramisu":[3,8],
+  "Pad Thai":[4],"Hakka Noodles":[4],"Egg Roll":[4],"Chicken Roll":[4,2],
+  "Margherita Volcano":[5],"BBQ Overload":[5],
+  "Salmon Roll (8 pcs)":[6],"Dragon Roll":[6],"Veggie Maki":[6],
+  "Masala Dosa":[7],"Ghee Roast Dosa":[7],"Filter Coffee":[7],
+  "Gulab Jamun":[8],"Choc Lava Cake":[8],"Brownie Sundae":[8],
 };
 
 const TRENDING = [
@@ -233,794 +182,1280 @@ const TRENDING = [
   {id:'t6',name:"Mango Lassi",rest:"Dosa Junction",restId:7,rating:4.7,reviews:"3.1k",price:89,img:"https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=600&q=90",tag:"☀️ Summer Hit",veg:true},
 ];
 
-const CHEFS = [
-  {name:"Chef Aryan Kapoor",specialty:"North Indian & Mughlai",exp:"18 yrs experience",bio:"Former head chef at The Leela Palace, Aryan brings royal Mughlai secrets into every dish — roasted slow over wood-fired tandoors.",img:"https://images.unsplash.com/photo-1566554273541-37a9ca77b91f?w=400&q=80",emoji:"🌿"},
-  {name:"Chef Meera Nair",specialty:"South Indian & Coastal",exp:"14 yrs experience",bio:"Born in Kerala's spice coast, Meera crafts dishes that tell stories of monsoon forests and sun-drenched backwaters with every bite.",img:"https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?w=400&q=80",emoji:"🌊"},
-  {name:"Chef Ravi Shetty",specialty:"Fusion & Desserts",exp:"11 yrs experience",bio:"A Mumbai-trained pastry wizard, Ravi blends East and West — foraging seasonal flavors to create dessert experiences unlike any other.",img:"https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=400&q=80",emoji:"🍃"},
-];
-
 const FAQS = [
   {q:"How long does delivery take?",a:"Standard delivery takes 25–45 minutes depending on your location and restaurant. You can track your order live from the moment it's placed."},
-  {q:"What is the minimum order amount?",a:"There's no platform-wide minimum. Individual restaurants may set their own — usually between ₹99–₹199. This is shown clearly before checkout."},
-  {q:"Can I cancel or modify my order?",a:"Orders can be cancelled within 2 minutes of placing. After that, please contact our support. Modifications depend on restaurant confirmation."},
-  {q:"Are there vegetarian-only restaurants?",a:"Yes! Use the 'Pure Veg' filter in Explore. Many restaurants on Terra Eats are certified vegetarian or offer clearly marked veg menus."},
-  {q:"Do you deliver at night?",a:"Most restaurants deliver until 11 PM. Some partner restaurants offer late-night delivery until 1 AM — look for the 🌙 badge."},
+  {q:"What is the minimum order amount?",a:"There's no platform-wide minimum. Individual restaurants may set their own — usually between ₹99–₹199."},
+  {q:"Can I cancel or modify my order?",a:"Orders can be cancelled within 2 minutes of placing. After that, please contact our support."},
+  {q:"Are there vegetarian-only restaurants?",a:"Yes! Use the 'Pure Veg' filter in Explore. Many restaurants on Terra Eats are certified vegetarian."},
+  {q:"Do you deliver at night?",a:"Most restaurants deliver until 11 PM. Some partner restaurants offer late-night delivery until 1 AM."},
   {q:"How are refunds processed?",a:"Refunds are credited to your original payment method within 5–7 business days, or instantly to your Terra wallet."},
 ];
 
-const OFFERS = [
-  {code:"TERRA30",title:"Weekend Feast",desc:"30% off on orders above ₹500",saving:"Save up to ₹180",expires:"Valid this weekend",color:T.sage},
-  {code:"FIRST100",title:"Welcome Gift",desc:"₹100 off on your very first order",saving:"Save ₹100",expires:"New users only",color:T.earth},
-  {code:"FREEDEL",title:"Free Delivery",desc:"Zero delivery charges on any order",saving:"Save ₹29",expires:"This week",color:T.moss},
-  {code:"NIGHT20",title:"Night Owl",desc:"20% off on orders after 9 PM",saving:"Save up to ₹120",expires:"Daily 9PM–1AM",color:T.dusk},
-];
+/* ═══════════════════════════════════════════════════════════════
+   CSS — Mobile-First Responsive Design System
+   Strategy: Base styles target 320–480px phones.
+   Progressive enhancement via min-width media queries.
+   ═══════════════════════════════════════════════════════════════ */
+const CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Bricolage+Grotesque:wght@300;400;500;600;700&display=swap&display=swap');
 
-const TRACK_STEPS = [
-  {label:"Order Placed",    icon:"📋",desc:"Confirmed & being processed"},
-  {label:"Preparing",       icon:"👨‍🍳",desc:"Chef is crafting your meal"},
-  {label:"Out for Delivery",icon:"🛵",desc:"Rider heading your way"},
-  {label:"Delivered",       icon:"🎉",desc:"Enjoy your meal!"},
-];
+/* ─── RESET & BASE ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body {
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+  background: ${T.cream}; color: ${T.forest};
+  -webkit-font-smoothing: antialiased;
+  /* Prevent horizontal scroll on mobile */
+  overflow-x: hidden;
+  /* Improve touch scrolling */
+  -webkit-overflow-scrolling: touch;
+}
+button { font-family: inherit; touch-action: manipulation; }
+img { max-width: 100%; display: block; }
 
-/* ─── DEFAULT CART ITEMS ─────────────────────────────────────── */
-const DEFAULT_CART = [];
+/* ─── TOUCH-ACTION: prevent 300ms click delay ─── */
+a, button, [role="button"] { touch-action: manipulation; }
 
-/* ─── AUTH CONTEXT ─────────────────────────────────────────── */
+/* ─── CSS CUSTOM PROPERTIES for theming ─── */
+:root {
+  --nav-h: 60px;
+  --mob-nav-h: 64px;
+  --container-px: 16px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --shadow-sm: 0 2px 10px rgba(26,58,42,0.07);
+  --shadow-md: 0 4px 20px rgba(26,58,42,0.12);
+  --shadow-lg: 0 12px 40px rgba(26,58,42,0.18);
+  --touch-min: 44px; /* WCAG minimum touch target */
+  --section-py: 48px;
+}
+@media (min-width: 768px) {
+  :root {
+    --nav-h: 68px;
+    --mob-nav-h: 0px;
+    --container-px: 28px;
+    --section-py: 80px;
+  }
+}
+
+/* ─── SKELETON LOADER ─── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skel {
+  background: linear-gradient(90deg, #e8e2d9 25%, #f0ebe4 50%, #e8e2d9 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 8px;
+}
+.skel-card { background: white; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid rgba(107,158,122,0.1); }
+.skel-img  { width: 100%; height: 180px; border-radius: 0; }
+@media (min-width: 768px) { .skel-img { height: 200px; } }
+.skel-body { padding: 14px 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+.skel-line-lg  { height: 16px; width: 70%; border-radius: 5px; }
+.skel-line-md  { height: 12px; width: 50%; border-radius: 5px; }
+.skel-line-sm  { height: 12px; width: 35%; border-radius: 5px; }
+.skel-badge    { height: 22px; width: 80px; border-radius: 11px; }
+.skel-btn      { height: 40px; width: 100%; border-radius: 10px; margin-top: 4px; }
+.skel-menu-card { background: white; border-radius: var(--radius-md); overflow: hidden; display: flex; border: 1px solid rgba(107,158,122,0.1); }
+.skel-menu-img  { width: 110px; min-width: 110px; height: 120px; flex-shrink: 0; }
+@media (min-width: 480px) { .skel-menu-img { width: 130px; min-width: 130px; height: 130px; } }
+.skel-menu-body { padding: 14px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+
+/* ─── ANIMATIONS (reduced-motion safe) ─── */
+@keyframes fadeUp   { from { opacity:0; transform:translateY(20px) } to { opacity:1; transform:none } }
+@keyframes fadeIn   { from { opacity:0 } to { opacity:1 } }
+@keyframes scaleIn  { from { opacity:0; transform:scale(0.94) } to { opacity:1; transform:scale(1) } }
+@keyframes bounceIn { 0% { transform:scale(0.6);opacity:0 } 60% { transform:scale(1.08);opacity:1 } 80% { transform:scale(0.97) } 100% { transform:scale(1) } }
+@keyframes pulse    { 0%,100% { transform:scale(1) } 50% { transform:scale(1.05) } }
+@keyframes ripple   { 0% { transform:scale(0);opacity:0.5 } 100% { transform:scale(4);opacity:0 } }
+@keyframes toastIn  { from { opacity:0;transform:translateX(-50%) translateY(16px) } to { opacity:1;transform:translateX(-50%) translateY(0) } }
+@keyframes pageFadeIn { from { opacity:0;transform:translateY(10px) } to { opacity:1;transform:none } }
+@keyframes trackPulse { 0%,100% { box-shadow:0 0 0 3px rgba(232,116,42,0.15) } 50% { box-shadow:0 0 0 8px rgba(232,116,42,0.05) } }
+@keyframes footerFloat { 0% { transform:translateY(0) rotate(0deg);opacity:0.06 } 50% { opacity:0.10 } 100% { transform:translateY(-80px) rotate(20deg);opacity:0 } }
+@keyframes kenBurns { from { transform:scale(1) } to { transform:scale(1.06) } }
+@keyframes spin { to { transform:rotate(360deg) } }
+@keyframes bannerZoom { from { transform:scale(1.06) } to { transform:scale(1) } }
+@keyframes slideUp { from { opacity:0;transform:translateY(100%) } to { opacity:1;transform:translateY(0) } }
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+.animate-fade-up     { animation: fadeUp 0.45s cubic-bezier(0.22,1,0.36,1) both; }
+.animate-fade-in     { animation: fadeIn 0.35s ease both; }
+.animate-scale-in    { animation: scaleIn 0.35s cubic-bezier(0.22,1,0.36,1) both; }
+.page-enter          { animation: pageFadeIn 0.4s cubic-bezier(0.22,1,0.36,1) both; }
+
+/* ─── RIPPLE BUTTON ─── */
+.btn-ripple { position:relative; overflow:hidden; }
+.btn-ripple::after { content:''; position:absolute; width:20px; height:20px; background:rgba(255,255,255,0.4); border-radius:50%; top:var(--ry,50%); left:var(--rx,50%); transform:scale(0); pointer-events:none; }
+.btn-ripple:active::after { animation:ripple 0.5s ease-out; }
+
+/* ─── CONTAINER / SECTION ─── */
+.container { max-width: ${BP.xl}px; margin: 0 auto; padding: 0 var(--container-px); }
+.section    { padding: var(--section-py) 0; }
+
+/* ─── NAVBAR — mobile-first ─── */
+.navbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 800;
+  transition: background 0.4s cubic-bezier(0.4,0,0.2,1), box-shadow 0.4s, transform 0.3s;
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  height: var(--nav-h);
+}
+/* Light mode: always have background for visibility */
+:not(.dark-mode) .navbar {
+  background: rgba(253,250,245,0.95);
+  backdrop-filter: blur(20px) saturate(200%);
+  -webkit-backdrop-filter: blur(20px) saturate(200%);
+  border-bottom-color: rgba(107,158,122,0.14);
+  box-shadow: 0 2px 20px rgba(26,58,42,0.08);
+}
+/* Solid non-home navbar: always fully opaque in light mode */
+.navbar.solid {
+  background: rgba(253,250,245,0.99);
+  backdrop-filter: blur(20px) saturate(200%);
+  -webkit-backdrop-filter: blur(20px) saturate(200%);
+  border-bottom-color: rgba(107,158,122,0.18);
+  box-shadow: 0 2px 16px rgba(26,58,42,0.10);
+}
+/* Scrolled home navbar */
+.navbar.scrolled {
+  background: rgba(253,250,245,0.97);
+  backdrop-filter: blur(20px) saturate(200%);
+  -webkit-backdrop-filter: blur(20px) saturate(200%);
+  border-bottom-color: rgba(107,158,122,0.14);
+  box-shadow: 0 2px 20px rgba(26,58,42,0.08);
+}
+/* Dark mode: keep existing dark navbar appearance */
+.dark-mode .navbar {
+  background: rgba(20,40,30,0.95);
+  border-bottom-color: rgba(107,158,122,0.18);
+  box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+}
+.dark-mode .navbar.solid,
+.dark-mode .navbar.scrolled {
+  background: rgba(20,40,30,0.97);
+  border-bottom-color: rgba(107,158,122,0.18);
+  box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+}
+.nav-hidden  { transform: translateY(-100%); }
+.nav-visible { transform: translateY(0); }
+
+.nav-inner {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 var(--container-px); height: var(--nav-h);
+  max-width: ${BP.xl}px; margin: 0 auto;
+}
+
+/* Logo */
+.nav-logo {
+  font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 700;
+  color: white; background: none; border: none; cursor: pointer;
+  display: flex; align-items: center; gap: 8px;
+  transition: all 0.25s cubic-bezier(0.22,1,0.36,1);
+  padding: 8px 6px; border-radius: 10px;
+  /* Ensure min touch target */
+  min-height: var(--touch-min);
+  flex-shrink: 0;
+}
+@media (min-width: 768px) { .nav-logo { font-size: 22px; } }
+:not(.dark-mode) .nav-logo { color: ${T.forest}; }
+.dark-mode .nav-logo { color: white; }
+.navbar.scrolled .nav-logo, .navbar.solid .nav-logo { color: ${T.forest}; }
+.dark-mode .navbar.scrolled .nav-logo, .dark-mode .navbar.solid .nav-logo { color: white; }
+.nav-logo:hover { opacity: 0.88; transform: scale(1.02); }
+.logo-leaf {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, ${T.sage}, ${T.leaf});
+  border-radius: 9px; display: flex; align-items: center; justify-content: center;
+  font-size: 15px; box-shadow: 0 3px 12px rgba(74,124,89,0.4);
+  border: 1.5px solid rgba(143,186,153,0.3);
+  transition: transform 0.25s cubic-bezier(0.22,1,0.36,1); flex-shrink: 0;
+}
+.nav-logo:hover .logo-leaf { transform: rotate(-8deg) scale(1.12); }
+
+/* Desktop nav links — hidden on mobile */
+.nav-links { display: none; gap: 2px; flex: 1; justify-content: center; }
+@media (min-width: ${BP.lg}px) { .nav-links { display: flex; } }
+
+.nav-link {
+  background: none; border: none; cursor: pointer; font-size: 13px; font-weight: 500;
+  color: rgba(255,255,255,0.9); padding: 8px 12px; border-radius: 8px;
+  transition: all 0.2s; position: relative;
+  min-height: var(--touch-min); display: flex; align-items: center;
+}
+:not(.dark-mode) .nav-link { color: ${T.forest}; }
+.navbar.scrolled .nav-link, .navbar.solid .nav-link { color: ${T.forest}; }
+.nav-link:hover { background: rgba(74,124,89,0.12); }
+.navbar.scrolled .nav-link:hover, .navbar.solid .nav-link:hover { color: ${T.forest}; }
+.nav-link.active { font-weight: 700; }
+.navbar.solid .nav-link.active, .navbar.scrolled .nav-link.active { color: ${T.forest}; background: rgba(74,124,89,0.1); }
+.nav-link.active::after { content:''; position:absolute; bottom:4px; left:50%; transform:translateX(-50%); width:16px; height:2px; background:${T.sage}; border-radius:2px; }
+/* Dark mode nav links */
+.dark-mode .nav-link { color: rgba(200,223,197,0.9); }
+.dark-mode .navbar.solid .nav-link,
+.dark-mode .navbar.scrolled .nav-link { color: rgba(200,223,197,0.9); }
+.dark-mode .navbar.solid .nav-link.active,
+.dark-mode .navbar.scrolled .nav-link.active { color: white; }
+
+.nav-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+
+/* Dark toggle — always visible */
+.dark-toggle-wrap { display: flex; align-items: center; gap: 5px; }
+.dark-toggle-label { font-size: 14px; display: none; }
+@media (min-width: 480px) { .dark-toggle-label { display: block; } }
+.dark-toggle { position:relative; width:40px; height:22px; background:rgba(107,158,122,0.25); border-radius:11px; border:1px solid rgba(107,158,122,0.3); cursor:pointer; transition:background 0.3s; min-width:40px; }
+.dark-toggle.on { background:${T.leaf}; }
+.dark-toggle-ball { position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:white; transition:transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow:0 1px 4px rgba(0,0,0,0.2); }
+.dark-toggle.on .dark-toggle-ball { transform:translateX(18px); }
+
+/* Login button */
+.nav-btn-sm {
+  background: rgba(255,255,255,0.15); color: white;
+  border: 1.5px solid rgba(255,255,255,0.35);
+  cursor: pointer; padding: 0 14px; border-radius: 8px;
+  font-size: 13px; font-weight: 700;
+  transition: all 0.2s; backdrop-filter: blur(8px);
+  height: 36px; display: flex; align-items: center;
+  /* Hide text on tiny phones, show icon */
+}
+:not(.dark-mode) .nav-btn-sm {
+  background: ${T.forest}; color: white; border-color: transparent;
+}
+.dark-mode .nav-btn-sm {
+  background: rgba(255,255,255,0.15); color: white;
+  border: 1.5px solid rgba(255,255,255,0.35);
+}
+.navbar.scrolled .nav-btn-sm, .navbar.solid .nav-btn-sm {
+  background: ${T.forest}; color: white; border-color: transparent;
+}
+.dark-mode .navbar.scrolled .nav-btn-sm, .dark-mode .navbar.solid .nav-btn-sm {
+  background: ${T.sage}; color: white; border-color: transparent;
+}
+.nav-btn-sm:hover { filter: brightness(1.12); transform: translateY(-1px); }
+.nav-btn-sm:active { transform: scale(0.97); }
+
+/* Icon buttons */
+.nav-btn-icon {
+  background: none; border: none; color: inherit; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  padding: 8px; border-radius: 8px; transition: all 0.2s;
+  min-height: var(--touch-min);
+}
+.nav-btn-icon:hover { background: rgba(74,124,89,0.12); }
+
+/* Cart button — compact on mobile */
+.nav-cart {
+  display: flex; align-items: center; gap: 5px;
+  background: rgba(255,255,255,0.15); color: white;
+  border: 1.5px solid rgba(255,255,255,0.3);
+  backdrop-filter: blur(8px); cursor: pointer;
+  padding: 0 12px; border-radius: 10px;
+  font-size: 13px; font-weight: 700;
+  transition: all 0.2s; position: relative;
+  height: 38px; white-space: nowrap;
+}
+/* On mobile, hide "Cart" text, show only icon */
+.nav-cart-text { display: none; }
+@media (min-width: 480px) { .nav-cart-text { display: inline; } }
+:not(.dark-mode) .nav-cart {
+  background: ${T.forest}; color: white; border-color: transparent;
+  box-shadow: 0 2px 10px rgba(26,58,42,0.2);
+}
+.dark-mode .nav-cart {
+  background: rgba(255,255,255,0.15); color: white;
+  border: 1.5px solid rgba(255,255,255,0.3);
+}
+.navbar.scrolled .nav-cart, .navbar.solid .nav-cart {
+  background: ${T.forest}; color: white; border-color: transparent;
+  box-shadow: 0 2px 10px rgba(26,58,42,0.2);
+}
+.dark-mode .navbar.scrolled .nav-cart, .dark-mode .navbar.solid .nav-cart {
+  background: ${T.sage}; color: white;
+}
+.nav-cart:hover { transform: scale(1.04); box-shadow: 0 4px 16px rgba(26,58,42,0.25); }
+.cart-badge {
+  position: absolute; top: -6px; right: -6px;
+  background: ${T.sunset}; color: white;
+  font-size: 10px; font-weight: 800; width: 18px; height: 18px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  border: 2px solid white; animation: bounceIn 0.3s cubic-bezier(0.22,1,0.36,1);
+}
+
+/* ─── MOBILE BOTTOM NAV ─── */
+.mob-nav {
+  display: flex;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 800;
+  background: rgba(253,250,245,0.98);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid rgba(107,158,122,0.12);
+  box-shadow: 0 -4px 24px rgba(26,58,42,0.1);
+  /* Safe area for iPhone home indicator */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  height: calc(var(--mob-nav-h) + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: ${BP.lg}px) { .mob-nav { display: none; } }
+
+.mob-btn {
+  flex: 1; background: none; border: none; cursor: pointer;
+  padding: 8px 4px 10px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  font-size: 9px; font-weight: 600;
+  color: ${T.moss}; text-transform: uppercase; letter-spacing: 0.05em;
+  transition: all 0.18s cubic-bezier(0.22,1,0.36,1); position: relative;
+  /* Ensure minimum touch target */
+  min-width: var(--touch-min);
+}
+.mob-btn.active { color: ${T.forest}; }
+.mob-btn.active::before {
+  content: ''; position: absolute; top: 0; left: 20%; right: 20%;
+  height: 2.5px; background: ${T.sage}; border-radius: 0 0 4px 4px;
+}
+.mob-btn:active { transform: scale(0.88); }
+.mob-btn-icon { font-size: 20px; position: relative; line-height: 1; }
+.mob-btn-label { font-size: 9px; line-height: 1; }
+
+/* ─── HERO ─── */
+.video-hero {
+  position: relative; min-height: 100svh;
+  display: flex; align-items: center; overflow: hidden;
+  background: ${T.forest};
+}
+@media (min-width: ${BP.md}px) { .video-hero { min-height: 95vh; } }
+.video-overlay { position:absolute; inset:0; background:linear-gradient(160deg,rgba(10,30,20,0.72) 0%,rgba(26,58,42,0.5) 50%,rgba(10,30,20,0.65) 100%); z-index:1; }
+.video-fallback { position:absolute; inset:0; background:linear-gradient(135deg,${T.forest} 0%,${T.leaf} 60%,${T.sage} 100%); }
+.video-hero-content {
+  position: relative; z-index: 2;
+  padding: 80px var(--container-px) 80px;
+  width: 100%; max-width: ${BP.xl}px; margin: 0 auto;
+}
+@media (min-width: ${BP.md}px) { .video-hero-content { padding: 100px 28px 80px; } }
+
+.hero-h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(38px, 8vw, 84px); font-weight: 700;
+  color: white; line-height: 1.0; margin-bottom: 16px;
+  text-shadow: 0 4px 24px rgba(0,0,0,0.35);
+}
+.hero-sub {
+  font-size: clamp(14px, 2vw, 18px); color: rgba(220,235,220,0.92);
+  font-weight: 300; margin-bottom: 28px; line-height: 1.65; max-width: 480px;
+}
+.hero-search {
+  display: flex; align-items: center; background: rgba(255,255,255,0.96);
+  border-radius: 14px; overflow: hidden; max-width: 540px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.5); transition: box-shadow 0.3s;
+}
+.hero-search:focus-within { box-shadow: 0 16px 48px rgba(0,0,0,0.25), 0 0 0 3px rgba(107,158,122,0.3); }
+.hero-search input {
+  flex: 1; border: none; outline: none;
+  padding: 15px 12px; font-size: 14px;
+  color: ${T.forest}; background: transparent; font-family: inherit;
+  min-width: 0; /* prevent flex overflow */
+}
+@media (min-width: ${BP.md}px) { .hero-search input { padding: 18px 14px; } }
+.hero-search-btn {
+  background: linear-gradient(135deg, ${T.sage}, ${T.leaf}); color: white;
+  border: none; cursor: pointer; padding: 15px 20px; font-size: 13px;
+  font-weight: 700; letter-spacing: 0.04em; transition: all 0.2s;
+  white-space: nowrap; flex-shrink: 0;
+}
+@media (min-width: ${BP.md}px) { .hero-search-btn { padding: 16px 28px; } }
+.hero-search-btn:hover { filter: brightness(1.1); }
+.hero-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
+.hero-pill {
+  background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.22);
+  color: rgba(255,255,255,0.9); border-radius: 20px;
+  padding: 7px 14px; font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all 0.2s; backdrop-filter: blur(8px);
+  /* Touch-friendly */
+  min-height: 36px; display: inline-flex; align-items: center;
+}
+.hero-pill:hover { background: rgba(255,255,255,0.25); }
+.hero-stat-bar { display: flex; gap: 24px; margin-top: 36px; flex-wrap: wrap; }
+@media (min-width: ${BP.md}px) { .hero-stat-bar { gap: 40px; margin-top: 48px; } }
+.hero-stat { display: flex; flex-direction: column; gap: 2px; }
+.hero-stat-n { font-family: 'Cormorant Garamond',serif; font-size: clamp(24px,4vw,32px); font-weight: 700; color: white; line-height: 1; }
+.hero-stat-l { font-size: 10px; color: rgba(200,223,197,0.8); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 500; }
+
+/* ─── SECTION HEADINGS ─── */
+.section-head { margin-bottom: 32px; }
+@media (min-width: ${BP.md}px) { .section-head { margin-bottom: 48px; } }
+.section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: ${T.sage}; display: inline-block; margin-bottom: 8px; }
+.section-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(24px, 4vw, 44px); font-weight: 700; color: ${T.forest}; line-height: 1.1; margin-bottom: 8px; }
+.section-sub { font-size: 13px; color: ${T.moss}; font-weight: 300; line-height: 1.6; max-width: 480px; }
+@media (min-width: ${BP.md}px) { .section-sub { font-size: 14px; } }
+
+/* ─── CATEGORY CAROUSEL ─── */
+.cat-carousel-wrap { overflow: hidden; cursor: grab; padding: 12px 0; -webkit-overflow-scrolling: touch; }
+.cat-carousel-wrap:active { cursor: grabbing; }
+.cat-carousel-track { display: flex; gap: 12px; transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); will-change: transform; padding: 4px 0; }
+@media (min-width: ${BP.md}px) { .cat-carousel-track { gap: 16px; } }
+.cat-carousel-track.dragging { transition: none; }
+.cat-item { display: flex; flex-direction: column; align-items: center; gap: 7px; cursor: pointer; flex-shrink: 0; width: 84px; transition: transform 0.22s cubic-bezier(0.22,1,0.36,1); }
+@media (min-width: ${BP.md}px) { .cat-item { width: 100px; gap: 8px; } }
+.cat-item:active { transform: scale(0.94); }
+@media (hover: hover) { .cat-item:hover { transform: translateY(-4px) scale(1.04); } }
+.cat-item.active .cat-img-ring { border-color: ${T.sage}; box-shadow: 0 0 0 3px rgba(74,124,89,0.2), 0 6px 20px rgba(74,124,89,0.25); }
+.cat-img-ring { width: 70px; height: 70px; border-radius: 50%; overflow: hidden; border: 2.5px solid rgba(107,158,122,0.2); transition: all 0.3s; }
+@media (min-width: ${BP.md}px) { .cat-img-ring { width: 80px; height: 80px; } }
+.cat-img-ring img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
+@media (hover: hover) { .cat-item:hover .cat-img-ring img { transform: scale(1.1); } }
+.cat-label { font-size: 10px; font-weight: 600; color: ${T.forest}; text-align: center; white-space: nowrap; }
+@media (min-width: ${BP.md}px) { .cat-label { font-size: 11px; } }
+.cat-carousel-btn {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 10;
+  width: 34px; height: 34px; border-radius: 50%; background: white;
+  border: 1px solid rgba(107,158,122,0.2); color: ${T.sage}; font-size: 18px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 3px 12px rgba(26,58,42,0.12); transition: all 0.2s;
+}
+@media (hover: hover) { .cat-carousel-btn:hover { background: ${T.forest}; color: white; transform: translateY(-50%) scale(1.08); } }
+.cat-carousel-btn.prev { left: -4px; }
+.cat-carousel-btn.next { right: -4px; }
+
+/* ─── BANNER CAROUSEL ─── */
+.banner-carousel { position: relative; overflow: hidden; touch-action: pan-y; }
+.banner-slides { display: flex; transition: transform 0.65s cubic-bezier(0.25,0.46,0.45,0.94); will-change: transform; }
+.banner-slide { min-width: 100%; position: relative; height: 260px; overflow: hidden; }
+@media (min-width: ${BP.md}px) { .banner-slide { height: 380px; } }
+@media (min-width: ${BP.lg}px) { .banner-slide { height: 480px; } }
+.banner-slide img { width: 100%; height: 100%; object-fit: cover; }
+.banner-slide.active img { animation: kenBurns 7s ease forwards; }
+.banner-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to right, rgba(10,30,20,0.85) 0%, rgba(26,58,42,0.45) 60%, transparent 100%);
+  display: flex; align-items: center; padding: 0 20px;
+}
+@media (min-width: ${BP.md}px) { .banner-overlay { padding: 0 48px; } }
+.banner-content { color: white; max-width: 380px; }
+@media (min-width: ${BP.md}px) { .banner-content { max-width: 460px; } }
+.banner-dots { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; }
+.banner-dot { width: 6px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.4); border: none; cursor: pointer; transition: all 0.3s; padding: 0; min-width: 6px; }
+@media (min-width: ${BP.md}px) { .banner-dot { width: 8px; height: 8px; border-radius: 4px; } }
+.banner-dot.active { background: white; width: 22px; }
+@media (min-width: ${BP.md}px) { .banner-dot.active { width: 28px; } }
+/* Arrows: hidden on small mobile (rely on swipe), visible on tablet+ */
+.banner-arrow {
+  display: none;
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 42px; height: 42px; border-radius: 50%;
+  background: rgba(255,255,255,0.15); backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.3); color: white;
+  font-size: 20px; cursor: pointer;
+  align-items: center; justify-content: center; transition: all 0.2s; z-index: 10;
+}
+@media (min-width: ${BP.md}px) { .banner-arrow { display: flex; } }
+.banner-arrow:hover { background: rgba(255,255,255,0.3); transform: translateY(-50%) scale(1.08); }
+.banner-arrow.prev { left: 16px; }
+.banner-arrow.next { right: 16px; }
+
+/* ─── RESTAURANT CARDS — 2-col on mobile ─── */
+.rest-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+@media (min-width: ${BP.md}px) { .rest-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; } }
+@media (min-width: 1100px) { .rest-grid { grid-template-columns: repeat(4, 1fr); gap: 24px; } }
+
+.rest-card {
+  background: white; border-radius: var(--radius-lg); overflow: hidden;
+  box-shadow: var(--shadow-sm); cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s;
+  border: 1px solid rgba(107,158,122,0.1);
+  /* Prevent tap highlight flash on mobile */
+  -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) { .rest-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: var(--shadow-lg); border-color: ${T.fern}; } }
+.rest-card:active { transform: scale(0.98); }
+
+.rest-img { position: relative; height: 140px; overflow: hidden; }
+@media (min-width: ${BP.md}px) { .rest-img { height: 180px; } }
+@media (min-width: ${BP.lg}px) { .rest-img { height: 200px; } }
+.rest-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s cubic-bezier(0.4,0,0.2,1); }
+@media (hover: hover) { .rest-card:hover .rest-img img { transform: scale(1.08); } }
+.rest-badge { position:absolute; top:8px; left:8px; background:rgba(10,30,18,0.82); backdrop-filter:blur(8px); color:white; font-size:8px; font-weight:700; padding:3px 8px; border-radius:5px; letter-spacing:0.06em; text-transform:uppercase; border:1px solid rgba(255,255,255,0.15); }
+.rest-discount { position:absolute; top:8px; right:8px; background:linear-gradient(135deg,${T.sunset},${T.dusk}); color:white; font-size:8px; font-weight:700; padding:3px 8px; border-radius:5px; letter-spacing:0.04em; }
+.rest-body { padding: 12px 12px 14px; }
+@media (min-width: ${BP.md}px) { .rest-body { padding: 14px 16px 18px; } }
+.rest-name { font-family:'Cormorant Garamond',serif; font-size:16px; font-weight:700; color:${T.forest}; margin-bottom:2px; line-height:1.2; }
+@media (min-width: ${BP.md}px) { .rest-name { font-size: 19px; } }
+.rest-cuisine { font-size:11px; color:${T.moss}; margin-bottom:8px; }
+.rest-meta { display:flex; align-items:center; gap:8px; font-size:11px; flex-wrap:wrap; }
+.star { color:${T.amber}; font-size:11px; }
+.rating { font-weight:700; color:${T.forest}; }
+.rest-time { color:${T.moss}; }
+.rest-price { color:${T.earth}; font-weight:600; margin-left:auto; }
+
+/* ─── TRENDING — horizontal scroll on mobile ─── */
+.trending-scroll {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 8px;
+  /* hide scrollbar */
+  scrollbar-width: none;
+}
+.trending-scroll::-webkit-scrollbar { display: none; }
+@media (min-width: ${BP.md}px) {
+  .trending-scroll {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    overflow-x: visible;
+    scroll-snap-type: none;
+    gap: 20px;
+  }
+}
+@media (min-width: ${BP.lg}px) { .trending-scroll { grid-template-columns: repeat(3, 1fr); gap: 24px; } }
+
+.trending-card {
+  background: white; border-radius: var(--radius-lg); overflow: hidden;
+  box-shadow: var(--shadow-sm); border: 1px solid rgba(107,158,122,0.1);
+  cursor: pointer; transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s;
+  /* Snap for horizontal scroll */
+  scroll-snap-align: start;
+  flex-shrink: 0;
+  width: 240px;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (min-width: ${BP.md}px) { .trending-card { width: auto; } }
+@media (hover: hover) { .trending-card:hover { transform: translateY(-8px) scale(1.01); box-shadow: var(--shadow-lg); border-color:${T.fern}; } }
+.trending-card:active { transform: scale(0.98); }
+.trending-img { position:relative; height:180px; overflow:hidden; }
+@media (min-width: ${BP.md}px) { .trending-img { height: 200px; } }
+@media (min-width: ${BP.lg}px) { .trending-img { height: 220px; } }
+.trending-img img { width:100%; height:100%; object-fit:cover; transition:transform 0.6s; }
+@media (hover: hover) { .trending-card:hover .trending-img img { transform:scale(1.08); } }
+.trending-tag { position:absolute; top:10px; left:10px; background:rgba(10,30,18,0.82); backdrop-filter:blur(10px); color:white; font-size:10px; font-weight:700; padding:4px 10px; border-radius:20px; letter-spacing:0.05em; border:1px solid rgba(255,255,255,0.15); }
+.trending-veg { position:absolute; top:10px; right:10px; width:20px; height:20px; border-radius:3px; border:2px solid; display:flex; align-items:center; justify-content:center; font-size:8px; font-weight:900; background:white; }
+.trending-body { padding: 14px 14px 10px; }
+.trending-name { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:700; color:${T.forest}; margin-bottom:2px; }
+.trending-rest { font-size:10px; color:${T.moss}; margin-bottom:10px; cursor:pointer; transition:color 0.2s; }
+@media (hover: hover) { .trending-rest:hover { color:${T.sage}; text-decoration:underline; } }
+.trending-meta { display:flex; align-items:center; justify-content:space-between; }
+.trending-price { font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:700; color:${T.leaf}; }
+.trending-rating { display:flex; align-items:center; gap:4px; font-size:11px; color:${T.moss}; }
+.trending-add-btn {
+  width: calc(100% - 24px); margin: 0 12px 12px;
+  background: linear-gradient(135deg,${T.sage},${T.leaf}); color:white;
+  border:none; cursor:pointer; padding:13px 12px; font-size:13px;
+  font-weight:600; letter-spacing:0.04em; border-radius:10px;
+  transition:all 0.22s; display:block;
+  /* Touch-friendly: ensure height */
+  min-height: var(--touch-min);
+}
+@media (hover: hover) { .trending-add-btn:hover { filter:brightness(1.1); transform:translateY(-2px); box-shadow:0 6px 20px rgba(45,90,61,0.3); } }
+.trending-add-btn:active { transform:scale(0.97); }
+
+/* ─── MENU PAGE ─── */
+.menu-hero { background:linear-gradient(135deg,${T.forest} 0%,${T.leaf} 100%); padding:48px 0 0; position:relative; overflow:hidden; }
+@media (min-width: ${BP.md}px) { .menu-hero { padding: 60px 0 0; } }
+.menu-sticky-cats { position:sticky; top:var(--nav-h); z-index:100; background:rgba(26,58,42,0.97); backdrop-filter:blur(16px); border-bottom:1px solid rgba(200,223,197,0.1); }
+.menu-cat-tabs { display:flex; gap:6px; overflow-x:auto; padding:10px 16px; scrollbar-width:none; -webkit-overflow-scrolling:touch; scroll-snap-type:x proximity; }
+@media (min-width: ${BP.md}px) { .menu-cat-tabs { padding: 12px 28px; } }
+.menu-cat-tabs::-webkit-scrollbar { display:none; }
+.menu-cat-tab {
+  background:rgba(255,255,255,0.08); border:1px solid rgba(200,223,197,0.15);
+  color:rgba(200,223,197,0.75); border-radius:20px; padding:8px 16px;
+  font-size:12px; font-weight:600; cursor:pointer; transition:all 0.2s; white-space:nowrap;
+  min-height: 36px; display:inline-flex; align-items:center; scroll-snap-align:start;
+  flex-shrink:0;
+}
+.menu-cat-tab.active { background:white; color:${T.forest}; border-color:white; }
+@media (hover: hover) { .menu-cat-tab:hover:not(.active) { background:rgba(255,255,255,0.18); color:white; } }
+.menu-items-grid { display:grid; grid-template-columns:1fr; gap:14px; }
+@media (min-width: ${BP.md}px) { .menu-items-grid { grid-template-columns:repeat(2,1fr); gap:18px; } }
+@media (min-width: ${BP.xl}px) { .menu-items-grid { gap: 20px; } }
+
+.menu-item-card {
+  background:white; border-radius:var(--radius-md); overflow:hidden;
+  box-shadow:var(--shadow-sm); border:1px solid rgba(107,158,122,0.1);
+  transition:transform 0.25s cubic-bezier(0.22,1,0.36,1), box-shadow 0.25s;
+  display:flex; -webkit-tap-highlight-color:transparent;
+}
+@media (hover: hover) { .menu-item-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-md); border-color:${T.fern}; } }
+.menu-item-card:active { transform:scale(0.99); }
+.menu-item-img { width:110px; min-width:110px; height:120px; overflow:hidden; position:relative; flex-shrink:0; }
+@media (min-width: ${BP.md}px) { .menu-item-img { width:130px; min-width:130px; height:130px; } }
+.menu-item-img img { width:100%; height:100%; object-fit:cover; transition:transform 0.4s; }
+@media (hover: hover) { .menu-item-card:hover .menu-item-img img { transform:scale(1.06); } }
+.menu-item-body { padding:12px 14px; flex:1; display:flex; flex-direction:column; justify-content:space-between; min-width:0; }
+.menu-item-name { font-weight:700; font-size:14px; color:${T.forest}; margin-bottom:3px; }
+@media (min-width: ${BP.md}px) { .menu-item-name { font-size:15px; } }
+.menu-item-desc { font-size:11px; color:${T.moss}; font-weight:300; line-height:1.5; margin-bottom:6px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.menu-item-bottom { display:flex; align-items:center; justify-content:space-between; gap:6px; flex-wrap:wrap; }
+.menu-item-price { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:700; color:${T.leaf}; }
+@media (min-width: ${BP.md}px) { .menu-item-price { font-size:20px; } }
+.menu-item-badge { font-size:8px; font-weight:700; padding:3px 7px; border-radius:5px; background:${T.forest}; color:white; letter-spacing:0.05em; white-space:nowrap; }
+
+/* Touch-friendly add/qty buttons */
+.menu-add-btn {
+  background:${T.forest}; color:white; border:none; cursor:pointer;
+  border-radius:8px; padding:9px 14px; font-size:12px; font-weight:700;
+  transition:all 0.18s; white-space:nowrap; position:relative; overflow:hidden;
+  min-height: 36px;
+}
+@media (hover: hover) { .menu-add-btn:hover { background:${T.leaf}; transform:scale(1.04); } }
+.menu-add-btn:active { transform:scale(0.94); }
+.menu-qty-ctrl { display:flex; align-items:center; gap:2px; }
+.menu-qty-btn {
+  width: 32px; height: 32px; border-radius:7px; border:1.5px solid ${T.fern};
+  background:none; color:${T.forest}; font-size:15px; font-weight:700; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition:all 0.15s;
+}
+@media (min-width: ${BP.md}px) { .menu-qty-btn { width:28px; height:28px; } }
+@media (hover: hover) { .menu-qty-btn:hover { background:${T.forest}; color:white; border-color:${T.forest}; } }
+.menu-qty-btn:active { transform:scale(0.88); }
+.menu-qty-num { font-weight:700; font-size:14px; min-width:24px; text-align:center; color:${T.forest}; }
+
+/* ─── CART NUDGE ─── */
+.cart-nudge {
+  background: linear-gradient(135deg,${T.forest},${T.leaf}); border-radius:14px;
+  padding:16px 20px; display:flex; align-items:center; justify-content:space-between;
+  box-shadow:var(--shadow-lg); transition:transform 0.3s; animation:scaleIn 0.4s cubic-bezier(0.22,1,0.36,1);
+  gap:12px;
+}
+@media (hover: hover) { .cart-nudge:hover { transform:scale(1.01); } }
+
+/* ─── CART PAGE ─── */
+.cart-layout { display:grid; grid-template-columns:1fr; gap:20px; }
+@media (min-width: ${BP.md}px) { .cart-layout { grid-template-columns:1fr 360px; gap:28px; } }
+@media (min-width: ${BP.lg}px) { .cart-layout { grid-template-columns:1fr 380px; gap:32px; } }
+.cart-item {
+  display:flex; align-items:center; gap:12px; background:white;
+  border-radius:14px; padding:12px 14px; margin-bottom:10px;
+  box-shadow:var(--shadow-sm); border:1px solid rgba(107,158,122,0.1);
+  transition:box-shadow 0.2s; animation:fadeUp 0.3s cubic-bezier(0.22,1,0.36,1) both;
+}
+@media (min-width: ${BP.md}px) { .cart-item { padding:14px 16px; gap:16px; } }
+@media (hover: hover) { .cart-item:hover { box-shadow:var(--shadow-md); } }
+.cart-item-img { width:72px; height:72px; border-radius:10px; overflow:hidden; flex-shrink:0; }
+@media (min-width: ${BP.md}px) { .cart-item-img { width:80px; height:80px; } }
+.cart-item-img img { width:100%; height:100%; object-fit:cover; }
+.qty-ctrl { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+.qty-btn {
+  width: 34px; height: 34px; border-radius:8px; border:1.5px solid ${T.fern};
+  background:none; color:${T.forest}; font-size:16px; font-weight:700; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition:all 0.15s;
+}
+@media (hover: hover) { .qty-btn:hover { background:${T.forest}; color:white; border-color:${T.forest}; } }
+.qty-btn:active { transform:scale(0.88); }
+.cart-summary {
+  background:white; border-radius:var(--radius-lg); padding:20px;
+  box-shadow:var(--shadow-sm); border:1px solid rgba(107,158,122,0.1);
+}
+@media (min-width: ${BP.md}px) { .cart-summary { padding:24px; position:sticky; top:88px; } }
+
+/* ─── BUTTONS — touch-friendly (min 44px height) ─── */
+.btn-primary {
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  background:${T.forest}; color:white; border:none; cursor:pointer;
+  padding:12px 24px; border-radius:12px; font-size:14px; font-weight:600;
+  transition:all 0.22s; box-shadow:var(--shadow-sm);
+  min-height: var(--touch-min);
+}
+@media (min-width: ${BP.md}px) { .btn-primary { padding: 14px 30px; } }
+@media (hover: hover) { .btn-primary:hover { background:${T.leaf}; transform:translateY(-2px); box-shadow:var(--shadow-md); } }
+.btn-primary:active { transform:scale(0.97); }
+
+.btn-nature {
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  background:linear-gradient(135deg,${T.sage},${T.leaf}); color:white;
+  border:none; cursor:pointer; padding:12px 24px; border-radius:12px;
+  font-size:14px; font-weight:600; transition:all 0.22s;
+  box-shadow:0 4px 16px rgba(74,124,89,0.28);
+  min-height: var(--touch-min);
+}
+@media (min-width: ${BP.md}px) { .btn-nature { padding: 14px 30px; } }
+@media (hover: hover) { .btn-nature:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(74,124,89,0.38); filter:brightness(1.06); } }
+.btn-nature:active { transform:scale(0.97); }
+
+.btn-outline {
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  background:transparent; color:${T.sage}; cursor:pointer;
+  padding:11px 22px; border-radius:12px; font-size:14px; font-weight:600;
+  border:1.5px solid rgba(107,158,122,0.4); transition:all 0.22s;
+  min-height: var(--touch-min);
+}
+@media (hover: hover) { .btn-outline:hover { border-color:${T.sage}; background:rgba(107,158,122,0.08); color:${T.forest}; } }
+.btn-outline:active { transform:scale(0.97); }
+
+/* ─── FORM FIELDS — touch-friendly ─── */
+.field {
+  width:100%; background:${T.sand}; border:1.5px solid rgba(107,158,122,0.2);
+  color:${T.forest}; padding:14px 16px; font-size:16px; /* 16px prevents iOS zoom */
+  outline:none; transition:border-color 0.25s, box-shadow 0.25s;
+  border-radius:12px; font-family:inherit; -webkit-appearance:none;
+  min-height: var(--touch-min);
+}
+.field:focus { border-color:${T.sage}; box-shadow:0 0 0 3px rgba(107,158,122,0.12); background:white; }
+.field::placeholder { color:${T.moss}; opacity:0.7; font-size:14px; }
+
+/* ─── CHIPS ─── */
+.chip {
+  background:white; border:1.5px solid rgba(107,158,122,0.2); color:${T.sage};
+  border-radius:20px; padding:9px 16px; font-size:12px; font-weight:500;
+  cursor:pointer; transition:all 0.2s; white-space:nowrap;
+  min-height:36px; display:inline-flex; align-items:center;
+}
+.chip:hover, .chip.active { border-color:${T.sage}; background:rgba(107,158,122,0.1); color:${T.forest}; }
+.chip:active { transform:scale(0.96); }
+
+/* ─── TOAST — above mobile nav ─── */
+.toast {
+  position:fixed; bottom:calc(var(--mob-nav-h) + 12px); left:50%; transform:translateX(-50%);
+  background:${T.forest}; color:white; padding:12px 22px; border-radius:28px;
+  font-size:13px; font-weight:600; z-index:9999; box-shadow:var(--shadow-lg);
+  animation:toastIn 0.3s cubic-bezier(0.4,0,0.2,1) both; white-space:nowrap;
+  max-width: calc(100vw - 32px); text-align:center;
+}
+@media (min-width: ${BP.lg}px) { .toast { bottom: 24px; } }
+
+/* ─── EMPTY / ERROR STATES ─── */
+.empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; text-align:center; }
+@media (min-width: ${BP.md}px) { .empty-state { padding: 80px 24px; } }
+.empty-state-icon { font-size:60px; margin-bottom:16px; animation:pulse 2.5s ease-in-out infinite; }
+@media (min-width: ${BP.md}px) { .empty-state-icon { font-size:72px; } }
+.empty-state h3 { font-family:'Cormorant Garamond',serif; font-size:26px; font-weight:700; color:${T.forest}; margin-bottom:8px; }
+.empty-state p { color:${T.moss}; font-size:13px; font-weight:300; margin-bottom:24px; max-width:300px; line-height:1.6; }
+.error-state { background:linear-gradient(135deg,rgba(232,116,42,0.06),rgba(196,91,26,0.04)); border:1px solid rgba(232,116,42,0.2); border-radius:var(--radius-lg); padding:28px 20px; text-align:center; }
+.error-state-icon { font-size:42px; margin-bottom:14px; }
+
+/* ─── NATURE DIVIDER ─── */
+.nature-divider { background:linear-gradient(180deg,${T.cream} 0%,${T.sand} 100%); padding:48px 0; border-top:1px solid rgba(107,158,122,0.15); border-bottom:1px solid rgba(107,158,122,0.15); position:relative; overflow:hidden; }
+@media (min-width: ${BP.md}px) { .nature-divider { padding: 60px 0; } }
+.nd-pattern { position:absolute; inset:0; opacity:0.04; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath d='M50 5 C30 25 20 45 50 65 C80 45 70 25 50 5Z' fill='%231A3A2A'/%3E%3C/svg%3E"); background-size:50px 50px; }
+
+/* ─── FAQ ACCORDION ─── */
+.faq-item { background:white; border-radius:14px; overflow:hidden; border:1.5px solid rgba(107,158,122,0.14); margin-bottom:10px; transition:border-color 0.3s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s, transform 0.22s; }
+@media (hover: hover) { .faq-item:hover, .faq-item:focus-within { border-color:${T.sage}; box-shadow:0 6px 24px rgba(74,124,89,0.12); transform:translateX(3px); } }
+.faq-item.faq-open { border-color:${T.sage}; box-shadow:0 6px 24px rgba(74,124,89,0.12); }
+.faq-q { width:100%; background:none; border:none; cursor:pointer; padding:18px 20px; display:flex; justify-content:space-between; align-items:center; gap:12px; text-align:left; transition:background 0.22s; min-height:var(--touch-min); }
+.faq-item.faq-open .faq-q, .faq-item:hover .faq-q { background:rgba(74,124,89,0.04); }
+.faq-q-text { font-size:14px; font-weight:600; color:${T.forest}; line-height:1.4; transition:color 0.2s; }
+.faq-item.faq-open .faq-q-text, .faq-item:hover .faq-q-text { color:${T.leaf}; }
+.faq-icon { width:24px; height:24px; border-radius:50%; background:rgba(107,158,122,0.1); border:1.5px solid rgba(107,158,122,0.2); display:flex; align-items:center; justify-content:center; color:${T.moss}; font-size:16px; flex-shrink:0; transition:transform 0.32s cubic-bezier(0.22,1,0.36,1), background 0.22s, border-color 0.22s, color 0.22s; }
+.faq-item.faq-open .faq-icon, .faq-item:hover .faq-icon { transform:rotate(45deg); background:${T.sage}; border-color:${T.sage}; color:white; }
+.faq-ans { display:grid; grid-template-rows:0fr; transition:grid-template-rows 0.38s cubic-bezier(0.4,0,0.2,1); }
+.faq-ans.open { grid-template-rows:1fr; }
+.faq-ans-inner { overflow:hidden; opacity:0; transform:translateY(-4px); transition:opacity 0.28s 0.04s ease, transform 0.32s 0.04s cubic-bezier(0.22,1,0.36,1); }
+.faq-ans.open .faq-ans-inner { opacity:1; transform:translateY(0); }
+.faq-ans-inner p { margin:0 18px 16px; font-size:13px; color:${T.earth}; font-weight:300; line-height:1.8; padding:10px 14px; background:rgba(74,124,89,0.03); border-left:3px solid rgba(74,124,89,0.2); border-radius:0 8px 8px 0; }
+
+/* ─── PAGE HERO BANNERS ─── */
+.page-banner { position:relative; min-height:260px; display:flex; align-items:center; overflow:hidden; }
+@media (min-width: ${BP.md}px) { .page-banner { min-height:340px; } }
+@media (min-width: ${BP.lg}px) { .page-banner { min-height:380px; } }
+.page-banner-img { position:absolute; inset:0; z-index:0; width:100%; height:100%; object-fit:cover; object-position:center 40%; animation:bannerZoom 10s ease forwards; }
+.page-banner-overlay { position:absolute; inset:0; z-index:1; }
+.page-banner-content { position:relative; z-index:2; width:100%; padding:90px 0 60px; animation:fadeUp 0.6s cubic-bezier(0.22,1,0.36,1) both; }
+@media (min-width: ${BP.md}px) { .page-banner-content { padding:110px 0 78px; } }
+.page-banner-eyebrow { font-size:10px; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:${T.fern}; display:inline-flex; align-items:center; gap:8px; margin-bottom:12px; }
+.page-banner-eyebrow::before { content:''; display:inline-block; width:20px; height:1.5px; background:${T.fern}; border-radius:2px; }
+.page-banner-h1 { font-family:'Cormorant Garamond',serif; font-size:clamp(32px,6vw,68px); font-weight:700; color:white; line-height:1.0; margin-bottom:12px; text-shadow:0 4px 24px rgba(0,0,0,0.35); }
+.page-banner-sub { font-size:clamp(13px,1.8vw,17px); color:rgba(220,237,220,0.92); font-weight:300; line-height:1.65; max-width:480px; }
+
+/* ─── TRACK PAGE ─── */
+.track-steps { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:24px; position:relative; gap:2px; }
+.track-steps::before { content:''; position:absolute; top:18px; left:20px; right:20px; height:2px; background:rgba(107,158,122,0.15); z-index:0; }
+.track-step { display:flex; flex-direction:column; align-items:center; gap:6px; flex:1; position:relative; z-index:1; }
+.track-icon { width:38px; height:38px; border-radius:50%; background:white; border:2px solid rgba(107,158,122,0.2); display:flex; align-items:center; justify-content:center; font-size:16px; transition:all 0.4s; box-shadow:var(--shadow-sm); }
+@media (min-width: ${BP.md}px) { .track-icon { width:44px; height:44px; font-size:18px; } }
+.track-step.done .track-icon { background:${T.sage}; border-color:${T.sage}; box-shadow:0 3px 12px rgba(74,124,89,0.3); }
+.track-step.current .track-icon { border-color:${T.sunset}; animation:trackPulse 1.5s ease-in-out infinite; }
+.track-label { font-size:9px; font-weight:600; color:${T.moss}; text-align:center; text-transform:uppercase; letter-spacing:0.05em; }
+@media (min-width: ${BP.md}px) { .track-label { font-size:10px; } }
+.track-step.done .track-label { color:${T.forest}; }
+
+/* ─── DARK MODE TOGGLE ─── */
+.dark-toggle { position:relative; width:40px; height:22px; background:rgba(107,158,122,0.25); border-radius:11px; border:1px solid rgba(107,158,122,0.3); cursor:pointer; transition:background 0.3s; min-height:auto; }
+.dark-toggle.on { background:${T.leaf}; }
+.dark-toggle-ball { position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:white; transition:transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow:0 1px 4px rgba(0,0,0,0.2); }
+.dark-toggle.on .dark-toggle-ball { transform:translateX(18px); }
+
+/* ─── DARK MODE ─── */
+body.dark-mode { background:#0f1f18 !important; color:#e8f0e8 !important; }
+body.dark-mode .navbar.scrolled,
+body.dark-mode .navbar.solid { background:rgba(10,21,16,0.97) !important; border-bottom-color:rgba(143,186,153,0.15) !important; }
+body.dark-mode .nav-logo { color:#e8f5e8 !important; }
+body.dark-mode .navbar.scrolled .nav-logo, body.dark-mode .navbar.solid .nav-logo { color:#c8e8c8 !important; }
+body.dark-mode .nav-link { color:rgba(200,223,197,0.85) !important; }
+body.dark-mode .navbar.solid .nav-link, body.dark-mode .navbar.scrolled .nav-link { color:rgba(200,223,197,0.85) !important; }
+body.dark-mode .nav-link:hover, body.dark-mode .nav-link.active { color:#e8f5e8 !important; background:rgba(143,186,153,0.12) !important; }
+body.dark-mode .navbar.scrolled .nav-btn-sm, body.dark-mode .navbar.solid .nav-btn-sm { background:${T.sage} !important; }
+body.dark-mode .navbar.scrolled .nav-cart, body.dark-mode .navbar.solid .nav-cart { background:${T.sage} !important; }
+body.dark-mode .rest-card, body.dark-mode .trending-card, body.dark-mode .menu-item-card,
+body.dark-mode .cart-item, body.dark-mode .faq-item, body.dark-mode .skel-card, body.dark-mode .skel-menu-card { background:#192d22 !important; border-color:rgba(143,186,153,0.12) !important; }
+body.dark-mode .faq-item.faq-open { background:#1e3628 !important; border-color:${T.sage} !important; }
+body.dark-mode .faq-q-text { color:#d4ebd4 !important; }
+body.dark-mode .faq-item.faq-open .faq-q-text { color:${T.fern} !important; }
+body.dark-mode .faq-ans-inner p { color:#8fba99 !important; background:rgba(74,124,89,0.06) !important; }
+body.dark-mode .rest-name, body.dark-mode .trending-name, body.dark-mode .menu-item-name,
+body.dark-mode .section-title, body.dark-mode h1, body.dark-mode h2, body.dark-mode h3 { color:#d4ebd4 !important; }
+body.dark-mode .rest-cuisine, body.dark-mode .section-sub, body.dark-mode .menu-item-desc { color:#7aab8a !important; }
+body.dark-mode .field { background:#1e3628 !important; color:#e8f0e8 !important; border-color:rgba(143,186,153,0.12) !important; }
+body.dark-mode .chip { background:#192d22 !important; color:#8fba99 !important; border-color:rgba(143,186,153,0.12) !important; }
+body.dark-mode .cart-summary { background:#192d22 !important; }
+body.dark-mode .mob-nav { background:rgba(10,21,16,0.97) !important; border-color:rgba(143,186,153,0.15) !important; }
+body.dark-mode .mob-btn { color:#7aab8a !important; }
+body.dark-mode .mob-btn.active { color:#c8e8c8 !important; }
+body.dark-mode .footer { background:#070f0b !important; }
+body.dark-mode .skel { background:linear-gradient(90deg,#1a2e20 25%,#223a28 50%,#1a2e20 75%) !important; background-size:800px 100% !important; }
+body.dark-mode .offer-card { background:#192d22 !important; }
+body.dark-mode .checkout-section { background:#192d22 !important; border-color:rgba(143,186,153,0.12) !important; }
+body.dark-mode .btn-outline { border-color:rgba(143,186,153,0.35) !important; color:${T.fern} !important; }
+body.dark-mode .btn-outline:hover { background:rgba(143,186,153,0.1) !important; color:#d4ebd4 !important; }
+
+/* ─── FOOTER ─── */
+.footer { background:${T.forest}; color:rgba(200,223,197,0.8); padding:40px 0 0; position:relative; overflow:hidden; }
+@media (min-width: ${BP.md}px) { .footer { padding: 56px 0 0; } }
+.footer-leaves { position:absolute; inset:0; pointer-events:none; overflow:hidden; opacity:0.04; }
+.footer-leaf { position:absolute; animation:footerFloat linear infinite; }
+.footer-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; padding-bottom:32px; align-items:start; }
+@media (min-width: ${BP.md}px) { .footer-grid { grid-template-columns:1.7fr 1fr 1fr 1fr; gap:40px; padding-bottom:40px; } }
+.footer-brand { font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:700; color:white; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.footer-title { font-size:10px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:${T.fern}; margin-bottom:14px; padding-bottom:7px; border-bottom:1px solid rgba(200,223,197,0.1); }
+.footer-link { display:block; font-size:12px; font-weight:300; margin-bottom:8px; cursor:pointer; transition:color 0.2s; color:rgba(200,223,197,0.7); background:none; border:none; text-align:left; font-family:inherit; padding:2px 0; min-height:28px; }
+@media (hover: hover) { .footer-link:hover { color:white; } }
+.footer-bar { border-top:1px solid rgba(200,223,197,0.1); padding:16px 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+
+/* ─── OFFERS GRID ─── */
+.offers-grid { display:grid; grid-template-columns:1fr; gap:14px; }
+@media (min-width: ${BP.md}px) { .offers-grid { grid-template-columns:repeat(2,1fr); gap:20px; } }
+.offer-card { background:white; border-radius:var(--radius-lg); padding:22px; box-shadow:var(--shadow-sm); border:1px solid rgba(107,158,122,0.1); transition:all 0.28s; }
+@media (min-width: ${BP.md}px) { .offer-card { padding: 28px; } }
+@media (hover: hover) { .offer-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-lg); } }
+.offer-code { display:inline-block; background:${T.sand}; border:1.5px dashed rgba(107,158,122,0.4); border-radius:8px; padding:5px 12px; font-size:12px; font-weight:700; letter-spacing:0.1em; color:${T.forest}; margin-bottom:12px; }
+
+/* ─── CHECKOUT ─── */
+.checkout-layout { display:grid; grid-template-columns:1fr; gap:20px; }
+@media (min-width: ${BP.md}px) { .checkout-layout { grid-template-columns:1fr 360px; gap:28px; } }
+@media (min-width: ${BP.lg}px) { .checkout-layout { grid-template-columns:1fr 380px; gap:32px; } }
+.checkout-section { background:white; border-radius:var(--radius-lg); padding:20px; box-shadow:var(--shadow-sm); border:1px solid rgba(107,158,122,0.1); margin-bottom:16px; }
+@media (min-width: ${BP.md}px) { .checkout-section { padding: 28px; margin-bottom:20px; } }
+.checkout-section h3 { font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:700; color:${T.forest}; margin-bottom:18px; display:flex; align-items:center; gap:10px; }
+@media (min-width: ${BP.md}px) { .checkout-section h3 { font-size:22px; } }
+.form-row { display:grid; grid-template-columns:1fr; gap:14px; }
+@media (min-width: ${BP.sm}px) { .form-row { grid-template-columns:1fr 1fr; gap:16px; } }
+.form-group { margin-bottom:14px; }
+.form-group label { display:block; font-size:11px; font-weight:700; color:${T.moss}; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:6px; }
+
+/* ─── LOADING SPINNER ─── */
+.spinner { width:32px; height:32px; border:3px solid rgba(107,158,122,0.2); border-top-color:${T.sage}; border-radius:50%; animation:spin 0.7s linear infinite; }
+
+/* ─── COUPON ─── */
+.coupon-input-row { display:flex; gap:8px; }
+.coupon-msg-success { color:#4CAF50; font-size:12px; font-weight:600; margin-top:7px; display:flex; align-items:center; gap:5px; }
+.coupon-msg-error   { color:#E53E3E; font-size:12px; font-weight:600; margin-top:7px; display:flex; align-items:center; gap:5px; }
+
+/* ─── MAP ─── */
+.realistic-map { border-radius:var(--radius-lg); overflow:hidden; border:1px solid rgba(107,158,122,0.15); margin-bottom:20px; position:relative; box-shadow:var(--shadow-md); height:280px; }
+@media (min-width: ${BP.md}px) { .realistic-map { height:360px; } }
+.map-eta-chip { position:absolute; top:12px; right:12px; background:${T.forest}; color:white; border-radius:20px; padding:7px 14px; font-size:12px; font-weight:700; z-index:12; box-shadow:0 3px 12px rgba(0,0,0,0.25); }
+
+/* ─── ADDRESS MODAL ─── */
+.addr-modal-bg { position:fixed; inset:0; background:rgba(26,58,42,0.55); backdrop-filter:blur(6px); z-index:900; display:flex; align-items:flex-end; justify-content:center; padding:0; animation:fadeIn 0.22s ease both; }
+@media (min-width: ${BP.md}px) { .addr-modal-bg { align-items:center; padding:20px; } }
+.addr-modal {
+  background:white; width:100%; max-width:480px;
+  box-shadow:0 -8px 40px rgba(26,58,42,0.2);
+  animation:slideUp 0.32s cubic-bezier(0.22,1,0.36,1) both;
+  border-radius:20px 20px 0 0; padding:24px 20px;
+  /* Safe area for iPhone */
+  padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));
+}
+@media (min-width: ${BP.md}px) {
+  .addr-modal { border-radius:20px; padding:32px; animation:fadeUp 0.32s cubic-bezier(0.22,1,0.36,1) both; }
+}
+
+/* ─── LOGIN ─── */
+.login-page { display:grid; grid-template-columns:1fr; min-height:100vh; }
+@media (min-width: ${BP.md}px) { .login-page { grid-template-columns:1fr 1fr; } }
+.login-art { background:linear-gradient(160deg,${T.forest} 0%,${T.leaf} 60%,${T.sage} 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:40px; position:relative; overflow:hidden; display:none; }
+@media (min-width: ${BP.md}px) { .login-art { display:flex; } }
+.login-form-side { display:flex; align-items:center; justify-content:center; padding:32px 20px; background:${T.snow}; min-height:100vh; }
+@media (min-width: ${BP.md}px) { .login-form-side { padding:40px 28px; } }
+.login-form { width:100%; max-width:400px; }
+
+/* ─── GLOBAL ─── */
+img { image-rendering: -webkit-optimize-contrast; }
+button:focus-visible { outline:2px solid ${T.sage}; outline-offset:3px; }
+.page {
+  min-height: 100vh;
+  padding-top: var(--nav-h);
+  padding-bottom: calc(var(--mob-nav-h) + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: ${BP.lg}px) { .page { padding-bottom: 0; } }
+
+/* Stagger delays */
+.d0{animation-delay:0ms}.d1{animation-delay:60ms}.d2{animation-delay:120ms}
+.d3{animation-delay:180ms}.d4{animation-delay:240ms}.d5{animation-delay:300ms}
+.d6{animation-delay:360ms}.d7{animation-delay:420ms}
+`;
+
+
+/* ═══════════════════════════════════════════════════════════════
+   AUTH CONTEXT
+   ═══════════════════════════════════════════════════════════════ */
 const AuthContext = createContext(null);
 function useAuth() { return useContext(AuthContext); }
 
-/* ─── ADDRESS MODAL ─────────────────────────────────────────── */
-function AddressModal({ onSave, onClose }) {
-  const [addr, setAddr] = useState({ line1:'', city:'', pincode:'' });
-  const [err, setErr] = useState('');
-  const submit = () => {
-    if (!addr.line1.trim() || !addr.city.trim() || !addr.pincode.trim()) {
-      setErr('Please fill all fields'); return;
-    }
-    if (!/^\d{6}$/.test(addr.pincode.trim())) {
-      setErr('Enter valid 6-digit pincode'); return;
-    }
-    onSave(addr);
-  };
+/* ═══════════════════════════════════════════════════════════════
+   ── HOOKS ─────────────────────────────────────────────────────
+   ═══════════════════════════════════════════════════════════════ */
+
+/** Simulates async data loading — returns { loading, data, error } */
+function useAsyncLoad(delay = 1000) {
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState(null);
+  const mounted = useRef(true);
+
+  useEffect(() => {
+    mounted.current = true;
+    setLoading(true);
+    setError(null);
+    const t = setTimeout(() => {
+      if (!mounted.current) return;
+      if (Math.random() < 0.04) setError("Couldn't load. Check your connection.");
+      setLoading(false);
+    }, delay);
+    return () => { mounted.current = false; clearTimeout(t); };
+  }, [delay]);
+
+  const retry = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    const t = setTimeout(() => { if (mounted.current) setLoading(false); }, delay);
+    return () => clearTimeout(t);
+  }, [delay]);
+
+  return { loading, error, retry };
+}
+
+/** Persist dark mode preference in localStorage */
+function useDarkMode() {
+  const [dark, setDark] = useState(() => {
+    try { return localStorage.getItem('terra-dark') === '1'; } catch { return false; }
+  });
+  useEffect(() => {
+    document.body.classList.toggle('dark-mode', dark);
+    try { localStorage.setItem('terra-dark', dark ? '1' : '0'); } catch {}
+  }, [dark]);
+  return [dark, setDark];
+}
+
+/** Debounced window size — avoid re-render on every resize pixel */
+function useIsMobile(breakpoint = 1024) {
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth < breakpoint : true
+  );
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+    const handler = (e) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, [breakpoint]);
+  return isMobile;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ── UI PRIMITIVES ─────────────────────────────────────────────
+   ═══════════════════════════════════════════════════════════════ */
+
+/** Fade-up reveal wrapper with stagger delay */
+function Reveal({ children, delay = 0, className = '' }) {
+  const ref = useRef();
+  const [vis, setVis] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVis(true); obs.disconnect(); } },
+      { threshold: 0.08 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
   return (
-    <div className="addr-modal-bg" onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div className="addr-modal">
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
-          <div>
-            <h2 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:26, fontWeight:700, color:T.forest }}>📍 Add Delivery Address</h2>
-            <p style={{ color:T.moss, fontSize:13, marginTop:4 }}>We need your address to deliver your order</p>
-          </div>
-          <button onClick={onClose} style={{ background:'none', border:'none', cursor:'pointer', fontSize:22, color:T.moss, lineHeight:1 }}>×</button>
-        </div>
-        <div style={{ marginBottom:16 }}>
-          <label style={{ display:'block', fontSize:11, fontWeight:700, color:T.moss, letterSpacing:'0.08em', textTransform:'uppercase', marginBottom:7 }}>Street / Flat / Building</label>
-          <input className="field" placeholder="123 MG Road, Apt 4B" value={addr.line1} onChange={e=>{ setAddr(x=>({...x,line1:e.target.value})); setErr(''); }} />
-        </div>
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:20 }}>
-          <div>
-            <label style={{ display:'block', fontSize:11, fontWeight:700, color:T.moss, letterSpacing:'0.08em', textTransform:'uppercase', marginBottom:7 }}>City</label>
-            <input className="field" placeholder="Mysuru" value={addr.city} onChange={e=>{ setAddr(x=>({...x,city:e.target.value})); setErr(''); }} />
-          </div>
-          <div>
-            <label style={{ display:'block', fontSize:11, fontWeight:700, color:T.moss, letterSpacing:'0.08em', textTransform:'uppercase', marginBottom:7 }}>Pincode</label>
-            <input className="field" placeholder="570001" value={addr.pincode} onChange={e=>{ setAddr(x=>({...x,pincode:e.target.value})); setErr(''); }} maxLength={6} />
-          </div>
-        </div>
-        {err && <p style={{ color:'#E53E3E', fontSize:12, fontWeight:600, marginBottom:12 }}>⚠ {err}</p>}
-        <div style={{ display:'flex', gap:10 }}>
-          <button className="btn-nature" style={{ flex:1, padding:'14px' }} onClick={submit}>Save Address →</button>
-          <button className="btn-outline" style={{ padding:'14px 20px' }} onClick={onClose}>Cancel</button>
+    <div
+      ref={ref}
+      className={className}
+      style={{
+        opacity:   vis ? 1 : 0,
+        transform: vis ? 'none' : 'translateY(24px)',
+        transition: `opacity 0.5s ${delay}s cubic-bezier(0.22,1,0.36,1), transform 0.5s ${delay}s cubic-bezier(0.22,1,0.36,1)`,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function Stars({ r }) {
+  return (
+    <span style={{ display:'flex', alignItems:'center', gap:4 }}>
+      <span className="star">★</span>
+      <span className="rating">{r}</span>
+    </span>
+  );
+}
+
+/* ─── SKELETON COMPONENTS ─── */
+function SkeletonRestCard() {
+  return (
+    <div className="skel-card">
+      <div className="skel skel-img" />
+      <div className="skel-body">
+        <div className="skel skel-line-lg" />
+        <div className="skel skel-line-md" />
+        <div style={{ display:'flex', gap:8, marginTop:4 }}>
+          <div className="skel skel-badge" />
+          <div className="skel skel-badge" style={{ width:60 }} />
         </div>
       </div>
     </div>
   );
 }
 
-/* ─── CSS ───────────────────────────────────────────────────── */
-const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&display=swap');
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-body {
-  font-family: 'DM Sans', system-ui, sans-serif;
-  background: ${T.cream};
-  color: ${T.forest};
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-  line-height: 1.6;
-}
-img { display: block; max-width: 100%; }
-button, input, textarea, select { font-family: inherit; }
-::selection { background: ${T.sage}; color: white; }
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-thumb { background: ${T.moss}; border-radius: 4px; }
-
-.serif { font-family: 'Cormorant Garamond', serif; }
-.page { padding-top: 70px; min-height: 100vh; }
-.section { padding: 80px 0; }
-.container { width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 28px; }
-.section-head { margin-bottom: 48px; }
-.section-label { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: ${T.sage}; display: block; margin-bottom: 10px; }
-.section-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(28px,4vw,48px); font-weight: 700; color: ${T.forest}; line-height: 1.1; margin-bottom: 10px; }
-.section-sub { color: ${T.moss}; font-size: 15px; font-weight: 300; }
-
-/* ─── NAVBAR ─── */
-.navbar {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 500;
-  height: 70px;
-  background: rgba(247,243,236,0.0);
-  backdrop-filter: blur(0px);
-  -webkit-backdrop-filter: blur(0px);
-  border-bottom: 1px solid rgba(107,158,122,0.0);
-  display: flex; align-items: center;
-  transition: transform 0.38s cubic-bezier(0.4,0,0.2,1), background 0.4s ease, box-shadow 0.4s ease, backdrop-filter 0.4s ease, border-color 0.4s ease;
-  animation: navSlideDown 0.5s cubic-bezier(0.4,0,0.2,1) both;
-}
-@keyframes navSlideDown {
-  from { transform: translateY(-100%); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-.navbar.scrolled {
-  background: rgba(247,243,236,0.97);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  box-shadow: 0 4px 30px rgba(26,58,42,0.12);
-  border-bottom: 1px solid rgba(107,158,122,0.18);
-}
-.navbar:not(.scrolled) .nav-link { color: rgba(200,223,197,0.9); }
-.navbar:not(.scrolled) .nav-link:hover { color: white; background: rgba(255,255,255,0.1); }
-.navbar:not(.scrolled) .nav-link.active { color: white; }
-.navbar:not(.scrolled) .nav-logo { color: white; }
-.navbar:not(.scrolled) .nav-logo em { color: rgba(200,223,197,0.9); }
-.navbar:not(.scrolled) .logo-leaf { box-shadow: 0 4px 14px rgba(0,0,0,0.3); }
-.navbar:not(.scrolled) .nav-btn-sm { border-color: rgba(255,255,255,0.3); color: rgba(255,255,255,0.9); }
-.navbar:not(.scrolled) .nav-btn-sm:hover { background: rgba(255,255,255,0.15); color: white; border-color: rgba(255,255,255,0.5); }
-.navbar:not(.scrolled) .dark-toggle { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.25); }
-.navbar.nav-hidden {
-  transform: translateY(-100%);
-}
-.navbar.nav-visible {
-  transform: translateY(0);
-}
-.nav-inner {
-  width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 28px;
-  display: flex; align-items: center; justify-content: space-between; gap: 20px;
-}
-.nav-logo {
-  background: none; border: none; cursor: pointer;
-  display: flex; align-items: center; gap: 10px;
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 26px; font-weight: 700; color: ${T.forest};
-  letter-spacing: -0.02em;
-  transition: opacity 0.2s;
-}
-.nav-logo:hover { opacity: 0.8; }
-.logo-leaf {
-  width: 34px; height: 34px;
-  background: linear-gradient(135deg, ${T.leaf}, ${T.moss});
-  border-radius: 50% 50% 50% 10%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 16px;
-  box-shadow: 0 4px 12px rgba(45,90,61,0.3);
-  animation: leafPulse 3s ease-in-out infinite;
-}
-@keyframes leafPulse {
-  0%,100% { transform: scale(1) rotate(-3deg); }
-  50% { transform: scale(1.06) rotate(3deg); }
-}
-.nav-links { display: none; gap: 2px; }
-.nav-link {
-  background: none; border: none; cursor: pointer;
-  color: ${T.sage}; font-size: 13px; font-weight: 600;
-  padding: 8px 14px; border-radius: 8px;
-  transition: color 0.2s, background 0.2s, transform 0.18s; position: relative; white-space: nowrap;
-  letter-spacing: 0.01em;
-}
-.nav-link::after {
-  content: ''; position: absolute; bottom: 3px; left: 14px; right: 14px;
-  height: 2px; background: linear-gradient(90deg, ${T.sage}, ${T.leaf}); border-radius: 1px;
-  transform: scaleX(0); transform-origin: left;
-  transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
-}
-.nav-link:hover { color: ${T.forest}; background: rgba(107,158,122,0.1); transform: translateY(-1px); }
-.nav-link.active { color: ${T.forest}; }
-.nav-link:hover::after, .nav-link.active::after { transform: scaleX(1); }
-.nav-actions { display: flex; align-items: center; gap: 10px; }
-.nav-cart {
-  position: relative; background: linear-gradient(135deg, ${T.forest}, ${T.leaf}); color: ${T.cream};
-  border: none; cursor: pointer; border-radius: 10px;
-  padding: 9px 18px; font-size: 13px; font-weight: 700;
-  display: flex; align-items: center; gap: 7px;
-  transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
-  box-shadow: 0 4px 14px rgba(45,90,61,0.3);
-  letter-spacing: 0.02em;
-}
-.nav-cart:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 8px 22px rgba(45,90,61,0.4); }
-.nav-btn-sm {
-  background: none; border: 1.5px solid rgba(107,158,122,0.35); color: ${T.sage};
-  border-radius: 8px; padding: 8px 16px; font-size: 12px; font-weight: 700;
-  cursor: pointer; transition: all 0.22s; white-space: nowrap; letter-spacing: 0.03em;
-}
-.nav-btn-sm:hover { border-color: ${T.leaf}; color: ${T.forest}; background: rgba(107,158,122,0.1); transform: translateY(-1px); }
-.cart-badge {
-  position: absolute; top: -6px; right: -6px;
-  background: ${T.sunset}; color: white;
-  width: 18px; height: 18px; border-radius: 50%;
-  font-size: 10px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-  border: 2px solid white;
-}
-
-/* ─── MOBILE NAV ─── */
-.mob-nav {
-  display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
-  background: rgba(247,243,236,0.97);
-  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(107,158,122,0.2);
-  padding: 8px 0 20px; justify-content: space-around;
-}
-.mob-btn {
-  background: none; border: none; cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
-  padding: 5px 12px; color: ${T.moss}; font-size: 9px; font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.06em;
-  transition: color 0.2s;
-}
-.mob-btn.active { color: ${T.forest}; }
-
-/* ─── VIDEO HERO ─── */
-.video-hero {
-  position: relative; width: 100%; height: 100vh; min-height: 600px;
-  overflow: hidden; display: flex; align-items: center;
-}
-.video-container { position: absolute; inset: 0; z-index: 0; }
-.video-container iframe {
-  position: absolute; top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  width: 177.78vh; height: 100vh;
-  min-width: 100vw; min-height: 56.25vw;
-  border: none; pointer-events: none;
-}
-.video-fallback {
-  position: absolute; inset: 0;
-  background-image: url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1920&q=95');
-  background-size: cover; background-position: center 40%;
-}
-.video-overlay {
-  position: absolute; inset: 0; z-index: 1;
-  background: 
-    linear-gradient(to bottom, rgba(10,30,18,0.35) 0%, transparent 30%, transparent 60%, rgba(10,30,18,0.5) 100%),
-    linear-gradient(to right, rgba(10,30,18,0.80) 0%, rgba(26,58,42,0.50) 50%, rgba(10,30,18,0.20) 100%);
-}
-.video-hero-content { position: relative; z-index: 2; width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 28px; }
-.hero-h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(40px,6vw,88px); font-weight: 700; line-height: 1.05; color: white; margin-bottom: 20px; text-shadow: 0 2px 20px rgba(0,0,0,0.3); }
-.hero-h1 em { font-style: italic; color: ${T.fern}; }
-.hero-sub { color: rgba(200,223,197,0.9); font-size: clamp(14px,1.6vw,18px); font-weight: 300; margin-bottom: 36px; max-width: 520px; line-height: 1.7; }
-.hero-search { display: flex; align-items: center; background: white; border-radius: 14px; overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,0.25); max-width: 540px; margin-bottom: 24px; }
-.hero-search input { flex: 1; border: none; outline: none; padding: 16px 20px; font-size: 14px; color: ${T.forest}; background: transparent; }
-.hero-search-btn { background: ${T.sunset}; color: white; border: none; cursor: pointer; padding: 16px 24px; font-size: 13px; font-weight: 700; letter-spacing: 0.04em; transition: background 0.2s; white-space: nowrap; }
-.hero-search-btn:hover { background: ${T.dusk}; }
-.hero-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 36px; }
-.hero-pill { background: rgba(255,255,255,0.12); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 20px; padding: 7px 16px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-.hero-pill:hover { background: rgba(255,255,255,0.22); }
-.hero-stat-bar { display: flex; gap: 32px; }
-.hero-stat { text-align: left; }
-.hero-stat-n { font-family: 'Cormorant Garamond', serif; font-size: 32px; font-weight: 700; color: white; line-height: 1; }
-.hero-stat-l { font-size: 11px; color: rgba(200,223,197,0.7); font-weight: 400; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 3px; }
-
-/* ─── CATEGORY CAROUSEL ─── */
-.cat-carousel-wrap { position: relative; overflow: hidden; margin: 0 -28px; padding: 0 28px; user-select: none; }
-.cat-carousel-track { display: flex; gap: 14px; transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94); will-change: transform; }
-.cat-carousel-track.dragging { transition: none; cursor: grabbing; }
-.cat-item { flex-shrink: 0; width: 110px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 10px; transition: transform 0.25s; }
-.cat-item:hover { transform: translateY(-4px); }
-.cat-img-ring { width: 88px; height: 88px; border-radius: 50%; overflow: hidden; border: 2.5px solid transparent; background: linear-gradient(white,white) padding-box, linear-gradient(135deg, ${T.moss}, ${T.fern}) border-box; box-shadow: 0 4px 18px ${T.shadow}; transition: all 0.3s; }
-.cat-item:hover .cat-img-ring { background: linear-gradient(white,white) padding-box, linear-gradient(135deg, ${T.sage}, ${T.leaf}) border-box; box-shadow: 0 8px 28px ${T.shadowD}; }
-.cat-item.active .cat-img-ring { background: linear-gradient(white,white) padding-box, linear-gradient(135deg, ${T.sunset}, ${T.dusk}) border-box; }
-.cat-img-ring img { width: 100%; height: 100%; object-fit: cover; }
-.cat-label { font-size: 12px; font-weight: 600; color: ${T.forest}; text-align: center; }
-.cat-carousel-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%; background: white; border: 1px solid rgba(107,158,122,0.2); color: ${T.forest}; font-size: 16px; cursor: pointer; z-index: 10; box-shadow: 0 4px 16px ${T.shadow}; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-.cat-carousel-btn:hover { background: ${T.forest}; color: white; }
-.cat-carousel-btn.prev { left: 6px; }
-.cat-carousel-btn.next { right: 6px; }
-
-/* ─── BANNER CAROUSEL ─── */
-.banner-carousel { position: relative; overflow: hidden; border-radius: 0; }
-.banner-slides { display: flex; transition: transform 0.7s cubic-bezier(0.25,0.46,0.45,0.94); will-change: transform; }
-.banner-slide { min-width: 100%; position: relative; height: 480px; overflow: hidden; }
-@media (max-width: 768px) { .banner-slide { height: 300px; } }
-.banner-slide img { width: 100%; height: 100%; object-fit: cover; transition: transform 8s ease; }
-.banner-slide.active img { transform: scale(1.04); }
-.banner-overlay { position: absolute; inset: 0; background: linear-gradient(to right, rgba(10,30,20,0.80) 0%, rgba(26,58,42,0.45) 55%, rgba(10,30,20,0.15) 100%); display: flex; align-items: center; padding: 0 56px; }
-.banner-content { color: white; max-width: 460px; }
-.banner-dots { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; }
-.banner-dot { width: 8px; height: 8px; border-radius: 4px; background: rgba(255,255,255,0.4); border: none; cursor: pointer; transition: all 0.3s; padding: 0; }
-.banner-dot.active { background: white; width: 28px; }
-.banner-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3); color: white; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; z-index: 10; }
-.banner-arrow:hover { background: rgba(255,255,255,0.3); transform: translateY(-50%) scale(1.1); }
-.banner-arrow.prev { left: 20px; }
-.banner-arrow.next { right: 20px; }
-
-/* ─── TRENDING ─── */
-.trending-scroll { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-.trending-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 2px 16px rgba(26,58,42,0.08), 0 1px 4px rgba(26,58,42,0.04); border: 1px solid rgba(107,158,122,0.1); cursor: pointer; position: relative; transition: all 0.35s cubic-bezier(0.4,0,0.2,1); }
-.trending-card:hover { transform: translateY(-10px) scale(1.01); box-shadow: 0 28px 64px rgba(26,58,42,0.18); border-color: ${T.fern}; }
-.trending-img { position: relative; height: 220px; overflow: hidden; }
-.trending-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.4,0,0.2,1); }
-.trending-card:hover .trending-img img { transform: scale(1.1); }
-.trending-tag { position: absolute; top: 12px; left: 12px; background: rgba(10,30,18,0.82); backdrop-filter: blur(10px); color: white; font-size: 10px; font-weight: 700; padding: 5px 12px; border-radius: 20px; letter-spacing: 0.05em; border: 1px solid rgba(255,255,255,0.15); }
-.trending-veg { position: absolute; top: 12px; right: 12px; width: 22px; height: 22px; border-radius: 4px; border: 2px solid; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 900; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
-.trending-body { padding: 18px 18px 12px; }
-.trending-name { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 700; color: ${T.forest}; margin-bottom: 2px; }
-.trending-rest { font-size: 11px; color: ${T.moss}; margin-bottom: 12px; cursor: pointer; transition: color 0.2s; }
-.trending-rest:hover { color: ${T.sage}; text-decoration: underline; }
-.trending-meta { display: flex; align-items: center; justify-content: space-between; }
-.trending-price { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 700; color: ${T.leaf}; }
-.trending-rating { display: flex; align-items: center; gap: 5px; font-size: 12px; color: ${T.moss}; }
-.trending-stars { color: ${T.amber}; font-size: 12px; }
-.trending-add-btn { flex: 1; background: linear-gradient(135deg, ${T.sage}, ${T.leaf}); color: white; border: none; cursor: pointer; padding: 12px; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; border-radius: 10px; transition: all 0.25s; }
-.trending-add-btn:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(45,90,61,0.3); }
-
-/* ─── RESTAURANT CARDS ─── */
-.rest-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 24px; }
-.rest-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 2px 16px rgba(26,58,42,0.08), 0 1px 4px rgba(26,58,42,0.04); cursor: pointer; transition: all 0.35s cubic-bezier(0.4,0,0.2,1); border: 1px solid rgba(107,158,122,0.1); }
-.rest-card:hover { transform: translateY(-8px); box-shadow: 0 24px 56px rgba(26,58,42,0.16); border-color: ${T.fern}; }
-.rest-img { position: relative; height: 200px; overflow: hidden; }
-.rest-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s cubic-bezier(0.4,0,0.2,1); }
-.rest-card:hover .rest-img img { transform: scale(1.09); }
-.rest-badge { position: absolute; top: 12px; left: 12px; background: rgba(10,30,18,0.82); backdrop-filter: blur(8px); color: white; font-size: 9px; font-weight: 700; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.06em; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.15); }
-.rest-discount { position: absolute; top: 12px; right: 12px; background: linear-gradient(135deg, ${T.sunset}, ${T.dusk}); color: white; font-size: 9px; font-weight: 700; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.05em; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
-.rest-body { padding: 16px 18px 20px; }
-.rest-name { font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 700; color: ${T.forest}; margin-bottom: 3px; line-height: 1.2; }
-.rest-cuisine { font-size: 12px; color: ${T.moss}; margin-bottom: 12px; font-weight: 400; }
-.rest-meta { display: flex; align-items: center; gap: 12px; font-size: 12px; }
-.star { color: ${T.amber}; font-size: 12px; }
-.rating { font-weight: 700; color: ${T.forest}; }
-.rest-time { color: ${T.moss}; }
-.rest-price { color: ${T.earth}; font-weight: 600; margin-left: auto; }
-
-/* ─── RESTAURANT MENU PAGE ─── */
-.menu-hero { background: linear-gradient(135deg, ${T.forest} 0%, ${T.leaf} 100%); padding: 60px 0 56px; position: relative; overflow: hidden; }
-.menu-hero-back { background: none; border: 1px solid rgba(200,223,197,0.3); color: ${T.mist}; border-radius: 8px; padding: 8px 16px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 20px; transition: all 0.2s; }
-.menu-hero-back:hover { background: rgba(255,255,255,0.1); color: white; }
-.menu-hero-info { display: flex; align-items: flex-start; gap: 24px; }
-.menu-hero-img { width: 100px; height: 100px; border-radius: 16px; overflow: hidden; border: 3px solid rgba(200,223,197,0.3); flex-shrink: 0; }
-.menu-hero-img img { width: 100%; height: 100%; object-fit: cover; }
-.menu-cat-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-top: 28px; scrollbar-width: none; }
-.menu-cat-tabs::-webkit-scrollbar { display: none; }
-.menu-cat-tab { background: rgba(255,255,255,0.1); border: 1px solid rgba(200,223,197,0.2); color: rgba(200,223,197,0.8); border-radius: 20px; padding: 8px 18px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-.menu-cat-tab.active { background: white; color: ${T.forest}; border-color: white; }
-.menu-cat-tab:hover:not(.active) { background: rgba(255,255,255,0.18); color: white; }
-.menu-items-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 20px; margin-top: 0; }
-.menu-item-card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px ${T.shadow}; border: 1px solid rgba(107,158,122,0.1); transition: all 0.3s cubic-bezier(0.4,0,0.2,1); display: flex; gap: 0; }
-.menu-item-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px ${T.shadowD}; border-color: ${T.fern}; }
-.menu-item-img { width: 130px; min-width: 130px; height: 130px; overflow: hidden; position: relative; flex-shrink: 0; }
-.menu-item-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
-.menu-item-card:hover .menu-item-img img { transform: scale(1.08); }
-.menu-item-body { padding: 16px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
-.menu-item-top { flex: 1; }
-.menu-item-name { font-weight: 700; font-size: 15px; color: ${T.forest}; margin-bottom: 4px; }
-.menu-item-desc { font-size: 12px; color: ${T.moss}; font-weight: 300; line-height: 1.5; margin-bottom: 8px; }
-.menu-item-bottom { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.menu-item-price { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 700; color: ${T.leaf}; }
-.menu-item-badge { font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 5px; background: ${T.forest}; color: white; letter-spacing: 0.05em; white-space: nowrap; }
-.menu-add-btn { background: ${T.forest}; color: white; border: none; cursor: pointer; border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 700; transition: all 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 4px; }
-.menu-add-btn:hover { background: ${T.leaf}; transform: scale(1.05); }
-.menu-qty-ctrl { display: flex; align-items: center; gap: 2px; }
-.menu-qty-btn { width: 28px; height: 28px; border-radius: 6px; border: 1.5px solid ${T.fern}; background: none; color: ${T.forest}; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
-.menu-qty-btn:hover { background: ${T.forest}; color: white; border-color: ${T.forest}; }
-.menu-qty-num { font-weight: 700; font-size: 14px; min-width: 24px; text-align: center; color: ${T.forest}; }
-
-/* ─── DISH SUGGESTIONS ─── */
-.dish-suggestions { margin-top: 40px; }
-.dish-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; margin-top: 20px; }
-.dish-card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px ${T.shadow}; transition: all 0.3s; cursor: pointer; border: 1px solid rgba(107,158,122,0.12); }
-.dish-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px ${T.shadowD}; border-color: ${T.fern}; }
-.dish-card img { width: 100%; height: 160px; object-fit: cover; }
-.dish-card-body { padding: 16px; }
-.dish-card-name { font-weight: 600; font-size: 15px; color: ${T.forest}; }
-.dish-card-price { color: ${T.sage}; font-weight: 700; font-size: 15px; margin-top: 6px; }
-.dish-card-add { margin-top: 12px; width: 100%; padding: 9px; background: ${T.forest}; color: white; border: none; cursor: pointer; border-radius: 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; transition: all 0.2s; }
-.dish-card-add:hover { background: ${T.leaf}; }
-
-/* ─── NATURE DIVIDER ─── */
-.nature-divider { background: linear-gradient(180deg, ${T.cream} 0%, ${T.sand} 100%); padding: 60px 0; border-top: 1px solid rgba(107,158,122,0.15); border-bottom: 1px solid rgba(107,158,122,0.15); position: relative; overflow: hidden; }
-.nd-pattern { position: absolute; inset: 0; opacity: 0.04; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath d='M50 5 C30 25 20 45 50 65 C80 45 70 25 50 5Z' fill='%231A3A2A'/%3E%3C/svg%3E"); background-size: 60px 60px; }
-
-/* ─── ABOUT ─── */
-.chefs-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 28px; margin-top: 48px; }
-.chef-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 24px ${T.shadow}; border: 1px solid rgba(107,158,122,0.1); transition: all 0.35s cubic-bezier(0.4,0,0.2,1); position: relative; }
-.chef-card:hover { transform: translateY(-8px); box-shadow: 0 24px 60px ${T.shadowD}; }
-.chef-img { position: relative; height: 300px; overflow: hidden; }
-.chef-img img { width: 100%; height: 100%; object-fit: cover; object-position: top; transition: transform 0.5s; }
-.chef-card:hover .chef-img img { transform: scale(1.06); }
-.chef-img-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(26,58,42,0.7) 0%, transparent 50%); }
-.chef-emoji { position: absolute; bottom: 16px; right: 16px; font-size: 28px; }
-.chef-body { padding: 22px 24px 26px; }
-.chef-name { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 700; color: ${T.forest}; }
-.chef-spec { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: ${T.sage}; margin: 6px 0 10px; }
-.chef-exp { font-size: 11px; color: ${T.moss}; margin-bottom: 12px; }
-.chef-bio { font-size: 13px; color: ${T.earth}; line-height: 1.7; font-weight: 300; }
-.story-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center; }
-.story-img { border-radius: 24px; overflow: hidden; box-shadow: 0 20px 60px ${T.shadowD}; position: relative; }
-.story-img img { width: 100%; height: 500px; object-fit: cover; }
-.story-img-leaf { position: absolute; bottom: -20px; right: -20px; width: 120px; height: 120px; background: linear-gradient(135deg, ${T.sage}, ${T.moss}); border-radius: 50% 50% 50% 10%; display: flex; align-items: center; justify-content: center; font-size: 48px; box-shadow: 0 10px 30px rgba(45,90,61,0.3); }
-
-/* ─── FAQ ─── */
-.faq-item { background: white; border-radius: 14px; overflow: hidden; border: 1px solid rgba(107,158,122,0.15); margin-bottom: 10px; transition: border-color 0.3s, box-shadow 0.3s, background 0.3s; position: relative; }
-.faq-item.hovered { border-color: ${T.fern}; box-shadow: 0 6px 28px ${T.shadow}; }
-.faq-highlight-bar { position: absolute; top: 0; left: 0; bottom: 0; width: 3px; background: linear-gradient(to bottom, ${T.sage}, ${T.moss}); transform: scaleY(0); transform-origin: top; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); border-radius: 0 0 0 0; }
-.faq-item.hovered .faq-highlight-bar { transform: scaleY(1); }
-.faq-q { width: 100%; background: none; border: none; cursor: pointer; padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; text-align: left; }
-.faq-q span:first-child { font-size: 14px; font-weight: 600; color: ${T.forest}; line-height: 1.4; }
-.faq-icon { font-size: 20px; color: ${T.moss}; transition: transform 0.3s, color 0.3s; flex-shrink: 0; font-weight: 300; }
-.faq-icon.open { transform: rotate(45deg); color: ${T.sage}; }
-.faq-ans { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1); }
-.faq-ans.open { max-height: 300px; }
-.faq-ans p { padding: 0 20px 18px 20px; font-size: 13.5px; color: ${T.earth}; font-weight: 300; line-height: 1.75; }
-
-/* ─── BUTTONS ─── */
-.btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: ${T.forest}; color: white; border: none; cursor: pointer; padding: 14px 30px; border-radius: 12px; font-size: 14px; font-weight: 600; transition: all 0.25s; box-shadow: 0 4px 20px ${T.shadow}; }
-.btn-primary:hover { background: ${T.leaf}; transform: translateY(-2px); box-shadow: 0 8px 28px ${T.shadowD}; }
-.btn-nature { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: linear-gradient(135deg, ${T.sage}, ${T.leaf}); color: white; border: none; cursor: pointer; padding: 14px 30px; border-radius: 12px; font-size: 14px; font-weight: 600; transition: all 0.25s; box-shadow: 0 4px 20px rgba(74,124,89,0.3); }
-.btn-nature:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(74,124,89,0.4); filter: brightness(1.06); }
-.btn-outline { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: transparent; color: ${T.sage}; cursor: pointer; padding: 13px 28px; border-radius: 12px; font-size: 14px; font-weight: 600; border: 1.5px solid rgba(107,158,122,0.4); transition: all 0.25s; }
-.btn-outline:hover { border-color: ${T.sage}; background: rgba(107,158,122,0.08); color: ${T.forest}; }
-
-/* ─── FIELD ─── */
-.field { width: 100%; background: ${T.sand}; border: 1.5px solid rgba(107,158,122,0.2); color: ${T.forest}; padding: 14px 18px; font-size: 14px; outline: none; transition: border-color 0.25s, box-shadow 0.25s; border-radius: 12px; }
-.field:focus { border-color: ${T.sage}; box-shadow: 0 0 0 4px rgba(107,158,122,0.1); background: white; }
-.field::placeholder { color: ${T.moss}; opacity: 0.7; font-size: 13px; }
-
-/* ─── CART ─── */
-.cart-layout { display: grid; grid-template-columns: 1fr 380px; gap: 32px; }
-.cart-item { display: flex; align-items: center; gap: 16px; background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 12px ${T.shadow}; border: 1px solid rgba(107,158,122,0.1); transition: all 0.2s; }
-.cart-item:hover { box-shadow: 0 6px 24px ${T.shadowD}; }
-.cart-item-img { width: 80px; height: 80px; border-radius: 12px; overflow: hidden; flex-shrink: 0; }
-.cart-item-img img { width: 100%; height: 100%; object-fit: cover; }
-.qty-ctrl { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.qty-btn { width: 30px; height: 30px; border-radius: 8px; border: 1.5px solid ${T.fern}; background: none; color: ${T.forest}; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
-.qty-btn:hover { background: ${T.forest}; color: white; border-color: ${T.forest}; }
-.qty-btn.fill { background: ${T.forest}; color: white; border-color: ${T.forest}; }
-.cart-summary { background: white; border-radius: 18px; padding: 24px; box-shadow: 0 4px 20px ${T.shadow}; border: 1px solid rgba(107,158,122,0.1); }
-
-/* ─── CHECKOUT ─── */
-.checkout-layout { display: grid; grid-template-columns: 1fr 380px; gap: 32px; }
-.checkout-section { background: white; border-radius: 18px; padding: 28px; box-shadow: 0 4px 20px ${T.shadow}; border: 1px solid rgba(107,158,122,0.1); margin-bottom: 20px; }
-.checkout-section h3 { font-family: 'Cormorant Garamond',serif; font-size: 22px; font-weight: 700; color: ${T.forest}; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.form-group { margin-bottom: 18px; }
-.form-group label { display: block; font-size: 11px; font-weight: 700; color: ${T.moss}; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 7px; }
-.payment-option { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 12px; border: 1.5px solid rgba(107,158,122,0.2); cursor: pointer; transition: all 0.2s; margin-bottom: 10px; }
-.payment-option:hover { border-color: ${T.sage}; background: rgba(107,158,122,0.04); }
-.payment-option.selected { border-color: ${T.sage}; background: rgba(107,158,122,0.08); }
-.payment-radio { width: 18px; height: 18px; border-radius: 50%; border: 2px solid ${T.fern}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; }
-.payment-option.selected .payment-radio { border-color: ${T.sage}; }
-.payment-radio-dot { width: 9px; height: 9px; border-radius: 50%; background: ${T.sage}; transform: scale(0); transition: transform 0.2s; }
-.payment-option.selected .payment-radio-dot { transform: scale(1); }
-.order-success { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; text-align: center; padding: 24px; }
-
-@media (max-width: 900px) { .checkout-layout { grid-template-columns: 1fr; } .form-row { grid-template-columns: 1fr; } }
-
-/* ─── OFFERS ─── */
-.offers-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 20px; }
-.offer-card { background: white; border-radius: 18px; padding: 28px; box-shadow: 0 4px 20px ${T.shadow}; border: 1px solid rgba(107,158,122,0.1); transition: all 0.3s; }
-.offer-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px ${T.shadowD}; }
-.offer-code { display: inline-block; background: ${T.sand}; border: 1.5px dashed rgba(107,158,122,0.4); border-radius: 8px; padding: 5px 14px; font-size: 13px; font-weight: 700; letter-spacing: 0.1em; color: ${T.forest}; margin-bottom: 14px; }
-.offer-copy { display: block; margin-top: 16px; background: none; border: 1.5px solid rgba(107,158,122,0.3); color: ${T.sage}; border-radius: 8px; padding: 9px 18px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-.offer-copy:hover { background: ${T.forest}; color: white; border-color: ${T.forest}; }
-
-/* ─── TRACK ─── */
-.track-steps { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 32px; position: relative; gap: 4px; }
-.track-steps::before { content: ''; position: absolute; top: 20px; left: 24px; right: 24px; height: 2px; background: rgba(107,158,122,0.15); z-index: 0; }
-.track-step { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; position: relative; z-index: 1; }
-.track-icon { width: 44px; height: 44px; border-radius: 50%; background: white; border: 2px solid rgba(107,158,122,0.2); display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.4s; box-shadow: 0 2px 12px ${T.shadow}; }
-.track-step.done .track-icon { background: ${T.sage}; border-color: ${T.sage}; box-shadow: 0 4px 16px rgba(74,124,89,0.3); }
-.track-step.current .track-icon { background: white; border-color: ${T.sunset}; box-shadow: 0 0 0 4px rgba(232,116,42,0.15); animation: trackPulse 1.5s ease-in-out infinite; }
-@keyframes trackPulse { 0%,100%{box-shadow:0 0 0 4px rgba(232,116,42,0.15);} 50%{box-shadow:0 0 0 8px rgba(232,116,42,0.08);} }
-.track-label { font-size: 10px; font-weight: 600; color: ${T.moss}; text-align: center; text-transform: uppercase; letter-spacing: 0.06em; }
-.track-step.done .track-label { color: ${T.forest}; }
-.track-live-map { border-radius: 20px; overflow: hidden; border: 1px solid rgba(107,158,122,0.15); margin-bottom: 24px; position: relative; box-shadow: 0 8px 32px ${T.shadow}; }
-.track-map-svg { width: 100%; height: 260px; display: block; }
-
-/* ─── COMPACT FOOTER ─── */
-.footer { background: ${T.forest}; color: rgba(200,223,197,0.8); padding: 48px 0 0; position: relative; overflow: hidden; margin-bottom: 0; }
-.footer-leaves { position: absolute; inset: 0; pointer-events: none; overflow: hidden; opacity: 0.04; }
-.footer-leaf { position: absolute; animation: footerFloat linear infinite; }
-@keyframes footerFloat { 0% { transform: translateY(0) rotate(0deg); opacity: 0.06; } 50% { opacity: 0.1; } 100% { transform: translateY(-80px) rotate(20deg); opacity: 0; } }
-.footer-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 32px; padding-bottom: 32px; align-items: start; }
-.footer-brand { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 700; color: white; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
-.footer-title { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: ${T.fern}; margin-bottom: 14px; }
-.footer-link { display: block; font-size: 12.5px; font-weight: 300; margin-bottom: 9px; cursor: pointer; transition: color 0.2s; }
-.footer-link:hover { color: white; }
-.footer-nav-inline { display: flex; flex-direction: column; gap: 0; margin-bottom: 0; }
-.footer-nav-inline span { font-size: 12.5px; font-weight: 300; cursor: pointer; color: rgba(200,223,197,0.75); transition: color 0.2s; margin-bottom: 9px; }
-.footer-nav-inline span:hover { color: white; }
-.footer-socials { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
-.social-btn { width: 36px; height: 36px; border-radius: 9px; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; font-size: 15px; cursor: pointer; transition: all 0.2s; border: 1px solid rgba(200,223,197,0.12); text-decoration: none; }
-.social-btn:hover { background: rgba(255,255,255,0.18); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
-.footer-map-embed { border-radius: 10px; overflow: hidden; border: 1px solid rgba(200,223,197,0.12); background: rgba(255,255,255,0.06); height: 120px; margin-top: 10px; position: relative; }
-.footer-map-embed iframe { width: 100%; height: 100%; border: none; filter: brightness(0.85) saturate(0.8); }
-.footer-map-label { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(26,58,42,0.9), transparent); padding: 14px 10px 7px; font-size: 10px; color: ${T.fern}; font-weight: 600; letter-spacing: 0.04em; }
-.footer-bar { border-top: 1px solid rgba(200,223,197,0.1); padding: 16px 0; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1; flex-wrap: wrap; gap: 8px; }
-.page { padding-bottom: 0 !important; }
-
-/* ─── TOAST ─── */
-.toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: ${T.forest}; color: white; padding: 12px 24px; border-radius: 30px; font-size: 13px; font-weight: 600; z-index: 9999; box-shadow: 0 8px 30px ${T.shadowD}; animation: toastIn 0.3s cubic-bezier(0.4,0,0.2,1) both; white-space: nowrap; }
-@keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(20px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
-
-/* ─── CHIPS ─── */
-.chip { background: white; border: 1.5px solid rgba(107,158,122,0.2); color: ${T.sage}; border-radius: 20px; padding: 8px 16px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-.chip:hover, .chip.active { border-color: ${T.sage}; background: rgba(107,158,122,0.1); color: ${T.forest}; }
-
-/* ─── EXPLORE HERO ─── */
-.explore-hero { position: relative; overflow: hidden; padding: 72px 0 56px; border-bottom: 1px solid rgba(107,158,122,0.1); }
-.explore-hero-bg { position: absolute; inset: 0; z-index: 0; }
-.explore-hero-bg img { width: 100%; height: 100%; object-fit: cover; object-position: center 40%; }
-.explore-hero-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(247,243,236,0.97) 0%, rgba(237,230,214,0.93) 60%, rgba(200,223,197,0.7) 100%); }
-
-/* ─── LOGIN ─── */
-.login-page { display: grid; grid-template-columns: 1fr 1fr; min-height: 100vh; }
-.login-art { background: linear-gradient(160deg, ${T.forest} 0%, ${T.leaf} 60%, ${T.sage} 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; position: relative; overflow: hidden; }
-.login-art-img { position: absolute; inset: 0; }
-.login-art-img img { width: 100%; height: 100%; object-fit: cover; opacity: 0.25; }
-.login-art-content { position: relative; z-index: 1; color: white; }
-.login-form-side { display: flex; align-items: center; justify-content: center; padding: 40px 28px; background: ${T.snow}; }
-.login-form { width: 100%; max-width: 400px; }
-
-/* ─── ADDRESS MODAL ─── */
-.addr-modal-bg { position: fixed; inset: 0; background: rgba(26,58,42,0.55); backdrop-filter: blur(6px); z-index: 900; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeInBg 0.25s ease both; }
-@keyframes fadeInBg { from{opacity:0} to{opacity:1} }
-.addr-modal { background: white; border-radius: 20px; padding: 32px; width: 100%; max-width: 480px; box-shadow: 0 24px 80px rgba(26,58,42,0.25); animation: slideUpModal 0.32s cubic-bezier(0.4,0,0.2,1) both; }
-@keyframes slideUpModal { from{opacity:0;transform:translateY(32px)} to{opacity:1;transform:translateY(0)} }
-
-/* ─── AUTH GATE ─── */
-.auth-gate { background: linear-gradient(135deg, ${T.forest}, ${T.leaf}); border-radius: 16px; padding: 28px 24px; text-align: center; margin-bottom: 20px; }
-
-/* ─── RESPONSIVE ─── */
-@media (min-width: 1024px) { .nav-links { display: flex; } .mob-nav { display: none; } }
-@media (max-width: 1200px) { .rest-grid { grid-template-columns: repeat(3,1fr); } .trending-scroll { grid-template-columns: repeat(2,1fr); } .footer-grid { grid-template-columns: 1.2fr 1fr 1fr; gap: 24px; } .cart-layout { grid-template-columns: 1fr 320px; } }
-@media (max-width: 900px) { .rest-grid { grid-template-columns: repeat(2,1fr); } .chefs-grid { grid-template-columns: 1fr; } .story-grid { grid-template-columns: 1fr; } .cart-layout { grid-template-columns: 1fr; } .trending-scroll { grid-template-columns: repeat(2,1fr); } .video-hero { height: 75vh; } .hero-stat-bar { gap: 20px; } .menu-items-grid { grid-template-columns: 1fr; } .footer-grid { grid-template-columns: 1fr 1fr; gap: 20px; } .offers-grid { grid-template-columns: 1fr; } }
-@media (max-width: 768px) { .track-steps { gap: 4px; } .track-label { font-size: 9px; } .footer-grid { grid-template-columns: 1fr 1fr; } .login-page { grid-template-columns: 1fr; } .login-art { display: none; } .login-form-side { padding: 40px 28px; } .dish-grid { grid-template-columns: repeat(2,1fr); } .video-hero { height: 70vh; min-height: 480px; } }
-/* ─── DARK MODE ─── */
-body.dark-mode {
-  --bg: #0f1f18;
-  --surface: #192d22;
-  --surface2: #1e3628;
-  --border: rgba(143,186,153,0.12);
-  --text: #e8f0e8;
-  --text-muted: #7aab8a;
-  background: var(--bg) !important;
-  color: var(--text) !important;
-}
-body.dark-mode .navbar { background: rgba(15,31,24,0.0) !important; border-color: transparent !important; }
-body.dark-mode .navbar.scrolled { background: rgba(10,21,16,0.97) !important; border-color: rgba(143,186,153,0.14) !important; box-shadow: 0 4px 30px rgba(0,0,0,0.5) !important; }
-body.dark-mode .nav-logo { color: #e8f5e8 !important; }
-body.dark-mode .nav-logo em { color: #8FBA99 !important; }
-body.dark-mode .logo-leaf { background: linear-gradient(135deg, #4A7C59, #8FBA99) !important; box-shadow: 0 4px 14px rgba(143,186,153,0.5) !important; border: 1.5px solid rgba(143,186,153,0.3) !important; }
-body.dark-mode .nav-link { color: rgba(200,223,197,0.85) !important; }
-body.dark-mode .nav-link:hover, body.dark-mode .nav-link.active { color: #e8f5e8 !important; background: rgba(143,186,153,0.1) !important; }
-body.dark-mode .page { background: var(--bg); }
-body.dark-mode .section { background: var(--bg); }
-body.dark-mode .rest-card, body.dark-mode .trending-card, body.dark-mode .chef-card,
-body.dark-mode .offer-card, body.dark-mode .cart-item, body.dark-mode .cart-summary,
-body.dark-mode .checkout-section, body.dark-mode .faq-item, body.dark-mode .menu-item-card {
-  background: var(--surface) !important;
-  border-color: var(--border) !important;
-  color: var(--text) !important;
-}
-body.dark-mode .explore-hero h1, body.dark-mode .explore-hero p, body.dark-mode .explore-hero span { color: #c8dfc5 !important; }
-body.dark-mode .page { background: var(--bg); }
-body.dark-mode .section { background: var(--bg); }
-body.dark-mode .rest-card, body.dark-mode .trending-card, body.dark-mode .chef-card,
-body.dark-mode .cart-item, body.dark-mode .faq-item, body.dark-mode .menu-item-card {
-  background: var(--surface) !important;
-  border-color: var(--border) !important;
-  color: var(--text) !important;
-}
-body.dark-mode .explore-hero { background: transparent !important; }
-body.dark-mode .explore-hero .explore-hero-bg { opacity: 0.55; }
-body.dark-mode .field { background: var(--surface2) !important; color: var(--text) !important; border-color: var(--border) !important; }
-body.dark-mode h1, body.dark-mode h2, body.dark-mode h3, body.dark-mode .rest-name,
-body.dark-mode .trending-name, body.dark-mode .menu-item-name, body.dark-mode .chef-name { color: #d4ebd4 !important; }
-body.dark-mode .section-title { color: #c8dfc5 !important; }
-body.dark-mode .rest-cuisine, body.dark-mode .section-sub, body.dark-mode .trending-rest,
-body.dark-mode .menu-item-desc { color: #7aab8a !important; }
-body.dark-mode .mob-nav { background: rgba(10,21,16,0.97) !important; border-color: rgba(143,186,153,0.15) !important; }
-body.dark-mode .chip { background: var(--surface) !important; color: #8fba99 !important; border-color: var(--border) !important; }
-body.dark-mode .chip.active { background: rgba(74,124,89,0.25) !important; border-color: rgba(74,124,89,0.4) !important; }
-body.dark-mode .payment-option { border-color: var(--border) !important; background: var(--surface) !important; }
-body.dark-mode .payment-option:hover, body.dark-mode .payment-option.selected { background: rgba(74,124,89,0.12) !important; }
-body.dark-mode .nature-divider { background: var(--surface2) !important; }
-body.dark-mode .cart-summary { background: var(--surface) !important; border-color: var(--border) !important; }
-body.dark-mode .checkout-section { background: var(--surface) !important; border-color: var(--border) !important; color: var(--text) !important; }
-body.dark-mode .checkout-section h3 { color: #d4ebd4 !important; }
-body.dark-mode .form-group label { color: #7aab8a !important; }
-body.dark-mode .trending-price, body.dark-mode .menu-item-price { color: #8fba99 !important; }
-body.dark-mode .rest-price { color: #d4a017 !important; }
-body.dark-mode .footer { background: #070f0b !important; }
-body.dark-mode .offer-card { background: var(--surface) !important; border-color: var(--border) !important; }
-body.dark-mode .offer-code { background: var(--surface2) !important; color: #c8dfc5 !important; border-color: rgba(143,186,153,0.25) !important; }
-body.dark-mode .addr-modal-bg { background: rgba(0,0,0,0.7) !important; }
-body.dark-mode .addr-modal { background: var(--surface) !important; border: 1px solid var(--border); }
-body.dark-mode .addr-modal h2, body.dark-mode .addr-modal p { color: #d4ebd4 !important; }
-body.dark-mode .menu-hero { background: linear-gradient(135deg, #0a150f, #192d22) !important; }
-body.dark-mode .login-form-side { background: var(--surface2) !important; }
-body.dark-mode .login-form div[style*="color:"] { color: var(--text) !important; }
-body.dark-mode .cart-item { background: var(--surface) !important; }
-body.dark-mode .banner-carousel .banner-slide::after { content: ''; }
-
-/* ─── DARK MODE TOGGLE ─── */
-.dark-toggle { position: relative; width: 44px; height: 24px; background: rgba(107,158,122,0.25); border-radius: 12px; border: 1px solid rgba(107,158,122,0.3); cursor: pointer; transition: background 0.3s; }
-.dark-toggle.on { background: ${T.leaf}; }
-.dark-toggle-ball { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: white; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
-.dark-toggle.on .dark-toggle-ball { transform: translateX(20px); }
-
-/* ─── COUPON SYSTEM ─── */
-.coupon-banner { background: linear-gradient(135deg, ${T.leaf}, ${T.forest}); border-radius: 12px; padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 12; }
-.coupon-input-row { display: flex; gap: 8px; }
-.coupon-msg-success { color: #4CAF50; font-size: 12px; font-weight: 600; margin-top: 8px; display: flex; align-items: center; gap: 5px; }
-.coupon-msg-error { color: #E53E3E; font-size: 12px; font-weight: 600; margin-top: 8px; display: flex; align-items: center; gap: 5px; }
-
-/* ─── REALISTIC MAP ─── */
-.realistic-map { border-radius: 20px; overflow: hidden; border: 1px solid rgba(107,158,122,0.15); margin-bottom: 24px; position: relative; box-shadow: 0 8px 32px rgba(26,58,42,0.15); height: 360px; }
-.map-rider-pin { position: absolute; transform: translate(-50%, -50%); font-size: 28px; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.3)); transition: left 1.2s cubic-bezier(0.4,0,0.2,1), top 1.2s cubic-bezier(0.4,0,0.2,1); z-index: 10; }
-.map-dest-pin { position: absolute; transform: translate(-50%, -100%); font-size: 28px; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.3)); z-index: 10; }
-.map-origin-pin { position: absolute; transform: translate(-50%, -100%); font-size: 24px; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.3)); z-index: 10; }
-.map-label { position: absolute; background: white; border-radius: 6px; padding: 4px 8px; font-size: 11px; font-weight: 600; color: ${T.forest}; box-shadow: 0 2px 8px rgba(0,0,0,0.15); white-space: nowrap; z-index: 11; }
-.map-eta-chip { position: absolute; top: 14px; right: 14px; background: ${T.forest}; color: white; border-radius: 20px; padding: 8px 16px; font-size: 13px; font-weight: 700; z-index: 12; box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
-
-/* ─── OFFERS CLAIM ─── */
-.offer-claim-btn { display: block; margin-top: 16px; background: linear-gradient(135deg, ${T.sage}, ${T.leaf}); color: white; border: none; border-radius: 8px; padding: 10px 18px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; width: 100%; letter-spacing: 0.04em; }
-.offer-claim-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
-.offer-claim-btn.claimed { background: #4CAF50; cursor: default; }
-.offer-copy { display: block; margin-top: 8px; background: none; border: 1.5px solid rgba(107,158,122,0.3); color: ${T.sage}; border-radius: 8px; padding: 9px 18px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; width: 100%; }
-.offer-copy:hover { background: ${T.forest}; color: white; border-color: ${T.forest}; }
-
-/* ─── FAQ CURSOR FIX ─── */
-.faq-item { cursor: pointer !important; }
-.faq-q { cursor: pointer !important; }
-.faq-q span:first-child { cursor: pointer !important; }
-
-/* ─── GLOBAL UI CONSISTENCY ─── */
-/* Consistent section backgrounds alternating */
-.section-alt { background: ${T.snow}; }
-/* Better focus states */
-button:focus-visible { outline: 2px solid ${T.sage}; outline-offset: 3px; }
-input:focus-visible { outline: none; }
-/* Smoother image rendering */
-img { image-rendering: -webkit-optimize-contrast; }
-/* Consistent card border radius */
-.rest-card, .trending-card, .offer-card, .menu-item-card { border-radius: 20px !important; }
-/* Consistent shadows */
-.rest-card, .trending-card { box-shadow: 0 2px 16px rgba(26,58,42,0.08), 0 1px 4px rgba(26,58,42,0.04) !important; }
-.rest-card:hover, .trending-card:hover { box-shadow: 0 20px 50px rgba(26,58,42,0.18) !important; }
-/* Gradient shimmer on active slide images */
-@keyframes kenBurns { from { transform: scale(1); } to { transform: scale(1.06); } }
-.banner-slide.active img { animation: kenBurns 6s ease forwards; }
-/* Smooth page transitions */
-.page > * { animation: pageFadeIn 0.4s ease both; }
-@keyframes pageFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-/* Better mobile spacing */
-@media (max-width: 600px) {
-  .container { padding: 0 16px; }
-  .section { padding: 56px 0; }
-  .hero-stat-bar { gap: 16px; }
-  .hero-stat-n { font-size: 24px; }
-  .banner-overlay { padding: 0 24px; }
-  .footer-grid { grid-template-columns: 1fr !important; gap: 28px !important; }
-  .footer-bar { flex-direction: column; text-align: center; gap: 6px; }
-}
-`;
-
-
-/* ─── HELPERS ─────────────────────────────────────────────── */
-function Stars({ r }) {
+function SkeletonMenuCard() {
   return (
-    <span>
-      {[1,2,3,4,5].map(i=>(
-        <span key={i} className="star" style={{ opacity: i<=Math.floor(r)?1:i===Math.ceil(r)?0.5:0.2 }}>★</span>
-      ))}
-      <span style={{ fontSize:12, fontWeight:700, marginLeft:4, color:T.forest }}>{r}</span>
-    </span>
-  );
-}
-
-function Rv({ children, delay=0 }) {
-  const ref = useRef();
-  const [vis, setVis] = useState(false);
-  useEffect(()=>{
-    const ob = new IntersectionObserver(([e])=>{ if(e.isIntersecting){setVis(true);ob.disconnect();} },{threshold:0.1});
-    if(ref.current) ob.observe(ref.current);
-    return ()=>ob.disconnect();
-  },[]);
-  return (
-    <div ref={ref} style={{ opacity: vis?1:0, transform: vis?'none':'translateY(24px)', transition:`opacity 0.5s ${delay}s, transform 0.5s ${delay}s cubic-bezier(0.4,0,0.2,1)` }}>
-      {children}
+    <div className="skel-menu-card">
+      <div className="skel skel-menu-img" />
+      <div className="skel-menu-body">
+        <div className="skel skel-line-lg" />
+        <div className="skel skel-line-md" />
+        <div className="skel skel-line-sm" />
+        <div style={{ display:'flex', justifyContent:'space-between', marginTop:'auto', paddingTop:8 }}>
+          <div className="skel skel-badge" style={{ width:60 }} />
+          <div className="skel skel-badge" style={{ width:70 }} />
+        </div>
+      </div>
     </div>
   );
 }
 
-/* ─── DARK MODE HOOK ──────────────────────────────────────── */
-function useDarkMode() {
-  const [dark, setDark] = useState(() => {
-    try { return localStorage.getItem('terraeats-dark') === '1'; } catch { return false; }
-  });
-  useEffect(() => {
-    document.body.classList.toggle('dark-mode', dark);
-    try { localStorage.setItem('terraeats-dark', dark ? '1' : '0'); } catch {}
-  }, [dark]);
-  return [dark, setDark];
+function SkeletonRestaurantList({ count = 8 }) {
+  return (
+    <div className="rest-grid">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} style={{ animationDelay: `${i * 60}ms` }}>
+          <SkeletonRestCard />
+        </div>
+      ))}
+    </div>
+  );
 }
 
-/* ─── NAVBAR ─────────────────────────────────────────────── */
-function Navbar({ page, go, cnt, user, onLogin }) {
-  const [scrolled, setScrolled] = useState(false);
-  const [hidden, setHidden] = useState(false);
+function SkeletonMenuList({ count = 6 }) {
+  return (
+    <div className="menu-items-grid">
+      {Array.from({ length: count }).map((_, i) => (
+        <SkeletonMenuCard key={i} />
+      ))}
+    </div>
+  );
+}
+
+function SkeletonDishList({ count = 4 }) {
+  return (
+    <div className="rest-grid">
+      {Array.from({ length: count }).map((_, i) => (
+        <SkeletonRestCard key={i} />
+      ))}
+    </div>
+  );
+}
+
+/* ─── EMPTY STATES ─── */
+function EmptyCart({ go }) {
+  return (
+    <div className="page empty-state">
+      <div className="empty-state-icon">🛒</div>
+      <h3>Your cart is empty</h3>
+      <p>Add something delicious to get started. Hundreds of restaurants are waiting!</p>
+      <button className="btn-nature" onClick={() => go('explore')}>Explore Restaurants</button>
+    </div>
+  );
+}
+
+function EmptySearch({ query, onClear }) {
+  return (
+    <div className="empty-state">
+      <div className="empty-state-icon">🔍</div>
+      <h3>No results for "{query}"</h3>
+      <p>Try a different cuisine, restaurant name, or clear your search filters.</p>
+      <button className="btn-outline" onClick={onClear}>Clear Search</button>
+    </div>
+  );
+}
+
+function EmptyDish({ dishName, go }) {
+  return (
+    <div className="empty-state">
+      <div className="empty-state-icon">🍽️</div>
+      <h3>Dish not found</h3>
+      <p>We couldn't find "{dishName}" at any restaurant right now. Try exploring all restaurants.</p>
+      <button className="btn-nature" onClick={() => go('explore')}>Explore All Restaurants</button>
+    </div>
+  );
+}
+
+/* ─── ERROR STATE ─── */
+function ErrorState({ message, onRetry }) {
+  return (
+    <div className="error-state">
+      <div className="error-state-icon">⚠️</div>
+      <h3 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:22, color:T.forest, marginBottom:8 }}>
+        Something went wrong
+      </h3>
+      <p style={{ color:T.moss, fontSize:13, marginBottom:20 }}>{message}</p>
+      <button className="btn-primary" onClick={onRetry}>Try Again</button>
+    </div>
+  );
+}
+
+/* ─── ADDRESS MODAL ─── */
+function AddressModal({ onSave, onClose }) {
+  const [addr, setAddr] = useState({ line1:'', city:'', pincode:'' });
+  const [err, setErr]   = useState('');
+
+  const submit = () => {
+    if (!addr.line1.trim() || !addr.city.trim() || !addr.pincode.trim()) { setErr('Please fill all fields'); return; }
+    if (!/^\d{6}$/.test(addr.pincode.trim())) { setErr('Enter valid 6-digit pincode'); return; }
+    onSave(addr);
+  };
+
+  return (
+    <div className="addr-modal-bg" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="addr-modal">
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
+          <div>
+            <h2 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:26, fontWeight:700, color:T.forest }}>📍 Add Delivery Address</h2>
+            <p style={{ color:T.moss, fontSize:13, marginTop:4 }}>We need your address to deliver your order</p>
+          </div>
+          <button onClick={onClose} style={{ background:'none', border:'none', cursor:'pointer', fontSize:22, color:T.moss }}>×</button>
+        </div>
+        {[['Street / Flat / Building','line1','123 MG Road, Apt 4B'],['City / Town','city','Bengaluru'],['Pincode','pincode','560001']].map(([label, key, ph]) => (
+          <div key={key} style={{ marginBottom:16 }}>
+            <label style={{ display:'block', fontSize:11, fontWeight:700, color:T.moss, letterSpacing:'0.08em', textTransform:'uppercase', marginBottom:7 }}>{label}</label>
+            <input className="field" placeholder={ph} value={addr[key]}
+              onChange={e => { setAddr(x => ({...x, [key]: e.target.value})); setErr(''); }} />
+          </div>
+        ))}
+        {err && <p style={{ color:'#E53E3E', fontSize:12, marginBottom:12 }}>{err}</p>}
+        <button className="btn-nature" style={{ width:'100%', marginTop:4 }} onClick={submit}>Save & Continue →</button>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ── NAVBAR ────────────────────────────────────────────────────
+   ═══════════════════════════════════════════════════════════════ */
+function Navbar({ page, go, cnt, user }) {
+  const [scrolled,  setScrolled]  = useState(false);
+  const [hidden,    setHidden]    = useState(false);
   const lastScrollY = useRef(0);
   const [dark, setDark] = useDarkMode();
 
-  useEffect(()=>{
+  // On non-home pages the navbar is always "solid" for readability
+  const isHome = page === 'home';
+
+  useEffect(() => {
     const fn = () => {
       const y = window.scrollY;
-      // On home page start transparent, on other pages always solid
-      setScrolled(page !== 'home' || y > 30);
-      if (y > lastScrollY.current && y > 100) {
-        setHidden(true);
-      } else {
-        setHidden(false);
-      }
+      setScrolled(y > 30);
+      setHidden(y > lastScrollY.current && y > 120);
       lastScrollY.current = y;
     };
-    // Trigger immediately when page changes
-    const y = window.scrollY;
-    setScrolled(page !== 'home' || y > 30);
+    setScrolled(window.scrollY > 30);
     window.addEventListener('scroll', fn, { passive: true });
-    return ()=> window.removeEventListener('scroll', fn);
-  },[page]);
+    return () => window.removeEventListener('scroll', fn);
+  }, []);
 
   const links = [
-    {id:'home',label:'Home'},{id:'restaurants',label:'Restaurants'},{id:'explore',label:'Explore'},{id:'offers',label:'Offers'},
-    {id:'track',label:'Track'},{id:'help',label:'Help'},{id:'about',label:'About'},
+    {id:'home',label:'Home'},{id:'restaurants',label:'Restaurants'},{id:'explore',label:'Explore'},
+    {id:'offers',label:'Offers'},{id:'track',label:'Track'},{id:'help',label:'Help'},{id:'about',label:'About'},
   ];
+
+  // Class logic: transparent → scrolled (on home), always solid on other pages
+  const navClass = [
+    'navbar',
+    !isHome || scrolled ? (isHome ? 'scrolled' : 'solid') : '',
+    hidden ? 'nav-hidden' : 'nav-visible',
+  ].filter(Boolean).join(' ');
+
   return (
-    <nav className={`navbar${scrolled?' scrolled':''}${hidden?' nav-hidden':' nav-visible'}`}>
+    <nav className={navClass} role="navigation" aria-label="Main navigation">
       <div className="nav-inner">
-        <button className="nav-logo" onClick={()=>go('home')}>
-          <div className="logo-leaf">🌿</div>
-          <span>Terra<em style={{fontStyle:'italic',fontWeight:400}}> Eats</em></span>
+        {/* Logo */}
+        <button className="nav-logo" onClick={() => go('home')} aria-label="Terra Eats — go home">
+          <div className="logo-leaf" aria-hidden="true">🌿</div>
+          <span>Terra<em style={{ fontStyle:'italic', fontWeight:400 }}> Eats</em></span>
         </button>
-        <div className="nav-links">
-          {links.map(l=>(
-            <button key={l.id} className={`nav-link${page===l.id?' active':''}`} onClick={()=>go(l.id)}>{l.label}</button>
+
+        {/* Desktop links */}
+        <nav className="nav-links" aria-label="Site pages">
+          {links.map(l => (
+            <button
+              key={l.id}
+              className={`nav-link${page === l.id ? ' active' : ''}`}
+              onClick={() => go(l.id)}
+              aria-current={page === l.id ? 'page' : undefined}
+            >
+              {l.label}
+            </button>
           ))}
-        </div>
+        </nav>
+
         <div className="nav-actions">
           {/* Dark mode toggle */}
-          <button
-            className={`dark-toggle${dark?' on':''}`}
-            onClick={()=>setDark(d=>!d)}
-            title={dark?'Switch to Light Mode':'Switch to Dark Mode'}
-            aria-label="Toggle dark mode"
-          >
-            <div className="dark-toggle-ball" />
-          </button>
-          <span style={{ fontSize:14, marginLeft:-4, marginRight:4 }}>{dark?'🌙':'☀️'}</span>
+          <div className="dark-toggle-wrap">
+            <button
+              className={`dark-toggle${dark ? ' on' : ''}`}
+              onClick={() => setDark(d => !d)}
+              aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-pressed={dark}
+            >
+              <div className="dark-toggle-ball" />
+            </button>
+            <span className="dark-toggle-label" aria-hidden="true">{dark ? '🌙' : '☀️'}</span>
+          </div>
+
+          {/* User avatar or login */}
           {user ? (
-            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-              <div style={{ width:32, height:32, borderRadius:'50%', background:`linear-gradient(135deg,${T.sage},${T.leaf})`, display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontSize:13, fontWeight:700, cursor:'pointer' }}
-                title={user.name} onClick={()=>go('cart')}>
-                {user.name[0].toUpperCase()}
-              </div>
-            </div>
+            <button
+              style={{ width:34, height:34, borderRadius:'50%', background:`linear-gradient(135deg,${T.sage},${T.leaf})`, display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontSize:13, fontWeight:700, cursor:'pointer', transition:'transform 0.2s', border:'2px solid rgba(255,255,255,0.3)' }}
+              title={user.name} onClick={() => go('cart')}
+              aria-label={`${user.name}'s account`}
+              onMouseEnter={e => e.currentTarget.style.transform='scale(1.1)'}
+              onMouseLeave={e => e.currentTarget.style.transform=''}
+            >
+              {user.name[0].toUpperCase()}
+            </button>
           ) : (
-            <button className="nav-btn-sm" onClick={()=>go('login')}>Login</button>
+            <button className="nav-btn-sm btn-ripple" onClick={() => go('login')} aria-label="Login to your account">
+              Login
+            </button>
           )}
-          <button className="nav-cart" onClick={()=>go('cart')}>
-            🛒 Cart
-            {cnt>0 && <span className="cart-badge">{cnt}</span>}
+
+          {/* Cart */}
+          <button className="nav-cart btn-ripple" onClick={() => go('cart')} aria-label={`Cart, ${cnt} items`}>
+            🛒 <span className="nav-cart-text">Cart</span>
+            {cnt > 0 && <span className="cart-badge" aria-hidden="true">{cnt}</span>}
           </button>
         </div>
       </div>
@@ -1028,83 +1463,366 @@ function Navbar({ page, go, cnt, user, onLogin }) {
   );
 }
 
-function MobNav({ page, go, cnt }) {
+const MobNav = memo(function MobNav({ page, go, cnt }) {
   const tabs = [
-    {id:'home',label:'Home',icon:'🏠'},{id:'restaurants',label:'Restaurants',icon:'🏪'},{id:'explore',label:'Explore',icon:'🔍'},
-    {id:'offers',label:'Offers',icon:'🏷️'},{id:'cart',label:'Cart',icon:'🛒',badge:cnt},
+    { id:'home',        label:'Home',    icon:'🏠' },
+    { id:'restaurants', label:'Eats',    icon:'🏪' },
+    { id:'explore',     label:'Explore', icon:'🔍' },
+    { id:'offers',      label:'Offers',  icon:'🏷️' },
+    { id:'cart',        label:'Cart',    icon:'🛒', badge: cnt },
   ];
   return (
-    <div className="mob-nav">
-      {tabs.map(t=>(
-        <button key={t.id} className={`mob-btn${page===t.id?' active':''}`} onClick={()=>go(t.id)}>
-          <span style={{fontSize:22,position:'relative'}}>
+    <nav className="mob-nav" aria-label="Mobile navigation">
+      {tabs.map(t => (
+        <button
+          key={t.id}
+          className={`mob-btn${page === t.id ? ' active' : ''}`}
+          onClick={() => go(t.id)}
+          aria-current={page === t.id ? 'page' : undefined}
+          aria-label={t.badge > 0 ? `${t.label}, ${t.badge} items` : t.label}
+        >
+          <span className="mob-btn-icon">
             {t.icon}
-            {t.badge>0&&<span className="cart-badge" style={{top:-4,right:-4}}>{t.badge}</span>}
+            {t.badge > 0 && (
+              <span className="cart-badge" style={{ top:-4, right:-4 }} aria-hidden="true">{t.badge}</span>
+            )}
           </span>
-          <span>{t.label}</span>
+          <span className="mob-btn-label">{t.label}</span>
         </button>
       ))}
+    </nav>
+  );
+});
+
+/* ═══════════════════════════════════════════════════════════════
+   ── REUSABLE PAGE BANNER ──────────────────────────────────────
+   Full-width hero with background image, gradient overlay,
+   animated entrance, and responsive layout.
+   ═══════════════════════════════════════════════════════════════ */
+function PageBanner({ eyebrow, title, subtitle, imgUrl, overlay, children }) {
+  // overlay defaults to a dark forest gradient
+  const grad = overlay || 'linear-gradient(135deg, rgba(10,35,20,0.88) 0%, rgba(26,58,42,0.65) 55%, rgba(10,35,20,0.55) 100%)';
+  return (
+    <div className="page-banner">
+      {imgUrl && (
+        <img
+          src={imgUrl}
+          alt=""
+          aria-hidden="true"
+          className="page-banner-img"
+          loading="eager"
+        />
+      )}
+      <div className="page-banner-overlay" style={{ background: imgUrl ? grad : `linear-gradient(135deg, ${T.forest} 0%, ${T.leaf} 100%)` }} />
+      <div className="page-banner-content">
+        <div className="container">
+          <Reveal>
+            {eyebrow && <div className="page-banner-eyebrow">{eyebrow}</div>}
+            <h1 className="page-banner-h1">{title}</h1>
+            {subtitle && <p className="page-banner-sub">{subtitle}</p>}
+            {children}
+          </Reveal>
+        </div>
+      </div>
     </div>
   );
 }
 
-/* ─── VIDEO HERO ─────────────────────────────────────────── */
+/* ─── FAQ ITEM — hover-expand accordion ─────────────────────── */
+/**
+ * Expands on hover (mouseenter) and on keyboard focus,
+ * collapses on mouseleave (unless keyboard-focused).
+ * Click also toggles for mobile users.
+ */
+function FaqItem({ faq, index }) {
+  const [open, setOpen] = useState(false);
+  const hoverTimer = useRef(null);
+  const itemRef    = useRef(null);
+
+  const expand  = useCallback(() => { clearTimeout(hoverTimer.current); setOpen(true); }, []);
+  const collapse = useCallback(() => {
+    // Delay collapse slightly so fast mouse passes don't flicker
+    hoverTimer.current = setTimeout(() => setOpen(false), 120);
+  }, []);
+
+  // Keyboard: open on focus, close when focus leaves the item entirely
+  const onFocus  = useCallback(() => expand(), [expand]);
+  const onBlur   = useCallback((e) => {
+    if (!itemRef.current?.contains(e.relatedTarget)) collapse();
+  }, [collapse]);
+
+  useEffect(() => () => clearTimeout(hoverTimer.current), []);
+
+  return (
+    <Reveal delay={index * 0.04}>
+      <div
+        ref={itemRef}
+        className={`faq-item${open ? ' faq-open' : ''}`}
+        onMouseEnter={expand}
+        onMouseLeave={collapse}
+      >
+        <button
+          className="faq-q"
+          aria-expanded={open}
+          aria-controls={`faq-ans-${index}`}
+          id={`faq-btn-${index}`}
+          onClick={() => setOpen(o => !o)}   /* mobile: tap to toggle */
+          onFocus={onFocus}
+          onBlur={onBlur}
+        >
+          <span className="faq-q-text">{faq.q}</span>
+          <span className="faq-icon" aria-hidden="true">+</span>
+        </button>
+        <div
+          className={`faq-ans${open ? ' open' : ''}`}
+          id={`faq-ans-${index}`}
+          role="region"
+          aria-labelledby={`faq-btn-${index}`}
+        >
+          <div className="faq-ans-inner">
+            <p>{faq.a}</p>
+          </div>
+        </div>
+      </div>
+    </Reveal>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ── FOOTER ────────────────────────────────────────────────────
+   ═══════════════════════════════════════════════════════════════ */
+function Footer({ go }) {
+  const leaves = ['🍃','🌿','🍀','🌱','🍂'];
+  return (
+    <footer className="footer">
+      <div className="footer-leaves">
+        {leaves.map((l, i) => (
+          <div key={i} className="footer-leaf" style={{ left:`${10 + i*18}%`, bottom: 0, fontSize: 28+i*4, animationDuration:`${6+i*2}s`, animationDelay:`${i*1.2}s` }}>{l}</div>
+        ))}
+      </div>
+      <div className="container">
+        <div className="footer-grid">
+          <div>
+            <div className="footer-brand">🌿 Terra Eats</div>
+            <p style={{ fontSize:13, fontWeight:300, lineHeight:1.7, marginBottom:16, maxWidth:280 }}>
+              Farm-to-table delivery from handpicked partner restaurants. Seasonal. Sustainable. Delicious.
+            </p>
+            <div style={{ display:'flex', gap:8 }}>
+              {['𝕏','in','📸','📘'].map(s => (
+                <button key={s} style={{ width:36, height:36, borderRadius:9, background:'rgba(255,255,255,0.08)', border:'1px solid rgba(200,223,197,0.12)', color:'rgba(200,223,197,0.7)', cursor:'pointer', fontSize:14, transition:'all 0.2s' }}
+                  onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.18)'; e.currentTarget.style.transform='translateY(-2px)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.08)'; e.currentTarget.style.transform=''; }}
+                >{s}</button>
+              ))}
+            </div>
+          </div>
+          {[
+            { title:'Explore', links:[['Home','home'],['Restaurants','restaurants'],['Explore','explore'],['Offers','offers']] },
+            { title:'Company', links:[['About Us','about'],['Our Chefs','about'],['Sustainability','about'],['Help','help']] },
+            { title:'Account', links:[['Sign In','login'],['Track Order','track'],['My Cart','cart'],['Support','help']] },
+          ].map(col => (
+            <div key={col.title}>
+              <div className="footer-title">{col.title}</div>
+              {col.links.map(([l, id]) => (
+                <button key={l} className="footer-link" onClick={() => go(id)}>{l}</button>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div className="footer-bar">
+          <span style={{ fontSize:12 }}>© 2025 Terra Eats. All rights reserved.</span>
+          <span style={{ fontSize:12, opacity:0.6 }}>🌱 1 tree planted per 10 orders</span>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ── BANNER CAROUSEL ───────────────────────────────────────────
+   ═══════════════════════════════════════════════════════════════ */
+const BANNER_SLIDES = [
+  { img:"https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1600&q=95", title:"Authentic Indian Flavours", sub:"Biryani, Butter Chicken & More", cta:"Order Indian →", color:"#E8742A" },
+  { img:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1600&q=95", title:"Burgers Worth the Wait", sub:"Crafted with premium beef & fresh buns", cta:"Explore Burgers →", color:"#D4A017" },
+  { img:"https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=1600&q=95", title:"Sushi Night, Done Right", sub:"Premium rolls from Sushi Bay", cta:"Order Sushi →", color:"#8FBA99" },
+  { img:"https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1600&q=95", title:"Pizza Like Never Before", sub:"Wood-fired, fresh, delivered hot", cta:"Get Pizza →", color:"#C45B1A" },
+];
+
+function BannerCarousel({ go }) {
+  const [cur, setCur] = useState(0);
+  const timer = useRef(null);
+  const total  = BANNER_SLIDES.length;
+
+  const goNext = useCallback(() => setCur(c => (c + 1) % total), [total]);
+  const goPrev = ()  => { setCur(c => (c - 1 + total) % total); resetTimer(); };
+  const resetTimer = () => { clearInterval(timer.current); timer.current = setInterval(goNext, 4500); };
+  useEffect(() => { timer.current = setInterval(goNext, 4500); return () => clearInterval(timer.current); }, [goNext]);
+
+  const touchX = useRef(null);
+
+  return (
+    <div className="banner-carousel"
+      onTouchStart={e => touchX.current = e.touches[0].clientX}
+      onTouchEnd={e => {
+        if (touchX.current === null) return;
+        const diff = touchX.current - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 40) { diff > 0 ? goNext() : goPrev(); resetTimer(); }
+        touchX.current = null;
+      }}
+    >
+      <div className="banner-slides" style={{ transform:`translateX(-${cur * 100}%)` }}>
+        {BANNER_SLIDES.map((s, i) => (
+          <div key={i} className={`banner-slide${cur === i ? ' active' : ''}`}>
+            <img src={s.img} alt={s.title} loading={i === 0 ? 'eager' : 'lazy'} />
+            <div className="banner-overlay">
+              <div className="banner-content">
+                <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:s.color, marginBottom:10 }}>🍃 Terra Eats Special</div>
+                <h2 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:'clamp(24px,3.5vw,52px)', fontWeight:700, lineHeight:1.05, marginBottom:12, color:'white', textShadow:'0 2px 16px rgba(0,0,0,0.4)' }}>{s.title}</h2>
+                <p style={{ fontSize:14, color:'rgba(255,255,255,0.80)', fontWeight:300, marginBottom:24, lineHeight:1.6 }}>{s.sub}</p>
+                <button onClick={() => go('explore')} className="btn-ripple"
+                  style={{ background:s.color, color:'white', border:'none', borderRadius:12, padding:'13px 28px', fontSize:13, fontWeight:700, cursor:'pointer', letterSpacing:'0.04em', transition:'all 0.2s', position:'relative', overflow:'hidden' }}
+                  onMouseEnter={e => { e.currentTarget.style.filter='brightness(1.12)'; e.currentTarget.style.transform='translateY(-2px)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.filter=''; e.currentTarget.style.transform=''; }}
+                >{s.cta}</button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <button className="banner-arrow prev" onClick={() => { goPrev(); }}>‹</button>
+      <button className="banner-arrow next" onClick={() => { goNext(); resetTimer(); }}>›</button>
+      <div className="banner-dots">
+        {BANNER_SLIDES.map((_, i) => (
+          <button key={i} className={`banner-dot${cur === i ? ' active' : ''}`} onClick={() => { setCur(i); resetTimer(); }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ── CATEGORY CAROUSEL ─────────────────────────────────────────
+   ═══════════════════════════════════════════════════════════════ */
+function CategoryCarousel({ activeCat, onCatClick }) {
+  const [offset, setOffset] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const dragStart = useRef(null);
+  const animRef   = useRef(null);
+  const ITEM_W    = 116;
+
+  const maxOff = Math.max(0, CATEGORIES.length * ITEM_W - (typeof window !== 'undefined' ? window.innerWidth - 56 : 800));
+
+  // Smooth animated scroll to target offset
+  const smoothScrollTo = useCallback((target) => {
+    if (animRef.current) cancelAnimationFrame(animRef.current);
+    const clampedTarget = Math.max(0, Math.min(maxOff, target));
+    const step = () => {
+      setOffset(prev => {
+        const diff = clampedTarget - prev;
+        if (Math.abs(diff) < 1) return clampedTarget;
+        animRef.current = requestAnimationFrame(step);
+        return prev + diff * 0.18;
+      });
+    };
+    animRef.current = requestAnimationFrame(step);
+  }, [maxOff]);
+
+  useEffect(() => () => { if (animRef.current) cancelAnimationFrame(animRef.current); }, []);
+
+  const slide = dir => smoothScrollTo(offset + dir * ITEM_W * 3);
+
+  const onMouseDown = e => { if (animRef.current) cancelAnimationFrame(animRef.current); setDragging(true); dragStart.current = { x: e.clientX, offset }; };
+
+  const onMouseMove = e => { if (!dragging || !dragStart.current) return; setOffset(Math.max(0, Math.min(maxOff, dragStart.current.offset + dragStart.current.x - e.clientX))); };
+  const onMouseUp   = ()  => { setDragging(false); };
+  const onTouchStart = e => { if (animRef.current) cancelAnimationFrame(animRef.current); dragStart.current = { x: e.touches[0].clientX, offset }; };
+  const onTouchMove  = e => { if (!dragStart.current) return; setOffset(Math.max(0, Math.min(maxOff, dragStart.current.offset + dragStart.current.x - e.touches[0].clientX))); };
+  const onTouchEnd   = ()  => { dragStart.current = null; };
+
+  return (
+    <div style={{ position:'relative' }}>
+      <button className="cat-carousel-btn prev" onClick={() => slide(-1)}>‹</button>
+      <div className="cat-carousel-wrap"
+        onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp}
+        onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
+      >
+        <div className={`cat-carousel-track${dragging ? ' dragging' : ''}`} style={{ transform:`translateX(-${offset}px)` }}>
+          {CATEGORIES.map(cat => (
+            <div key={cat.label} className={`cat-item${activeCat === cat.label ? ' active' : ''}`} onClick={() => onCatClick(cat.label)}>
+              <div className="cat-img-ring">
+                <img src={cat.img} alt={cat.label} loading="lazy" />
+              </div>
+              <span className="cat-label">{cat.emoji} {cat.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <button className="cat-carousel-btn next" onClick={() => slide(1)}>›</button>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ── VIDEO HERO ────────────────────────────────────────────────
+   ═══════════════════════════════════════════════════════════════ */
 function VideoHero({ go }) {
   const videoRef = useRef();
+  const [videoLoaded, setVideoLoaded] = useState(false);
+
   useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.play().catch(()=>{});
+    // Skip video on slow connections or reduced-motion preference
+    const conn = navigator.connection;
+    const slowConn = conn && (conn.saveData || ['slow-2g','2g'].includes(conn.effectiveType));
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (slowConn || reducedMotion) return;
+
+    const v = videoRef.current;
+    if (v) {
+      v.play().catch(() => {});
+      setVideoLoaded(true);
     }
   }, []);
 
-  // Use a direct MP4 Unsplash video for food ambiance - autoplay, loop, muted, no controls
   return (
     <div className="video-hero">
       <div className="video-fallback" />
-      <div className="video-container" style={{ position:'absolute', inset:0, zIndex:0, overflow:'hidden' }}>
+      {/* Video: only rendered when not slow connection */}
+      <div style={{ position:'absolute', inset:0, zIndex:0, overflow:'hidden' }}>
         <video
           ref={videoRef}
-          autoPlay
-          loop
-          muted
-          playsInline
-          style={{
-            position: 'absolute', top: '50%', left: '50%',
-            transform: 'translate(-50%, -50%)',
-            minWidth: '100%', minHeight: '100%',
-            width: 'auto', height: 'auto',
-            objectFit: 'cover',
-            pointerEvents: 'none',
-          }}
+          autoPlay loop muted playsInline
+          preload="none"
+          style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', minWidth:'100%', minHeight:'100%', objectFit:'cover', pointerEvents:'none' }}
         >
-          {/* Multiple high-quality food videos for reliability */}
           <source src="https://videos.pexels.com/video-files/3195394/3195394-uhd_2560_1440_25fps.mp4" type="video/mp4" />
-          <source src="https://videos.pexels.com/video-files/1437396/1437396-uhd_2560_1440_25fps.mp4" type="video/mp4" />
-          <source src="https://videos.pexels.com/video-files/2098575/2098575-hd_1920_1080_25fps.mp4" type="video/mp4" />
         </video>
       </div>
       <div className="video-overlay" />
       <div className="video-hero-content">
-        <div style={{ maxWidth:640, animation:'fadeUp 0.8s ease both' }}>
-          <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}`}</style>
-          <div style={{ display:'inline-flex',alignItems:'center',gap:8,background:'rgba(255,255,255,0.1)',borderRadius:20,padding:'6px 16px 6px 8px',marginBottom:24,backdropFilter:'blur(12px)',border:'1px solid rgba(255,255,255,0.15)' }}>
-            <span style={{ background:'linear-gradient(135deg,rgba(232,116,42,0.95),rgba(196,91,26,0.95))',borderRadius:14,padding:'2px 12px',fontSize:10,fontWeight:700,color:'white',letterSpacing:'0.08em',textTransform:'uppercase' }}>NEW</span>
-            <span style={{ fontSize:12,color:'rgba(200,223,197,0.95)',fontWeight:400,letterSpacing:'0.01em' }}>Farm-to-table delivery is here 🌱</span>
+        <div style={{ maxWidth:620 }} className="animate-fade-up">
+          <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.1)', borderRadius:20, padding:'6px 16px 6px 8px', marginBottom:20, backdropFilter:'blur(12px)', border:'1px solid rgba(255,255,255,0.15)' }}>
+            <span style={{ background:'linear-gradient(135deg,rgba(232,116,42,0.95),rgba(196,91,26,0.95))', borderRadius:14, padding:'2px 12px', fontSize:10, fontWeight:700, color:'white', letterSpacing:'0.08em', textTransform:'uppercase' }}>NEW</span>
+            <span style={{ fontSize:12, color:'rgba(200,223,197,0.95)', fontWeight:400 }}>Farm-to-table delivery is here 🌱</span>
           </div>
-          <h1 className="hero-h1">From nature's<br/>kitchen <em>to yours</em></h1>
+          <h1 className="hero-h1">From nature's<br/>kitchen <em style={{ fontStyle:'italic', opacity:0.9 }}>to yours</em></h1>
           <p className="hero-sub">Handpicked restaurants. Seasonal ingredients.<br/>Delivered with care in 30 minutes or less.</p>
           <div className="hero-search">
-            <span style={{ paddingLeft:18,fontSize:18,opacity:0.5 }}>🔍</span>
-            <input placeholder="Search biryani, sushi, burgers, pizza…" style={{ border:'none',outline:'none',flex:1,padding:'16px 14px',fontSize:14,color:T.forest,background:'transparent' }} />
-            <button className="hero-search-btn" onClick={()=>go('explore')}>Find Food</button>
+            <span style={{ paddingLeft:16, fontSize:18, opacity:0.5, flexShrink:0 }}>🔍</span>
+            <input
+              placeholder="Search biryani, sushi, burgers…"
+              style={{ border:'none', outline:'none', flex:1, padding:'14px 12px', fontSize:15, color:T.forest, background:'transparent', fontFamily:'inherit', minWidth:0 }}
+              onFocus={e => e.currentTarget.placeholder = ''}
+              onBlur={e => e.currentTarget.placeholder = 'Search biryani, sushi, burgers…'}
+            />
+            <button className="hero-search-btn btn-ripple" onClick={() => go('explore')}>Search</button>
           </div>
           <div className="hero-pills">
-            {['🍕 Pizza','🍔 Burger','🍛 Biryani','🍜 Noodles','🍣 Sushi','🍰 Desserts'].map(p=>(
-              <button key={p} className="hero-pill" onClick={()=>go('explore')}>{p}</button>
+            {['🍕 Pizza','🍔 Burger','🍛 Biryani','🍜 Noodles','🍣 Sushi','🍰 Desserts'].map(p => (
+              <button key={p} className="hero-pill btn-ripple" onClick={() => go('explore')}>{p}</button>
             ))}
           </div>
           <div className="hero-stat-bar">
-            {[['500+','Restaurants'],['30 min','Avg Delivery'],['4.8 ★','Platform Rating'],['50k+','Happy Eaters']].map(([n,l])=>(
+            {[['500+','Restaurants'],['30 min','Avg Delivery'],['4.8 ★','Rating'],['50k+','Happy Eaters']].map(([n, l]) => (
               <div key={l} className="hero-stat">
                 <div className="hero-stat-n">{n}</div>
                 <div className="hero-stat-l">{l}</div>
@@ -1117,748 +1835,249 @@ function VideoHero({ go }) {
   );
 }
 
-/* ─── CATEGORY CAROUSEL ──────────────────────────────────── */
-function CategoryCarousel({ activeCat, setActiveCat, go }) {
-  const trackRef = useRef();
-  const [offset, setOffset] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStart = useRef(null);
-  const autoRef = useRef(null);
-  const ITEM_W = 124;
-
-  const maxOffset = Math.max(0, CATEGORIES.length * ITEM_W - (typeof window !== 'undefined' ? window.innerWidth - 56 : 800));
-
-  const startAuto = useCallback(() => {
-    autoRef.current = setInterval(() => {
-      setOffset(prev => { const next = prev + 0.5; return next > maxOffset ? 0 : next; });
-    }, 20);
-  }, [maxOffset]);
-
-  useEffect(() => { startAuto(); return () => clearInterval(autoRef.current); }, [startAuto]);
-
-  const stopAuto = () => clearInterval(autoRef.current);
-  const slide = (dir) => {
-    stopAuto();
-    setOffset(prev => Math.max(0, Math.min(maxOffset, prev + dir * ITEM_W * 3)));
-    setTimeout(startAuto, 4000);
-  };
-
-  const onMouseDown = (e) => { stopAuto(); setIsDragging(true); dragStart.current = { x: e.clientX, offset }; };
-  const onMouseMove = (e) => { if (!isDragging || !dragStart.current) return; const dx = dragStart.current.x - e.clientX; setOffset(Math.max(0, Math.min(maxOffset, dragStart.current.offset + dx))); };
-  const onMouseUp = () => { setIsDragging(false); setTimeout(startAuto, 4000); };
-  const onTouchStart = (e) => { stopAuto(); dragStart.current = { x: e.touches[0].clientX, offset }; };
-  const onTouchMove = (e) => { if (!dragStart.current) return; const dx = dragStart.current.x - e.touches[0].clientX; setOffset(Math.max(0, Math.min(maxOffset, dragStart.current.offset + dx))); };
-  const onTouchEnd = () => { dragStart.current = null; setTimeout(startAuto, 4000); };
-
-  const handleCatClick = (cat) => {
-    setActiveCat(cat.label === activeCat ? null : cat.label);
-    go && go('explore', { catFilter: cat.label });
-  };
-
-  return (
-    <div style={{ position:'relative' }}>
-      <button className="cat-carousel-btn prev" onClick={()=>slide(-1)}>‹</button>
-      <div className="cat-carousel-wrap"
-        onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp}
-        onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
-        <div ref={trackRef} className={`cat-carousel-track${isDragging?' dragging':''}`} style={{ transform:`translateX(-${offset}px)` }}>
-          {CATEGORIES.map((cat)=>(
-            <div key={cat.label} className={`cat-item${activeCat===cat.label?' active':''}`}
-              onClick={()=>handleCatClick(cat)}>
-              <div className="cat-img-ring"><img src={cat.img} alt={cat.label} loading="lazy" /></div>
-              <span className="cat-label">{cat.emoji} {cat.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-      <button className="cat-carousel-btn next" onClick={()=>slide(1)}>›</button>
-    </div>
-  );
-}
-
-/* ─── BANNER CAROUSEL ────────────────────────────────────── */
-const BANNER_SLIDES = [
-  { img:"https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1600&q=95", title:"Authentic Indian Flavours", sub:"Biryani, Butter Chicken & More", cta:"Order Indian →", color:"#E8742A" },
-  { img:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1600&q=95", title:"Burgers Worth the Wait", sub:"Crafted with premium beef & fresh buns", cta:"Explore Burgers →", color:"#D4A017" },
-  { img:"https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=1600&q=95", title:"Sushi Night, Done Right", sub:"Premium rolls from Sushi Bay", cta:"Order Sushi →", color:"#8FBA99" },
-  { img:"https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1600&q=95", title:"Pizza Like Never Before", sub:"Wood-fired, fresh, delivered hot", cta:"Get Pizza →", color:"#C45B1A" },
-];
-
-function BannerCarousel({ go }) {
-  const [cur, setCur] = useState(0);
-  const timerRef = useRef(null);
-  const total = BANNER_SLIDES.length;
-
-  const goPrev = () => { setCur(c => (c - 1 + total) % total); resetTimer(); };
-  const goNext = useCallback(() => { setCur(c => (c + 1) % total); }, [total]);
-  const resetTimer = () => { clearInterval(timerRef.current); timerRef.current = setInterval(goNext, 4500); };
-
-  useEffect(() => {
-    timerRef.current = setInterval(goNext, 4500);
-    return () => clearInterval(timerRef.current);
-  }, [goNext]);
-
-  // Touch/drag support
-  const touchStart = useRef(null);
-  const onTouchStart = (e) => { touchStart.current = e.touches[0].clientX; };
-  const onTouchEnd = (e) => {
-    if (touchStart.current === null) return;
-    const diff = touchStart.current - e.changedTouches[0].clientX;
-    if (Math.abs(diff) > 40) { diff > 0 ? goNext() : goPrev(); resetTimer(); }
-    touchStart.current = null;
-  };
-
-  return (
-    <div className="banner-carousel" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-      <div className="banner-slides" style={{ transform:`translateX(-${cur*100}%)` }}>
-        {BANNER_SLIDES.map((s, i) => (
-          <div key={i} className={`banner-slide${cur===i?' active':''}`}>
-            <img src={s.img} alt={s.title} loading={i===0?"eager":"lazy"} />
-            <div className="banner-overlay">
-              <div className="banner-content">
-                <div style={{ fontSize:11,fontWeight:700,letterSpacing:'0.14em',textTransform:'uppercase',color:s.color,marginBottom:10,display:'flex',alignItems:'center',gap:6 }}>
-                  <span style={{ display:'inline-block',width:20,height:2,background:s.color,borderRadius:1 }} />
-                  🍃 Terra Eats Special
-                </div>
-                <h2 style={{ fontFamily:'Cormorant Garamond,serif',fontSize:'clamp(24px,3.5vw,52px)',fontWeight:700,lineHeight:1.05,marginBottom:12,color:'white',textShadow:'0 2px 16px rgba(0,0,0,0.4)' }}>{s.title}</h2>
-                <p style={{ fontSize:14,color:'rgba(255,255,255,0.80)',fontWeight:300,marginBottom:24,lineHeight:1.6 }}>{s.sub}</p>
-                <button onClick={()=>go('explore')} style={{ background:s.color,color:'white',border:'none',borderRadius:12,padding:'13px 28px',fontSize:13,fontWeight:700,cursor:'pointer',letterSpacing:'0.04em',transition:'all 0.2s',boxShadow:`0 6px 20px rgba(0,0,0,0.25)` }}
-                  onMouseEnter={e=>{ e.currentTarget.style.filter='brightness(1.12)'; e.currentTarget.style.transform='translateY(-2px)'; }}
-                  onMouseLeave={e=>{ e.currentTarget.style.filter='none'; e.currentTarget.style.transform='none'; }}>{s.cta}</button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      <button className="banner-arrow prev" onClick={()=>{goPrev();}}>‹</button>
-      <button className="banner-arrow next" onClick={()=>{goNext();resetTimer();}}>›</button>
-      <div className="banner-dots">
-        {BANNER_SLIDES.map((_,i)=>(
-          <button key={i} className={`banner-dot${cur===i?' active':''}`} onClick={()=>{setCur(i);resetTimer();}} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-
-function TopOffersSection({ go, goRestaurant }) {
-  const offeredRests = RESTAURANTS.filter(r => r.discount);
-  return (
-    <section className="section" style={{ background: T.sand, paddingTop: 56, paddingBottom: 56 }}>
-      <div className="container">
-        <Rv>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 36 }}>
-            <div className="section-head" style={{ marginBottom: 0 }}>
-              <span className="section-label">💰 Save Big</span>
-              <h2 className="section-title">Top Offers & Discounts</h2>
-              <p className="section-sub">Grab these deals before they expire</p>
-            </div>
-            <button className="btn-outline" onClick={() => go('offers')}>All Offers →</button>
-          </div>
-        </Rv>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
-          {offeredRests.map((r, i) => (
-            <Rv key={r.id} delay={i * 0.06}>
-              <div
-                onClick={() => goRestaurant(r.id)}
-                style={{ background: 'white', borderRadius: 18, overflow: 'hidden', boxShadow: `0 4px 20px ${T.shadow}`, border: `1px solid rgba(107,158,122,0.1)`, cursor: 'pointer', transition: 'all 0.3s', position: 'relative' }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = `0 16px 40px ${T.shadowD}`; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = `0 4px 20px ${T.shadow}`; }}
-              >
-                {/* Discount badge ribbon */}
-                <div style={{ position: 'absolute', top: 14, right: -1, background: `linear-gradient(135deg, ${T.sunset}, ${T.dusk})`, color: 'white', fontSize: 10, fontWeight: 800, padding: '5px 14px 5px 12px', borderRadius: '6px 0 0 6px', letterSpacing: '0.04em', zIndex: 2, boxShadow: `-2px 2px 8px rgba(0,0,0,0.2)` }}>
-                  {r.discount}
-                </div>
-                <div style={{ height: 140, overflow: 'hidden', position: 'relative' }}>
-                  <img src={r.img} alt={r.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s' }} loading="lazy"
-                    onMouseEnter={e => e.target.style.transform = 'scale(1.05)'}
-                    onMouseLeave={e => e.target.style.transform = ''}
-                  />
-                </div>
-                <div style={{ padding: '16px 18px 18px' }}>
-                  <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: 18, fontWeight: 700, color: T.forest, marginBottom: 2 }}>{r.name}</div>
-                  <div style={{ fontSize: 12, color: T.moss, marginBottom: 10 }}>{r.cuisine} · {r.price} · ⏱ {r.time} min</div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Stars r={r.rating} />
-                    <span style={{ fontSize: 11, fontWeight: 700, color: T.leaf, background: 'rgba(45,90,61,0.08)', padding: '3px 10px', borderRadius: 6 }}>View Menu →</span>
-                  </div>
-                </div>
-              </div>
-            </Rv>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ─── TRENDING SECTION ──────────────────────────────────── */
-function TrendingSection({ addToCart, goRestaurant, goDish }) {
-  return (
-    <section className="section" style={{ paddingBottom:40 }}>
-      <div className="container">
-        <Rv>
-          <div style={{ display:'flex',justifyContent:'space-between',alignItems:'flex-end',marginBottom:40 }}>
-            <div className="section-head" style={{ marginBottom:0 }}>
-              <span className="section-label">🔥 Hot right now</span>
-              <h2 className="section-title">Trending Now</h2>
-              <p className="section-sub">Dishes everyone's ordering this week — click a dish to find where to order it</p>
-            </div>
-          </div>
-        </Rv>
-        <div className="trending-scroll">
-          {TRENDING.map((item, i) => (
-            <Rv key={item.id} delay={i * 0.06}>
-              <div className="trending-card">
-                <div className="trending-img" style={{ cursor: 'pointer' }} onClick={() => goDish && goDish(item.name)}>
-                  <img src={item.img} alt={item.name} loading="lazy" />
-                  <span className="trending-tag">{item.tag}</span>
-                  <div className="trending-veg" style={{ borderColor: item.veg ? '#2D7A22' : '#E53E3E', color: item.veg ? '#2D7A22' : '#E53E3E' }}>●</div>
-                  {/* Dish finder hint */}
-                  <div style={{ position:'absolute',bottom:0,left:0,right:0,background:'linear-gradient(to top, rgba(26,58,42,0.85), transparent)',padding:'20px 10px 8px',opacity:0,transition:'opacity 0.25s',display:'flex',alignItems:'flex-end',justifyContent:'center' }}
-                    onMouseEnter={e=>e.currentTarget.style.opacity='1'} onMouseLeave={e=>e.currentTarget.style.opacity='0'}>
-                    <span style={{ fontSize:10,fontWeight:700,color:'white',letterSpacing:'0.06em' }}>🔍 FIND WHERE TO ORDER</span>
-                  </div>
-                </div>
-                <div className="trending-body">
-                  <div className="trending-name" style={{ cursor: 'pointer' }} onClick={() => goDish && goDish(item.name)}>{item.name}</div>
-                  <div className="trending-rest" onClick={()=>goRestaurant(item.restId)}>🏪 {item.rest}</div>
-                  <div className="trending-meta">
-                    <div className="trending-price">₹{item.price}</div>
-                    <div className="trending-rating">
-                      <span className="trending-stars">★</span>
-                      <span style={{ fontWeight:700,color:T.forest }}>{item.rating}</span>
-                      <span>({item.reviews})</span>
-                    </div>
-                  </div>
-                </div>
-                <div style={{ display:'flex',gap:6,padding:'0 14px 14px' }}>
-                  <button className="trending-add-btn" style={{ flex:1 }} onClick={()=>addToCart({id:item.id,name:item.name,price:item.price,img:item.img,restName:item.rest})}>
-                    + Add to Cart
-                  </button>
-                  {goDish && (
-                    <button onClick={() => goDish(item.name)} style={{ padding:'10px 12px',borderRadius:10,border:`1.5px solid rgba(107,158,122,0.3)`,background:'none',cursor:'pointer',fontSize:14,color:T.sage,fontWeight:700,transition:'all 0.2s' }}
-                      onMouseEnter={e=>{e.currentTarget.style.background=T.sage;e.currentTarget.style.color='white';}}
-                      onMouseLeave={e=>{e.currentTarget.style.background='none';e.currentTarget.style.color=T.sage;}}>
-                      🔍
-                    </button>
-                  )}
-                </div>
-              </div>
-            </Rv>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ─── COMPACT FOOTER ─────────────────────────────────────── */
-function Footer({ go }) {
-  const socials = [
-    { icon:'📸', label:'Instagram', url:'https://instagram.com' },
-    { icon:'▶️', label:'YouTube', url:'https://youtube.com' },
-    { icon:'𝕏', label:'Twitter', url:'https://twitter.com' },
-    { icon:'💼', label:'LinkedIn', url:'https://linkedin.com' },
-    { icon:'📘', label:'Facebook', url:'https://facebook.com' },
-  ];
-  const leaves = Array.from({length:6}, (_,i) => ({
-    left:`${10+i*16}%`, size:20+Math.random()*16, dur:`${8+i*3}s`, delay:`-${i*2}s`, bot:`${Math.random()*30}%`
-  }));
-
-  return (
-    <footer className="footer">
-      <div className="footer-leaves">
-        {leaves.map((l,i)=>(
-          <div key={i} className="footer-leaf" style={{ left:l.left, bottom:l.bot, fontSize:l.size, animationDuration:l.dur, animationDelay:l.delay }}>🍃</div>
-        ))}
-      </div>
-      <div className="container">
-        <div className="footer-grid">
-          {/* Col 1: Brand + Contact */}
-          <div>
-            <div className="footer-brand">
-              <div style={{ width:32,height:32,background:'linear-gradient(135deg,#4A7C59,#8FBA99)',borderRadius:'50% 50% 50% 10%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:15,flexShrink:0 }}>🌿</div>
-              Terra Eats
-            </div>
-            <p style={{ fontSize:12,fontWeight:300,color:'rgba(200,223,197,0.65)',marginBottom:14,lineHeight:1.7,maxWidth:220 }}>
-              Farm-fresh food delivered with care. Sustainable, local, delicious.
-            </p>
-            <div style={{ fontSize:12,fontWeight:300,color:'rgba(200,223,197,0.6)',marginBottom:14,lineHeight:1.8 }}>
-              📍 Mysuru, Karnataka, India<br/>
-              📱 +91 98765 43210<br/>
-              📧 hello@terraeats.in
-            </div>
-            <div style={{ background:'rgba(143,186,153,0.07)',border:'1px solid rgba(200,223,197,0.1)',borderRadius:9,padding:'10px 14px',maxWidth:220 }}>
-              <div style={{ fontSize:10,fontWeight:700,color:'#8FBA99',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:3 }}>🌱 Eco Pledge</div>
-              <p style={{ fontSize:11,fontWeight:300,lineHeight:1.6,color:'rgba(200,223,197,0.7)' }}>1 order = 1 tree planted. 12,000 trees so far!</p>
-            </div>
-          </div>
-
-          {/* Col 2: Navigate */}
-          <div>
-            <div className="footer-title">Navigate</div>
-            <div className="footer-nav-inline">
-              {['Home','Restaurants','Explore','Offers','Track','Help','About'].map(l=>(
-                <span key={l} onClick={()=>go(l.toLowerCase())}>{l}</span>
-              ))}
-            </div>
-            <div className="footer-socials">
-              {socials.map(s=>(
-                <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer" className="social-btn" title={s.label}>
-                  {s.icon}
-                </a>
-              ))}
-            </div>
-          </div>
-
-          {/* Col 3: Company */}
-          <div>
-            <div className="footer-title">Company</div>
-            {['About Us','Careers','Blog','Press','Sustainability','Partners','Investors'].map(l=>(
-              <span key={l} className="footer-link">{l}</span>
-            ))}
-          </div>
-
-          {/* Col 4: Support */}
-          <div>
-            <div className="footer-title">Support</div>
-            {['Help Center','Track Order','Returns & Refunds','Payment Issues','Contact Us','Report a Problem','Feedback'].map(l=>(
-              <span key={l} className="footer-link">{l}</span>
-            ))}
-          </div>
-        </div>
-
-        <div className="footer-bar">
-          <span style={{ fontSize:11,fontWeight:300 }}>© 2026 Terra Eats · All rights reserved</span>
-          <span style={{ fontSize:11,fontWeight:300 }}>Made with 🌿 in Mysuru, India</span>
-        </div>
-      </div>
-    </footer>
-  );
-}
-
-/* ─── RESTAURANT MENU PAGE ────────────────────────────────── */
-function RestaurantMenuPage({ restaurant, cart, addToCart, go }) {
-  const menu = RESTAURANT_MENUS[restaurant.id] || {};
-  const categories = Object.keys(menu);
-  const [activeTab, setActiveTab] = useState(categories[0] || '');
-  const [quantities, setQuantities] = useState({});
-
-  const getQty = (itemId) => quantities[itemId] || 0;
-  const increment = (item) => {
-    const newQty = getQty(item.id) + 1;
-    setQuantities(q => ({...q, [item.id]: newQty}));
-    addToCart({...item, restName: restaurant.name});
-  };
-  const decrement = (item) => {
-    const newQty = Math.max(0, getQty(item.id) - 1);
-    setQuantities(q => ({...q, [item.id]: newQty}));
-    if (newQty > 0) {
-      // reduce qty in cart
-      addToCart({...item, restName: restaurant.name, _remove: true});
-    }
-  };
-
-  const currentItems = menu[activeTab] || [];
-
-  return (
-    <div className="page">
-      {/* Menu Hero */}
-      <div className="menu-hero">
-        <div style={{ position:'absolute',inset:0,backgroundImage:`url("data:image/svg+xml,%3Csvg width='80' height='80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 4 C20 24 12 44 40 60 C68 44 60 24 40 4Z' fill='%238FBA99' fill-opacity='0.06'/%3E%3C/svg%3E")`,backgroundSize:'80px' }} />
-        <div className="container" style={{ position:'relative',zIndex:1 }}>
-          <button className="menu-hero-back" onClick={()=>go('explore')}>← Back to Restaurants</button>
-          <div className="menu-hero-info">
-            <div className="menu-hero-img">
-              <img src={restaurant.img} alt={restaurant.name} />
-            </div>
-            <div>
-              <div style={{ display:'flex',alignItems:'center',gap:10,marginBottom:6 }}>
-                {restaurant.badge && <span style={{ background:'rgba(232,116,42,0.9)',color:'white',fontSize:9,fontWeight:700,padding:'4px 10px',borderRadius:6,letterSpacing:'0.06em',textTransform:'uppercase' }}>{restaurant.badge}</span>}
-                {restaurant.discount && <span style={{ background:'rgba(255,255,255,0.15)',color:T.fern,fontSize:10,fontWeight:600,padding:'4px 10px',borderRadius:6 }}>{restaurant.discount}</span>}
-              </div>
-              <h1 style={{ fontFamily:'Cormorant Garamond,serif',fontSize:'clamp(28px,4vw,52px)',fontWeight:700,color:'white',lineHeight:1.1,marginBottom:6 }}>{restaurant.name}</h1>
-              <p style={{ color:T.mist,fontSize:14,fontWeight:300,marginBottom:12 }}>{restaurant.cuisine} cuisine</p>
-              <div style={{ display:'flex',alignItems:'center',gap:18,fontSize:13 }}>
-                <span style={{ color:'white',fontWeight:700 }}>★ {restaurant.rating}</span>
-                <span style={{ color:T.mist }}>⏱ {restaurant.time} min</span>
-                <span style={{ color:T.mist }}>{restaurant.price}</span>
-              </div>
-            </div>
-          </div>
-          {/* Category Tabs */}
-          <div className="menu-cat-tabs">
-            {categories.map(cat => (
-              <button key={cat} className={`menu-cat-tab${activeTab===cat?' active':''}`} onClick={()=>setActiveTab(cat)}>
-                {cat}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Menu Items */}
-      <section className="section" style={{ paddingTop:40 }}>
-        <div className="container">
-          <Rv>
-            <h2 style={{ fontFamily:'Cormorant Garamond,serif',fontSize:28,fontWeight:700,color:T.forest,marginBottom:6 }}>{activeTab}</h2>
-            <p style={{ color:T.moss,fontSize:13,fontWeight:300,marginBottom:28 }}>{currentItems.length} items</p>
-          </Rv>
-          <div className="menu-items-grid">
-            {currentItems.map((item, i) => {
-              const qty = getQty(item.id);
-              return (
-                <Rv key={item.id} delay={i*0.05}>
-                  <div className="menu-item-card">
-                    <div className="menu-item-img">
-                      <img src={item.img} alt={item.name} loading="lazy" />
-                    </div>
-                    <div className="menu-item-body">
-                      <div className="menu-item-top">
-                        <div style={{ display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:8,marginBottom:4 }}>
-                          <div className="menu-item-name">{item.name}</div>
-                          <div style={{ display:'flex',alignItems:'center',gap:6,flexShrink:0 }}>
-                            <div style={{ width:14,height:14,borderRadius:3,border:`2px solid ${item.veg?'#2D7A22':'#E53E3E'}`,background:'white',display:'flex',alignItems:'center',justifyContent:'center' }}>
-                              <div style={{ width:7,height:7,borderRadius:'50%',background:item.veg?'#2D7A22':'#E53E3E' }} />
-                            </div>
-                          </div>
-                        </div>
-                        <p className="menu-item-desc">{item.desc}</p>
-                        <div style={{ display:'flex',alignItems:'center',gap:6,marginBottom:10 }}>
-                          <span style={{ color:T.amber,fontSize:11 }}>★</span>
-                          <span style={{ fontSize:11,fontWeight:600,color:T.forest }}>{item.rating}</span>
-                          {item.badge && <span className="menu-item-badge">{item.badge}</span>}
-                        </div>
-                      </div>
-                      <div className="menu-item-bottom">
-                        <div className="menu-item-price">₹{item.price}</div>
-                        {qty === 0 ? (
-                          <button className="menu-add-btn" onClick={()=>increment(item)}>
-                            + Add
-                          </button>
-                        ) : (
-                          <div className="menu-qty-ctrl">
-                            <button className="menu-qty-btn" onClick={()=>decrement(item)}>−</button>
-                            <span className="menu-qty-num">{qty}</span>
-                            <button className="menu-qty-btn" onClick={()=>increment(item)}>+</button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </Rv>
-              );
-            })}
-          </div>
-
-          {/* Cart nudge */}
-          {cart.length > 0 && (
-            <div style={{ marginTop:40,background:`linear-gradient(135deg, ${T.forest}, ${T.leaf})`,borderRadius:16,padding:'20px 24px',display:'flex',alignItems:'center',justifyContent:'space-between',boxShadow:`0 8px 32px ${T.shadowD}` }}>
-              <div style={{ color:'white' }}>
-                <div style={{ fontSize:14,fontWeight:600 }}>🛒 {cart.reduce((s,c)=>s+c.qty,0)} items in cart</div>
-                <div style={{ fontSize:12,color:T.mist,marginTop:2 }}>₹{cart.reduce((s,c)=>s+c.price*c.qty,0)} total</div>
-              </div>
-              <button className="btn-nature" style={{ padding:'10px 24px',fontSize:13 }} onClick={()=>go('cart')}>
-                View Cart →
-              </button>
-            </div>
-          )}
-        </div>
-      </section>
-      <Footer go={go} />
-    </div>
-  );
-}
-
-/* ─── LIVE TRACK MAP ─────────────────────────────────────── */
-function LiveTrackMap({ step }) {
-  const etaMin = step >= 3 ? 0 : 18 - step * 5;
-
-  // Real Google Maps embed showing Mysuru with route-style view
-  // Origin: Spice Garden area (MG Road, Mysuru)
-  // Destination: Central Mysuru residential area
-  const mapSrc = "https://www.google.com/maps/embed?pb=!1m28!1m12!1m3!1d15626.14!2d76.6488!3d12.3053!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!4m13!3e0!4m5!1s0x3baf6b4e6b5d5555%3A0x1!2sMG+Road%2C+Mysuru%2C+Karnataka!3m2!1d12.3075!2d76.6552!4m5!1s0x3baf6b4e6b5d5555%3A0x2!2sDevaraja+Mohalla%2C+Mysuru%2C+Karnataka!3m2!1d12.2999!2d76.6394!5e0!3m2!1sen!2sin!4v1710000000000!5m2!1sen!2sin";
-
-  return (
-    <div className="realistic-map">
-      {/* Real Google Maps iframe */}
-      <iframe
-        src={mapSrc}
-        width="100%"
-        height="100%"
-        style={{ border:'none', display:'block' }}
-        allowFullScreen=""
-        loading="lazy"
-        referrerPolicy="no-referrer-when-downgrade"
-        title="Live delivery tracking map"
-      />
-
-      {/* ETA chip overlaid on top of map */}
-      <div className="map-eta-chip">
-        {step >= 3 ? '✅ Delivered!' : `🛵 ETA: ${etaMin} min`}
-      </div>
-
-      {/* Status overlay badge */}
-      <div style={{
-        position: 'absolute', bottom: 14, left: 14, zIndex: 12,
-        background: 'white', borderRadius: 12, padding: '8px 14px',
-        boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
-        display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, fontWeight: 600, color: T.forest
-      }}>
-        <div style={{ width: 10, height: 10, borderRadius: '50%', background: step >= 2 ? '#4CAF50' : '#FFC107', animation: step >= 2 && step < 3 ? 'trackPulse 1.5s infinite' : 'none' }} />
-        {step === 0 && '📋 Order confirmed'}
-        {step === 1 && '👨‍🍳 Chef is preparing'}
-        {step === 2 && '🛵 Rider is on the way'}
-        {step === 3 && '🎉 Delivered!'}
-      </div>
-    </div>
-  );
-}
-
-/* ─── HOME PAGE ───────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   ── HOME PAGE ─────────────────────────────────────────────────
+   ═══════════════════════════════════════════════════════════════ */
 function HomePage({ go, addToCart, goRestaurant, goDish }) {
   const [activeCat, setActiveCat] = useState(null);
-
-  const handleCatClick = (cat) => {
-    setActiveCat(cat);
-  };
-
-  const catRestaurants = activeCat
-    ? RESTAURANTS.filter(r => (CATEGORY_RESTAURANTS[activeCat]||[]).includes(r.id))
-    : [];
+  // useMemo so the filter only re-runs when activeCat changes
+  const catRests = useMemo(
+    () => activeCat ? RESTAURANTS.filter(r => (CATEGORY_RESTAURANTS[activeCat] || []).includes(r.id)) : [],
+    [activeCat]
+  );
+  const handleCatClick = useCallback(c => setActiveCat(prev => c === prev ? null : c), []);
 
   return (
-    <div style={{ paddingTop:70, minHeight:'100vh' }}>
+    <div style={{ paddingTop:'var(--nav-h)', minHeight:'100vh' }}>
       <VideoHero go={go} />
-
-      {/* Promo Banner Carousel */}
       <BannerCarousel go={go} />
 
       {/* Categories */}
       <section className="section" style={{ background:T.snow, paddingBottom:60 }}>
         <div className="container">
-          <Rv>
+          <Reveal>
             <div className="section-head" style={{ marginBottom:36 }}>
               <span className="section-label">Browse by Category</span>
               <h2 className="section-title">What's your craving?</h2>
               <p className="section-sub">Drag, swipe or click — discover every cuisine</p>
             </div>
-          </Rv>
-          <Rv delay={0.06}>
-            <CategoryCarousel activeCat={activeCat} setActiveCat={handleCatClick} />
-          </Rv>
+          </Reveal>
+          <Reveal delay={0.06}>
+            <CategoryCarousel activeCat={activeCat} onCatClick={handleCatClick} />
+          </Reveal>
 
-          {activeCat && catRestaurants.length > 0 && (
-            <div className="dish-suggestions">
-              <Rv>
-                <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20 }}>
-                  <h3 style={{ fontFamily:'Cormorant Garamond,serif',fontSize:26,fontWeight:700,color:T.forest }}>Restaurants offering {activeCat}</h3>
-                  <button className="btn-outline" style={{ padding:'9px 20px',fontSize:12 }} onClick={()=>go('restaurants')}>See all →</button>
-                </div>
-              </Rv>
+          {activeCat && catRests.length > 0 && (
+            <div style={{ marginTop:40 }} className="animate-fade-up">
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:24 }}>
+                <h3 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:26, fontWeight:700, color:T.forest }}>Restaurants offering {activeCat}</h3>
+                <button className="btn-outline" style={{ padding:'9px 20px', fontSize:12 }} onClick={() => go('restaurants')}>See all →</button>
+              </div>
               <div className="rest-grid">
-                {catRestaurants.map((r,i)=>(
-                  <Rv key={r.id} delay={i*.07}>
-                    <div className="rest-card" onClick={()=>goRestaurant(r.id)}>
-                      <div className="rest-img">
-                        <img src={r.img} alt={r.name} loading="lazy" />
-                        {r.badge && <span className="rest-badge">{r.badge}</span>}
-                        {r.discount && <span className="rest-discount">{r.discount}</span>}
-                      </div>
-                      <div className="rest-body">
-                        <div className="rest-name">{r.name}</div>
-                        <div className="rest-cuisine">{r.cuisine}</div>
-                        <div className="rest-meta">
-                          <Stars r={r.rating} />
-                          <span className="rest-time">⏱ {r.time} min</span>
-                          <span className="rest-price">{r.price}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </Rv>
+                {catRests.map((r, i) => (
+                  <Reveal key={r.id} delay={i * 0.07}>
+                    <RestCard r={r} onClick={() => goRestaurant(r.id)} />
+                  </Reveal>
                 ))}
               </div>
             </div>
           )}
+          {activeCat && catRests.length === 0 && <EmptySearch query={activeCat} onClear={() => setActiveCat(null)} />}
         </div>
       </section>
 
       {/* Trending */}
       <TrendingSection addToCart={addToCart} goRestaurant={goRestaurant} goDish={goDish} />
 
-      {/* Top Offers & Discounts */}
-      <TopOffersSection go={go} goRestaurant={goRestaurant} />
-
       {/* Featured Restaurants */}
       <div className="nature-divider">
         <div className="nd-pattern" />
         <div className="container">
-          <Rv>
-            <div style={{ display:'flex',justifyContent:'space-between',alignItems:'flex-end',marginBottom:36 }}>
+          <Reveal>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginBottom:28, flexWrap:'wrap', gap:12 }}>
               <div className="section-head" style={{ marginBottom:0 }}>
                 <span className="section-label">Handpicked for you</span>
                 <h2 className="section-title">Featured Restaurants</h2>
-                <p className="section-sub">Click any restaurant to explore their full menu</p>
+                <p className="section-sub">Tap any to explore their full menu</p>
               </div>
-              <button className="btn-outline" onClick={()=>go('restaurants')}>View all →</button>
+              <button className="btn-outline" style={{ flexShrink:0 }} onClick={() => go('restaurants')}>View all →</button>
             </div>
-          </Rv>
+          </Reveal>
           <div className="rest-grid">
-            {RESTAURANTS.map((r,i)=>(
-              <Rv key={r.id} delay={i*.05}>
-                <div className="rest-card" onClick={()=>goRestaurant(r.id)}>
-                  <div className="rest-img">
-                    <img src={r.img} alt={r.name} loading="lazy" />
-                    {r.badge && <span className="rest-badge">{r.badge}</span>}
-                    {r.discount && <span className="rest-discount">{r.discount}</span>}
-                  </div>
-                  <div className="rest-body">
-                    <div className="rest-name">{r.name}</div>
-                    <div className="rest-cuisine">{r.cuisine}</div>
-                    <div className="rest-meta">
-                      <Stars r={r.rating} />
-                      <span className="rest-time">⏱ {r.time} min</span>
-                      <span className="rest-price">{r.price}</span>
-                    </div>
-                  </div>
-                </div>
-              </Rv>
+            {RESTAURANTS.map((r, i) => (
+              <Reveal key={r.id} delay={i * 0.04}>
+                <RestCard r={r} onClick={() => goRestaurant(r.id)} />
+              </Reveal>
             ))}
           </div>
         </div>
       </div>
 
-      {/* CTA - Nature Banner */}
-      <section style={{ position:'relative', overflow:'hidden', minHeight:480, display:'flex', alignItems:'center' }}>
-        {/* High-quality nature background image */}
+      {/* CTA */}
+      <section style={{ position:'relative', overflow:'hidden', minHeight:360, display:'flex', alignItems:'center' }}>
         <div style={{ position:'absolute', inset:0, zIndex:0 }}>
-          <img
-            src="https://images.unsplash.com/photo-1448375240586-882707db888b?w=1600&q=90"
-            alt="Forest nature"
-            style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center' }}
-          />
-          {/* Strong gradient overlay for text readability */}
+          <img src="https://images.unsplash.com/photo-1448375240586-882707db888b?w=1600&q=90" alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} loading="lazy" />
           <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(10,35,20,0.88) 0%, rgba(26,58,42,0.72) 50%, rgba(10,35,20,0.65) 100%)' }} />
         </div>
-        <div className="container" style={{ textAlign:'center', position:'relative', zIndex:1, padding:'96px 28px' }}>
-          <Rv>
-            <div style={{ fontSize:52, marginBottom:16, filter:'drop-shadow(0 4px 12px rgba(0,0,0,0.4))' }}>🌱</div>
-            <h2 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:'clamp(34px,4.5vw,64px)', fontWeight:700, color:'white', marginBottom:16, lineHeight:1.05, textShadow:'0 3px 24px rgba(0,0,0,0.5)' }}>
+        <div className="container" style={{ textAlign:'center', position:'relative', zIndex:1, padding:'72px var(--container-px)' }}>
+          <Reveal>
+            <div style={{ fontSize:44, marginBottom:14 }}>🌱</div>
+            <h2 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:'clamp(28px,4.5vw,64px)', fontWeight:700, color:'white', marginBottom:14, lineHeight:1.1 }}>
               Order today,<br/><em style={{ fontStyle:'italic', color:T.fern }}>save the planet tomorrow</em>
             </h2>
-            <p style={{ color:'rgba(220,240,220,0.92)', fontSize:17, fontWeight:300, marginBottom:36, maxWidth:520, margin:'0 auto 36px', lineHeight:1.7, textShadow:'0 1px 8px rgba(0,0,0,0.4)' }}>We plant one tree for every 10 orders. Join 50,000+ eco-conscious food lovers making a difference.</p>
+            <p style={{ color:'rgba(220,240,220,0.92)', fontSize:'clamp(13px,1.6vw,17px)', fontWeight:300, marginBottom:32, maxWidth:480, margin:'0 auto 32px', lineHeight:1.7 }}>
+              We plant one tree for every 10 orders. Join 50,000+ eco-conscious food lovers.
+            </p>
             <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap' }}>
-              <button className="btn-nature" style={{ fontSize:15, padding:'16px 40px', boxShadow:'0 8px 32px rgba(0,0,0,0.3)' }} onClick={()=>go('explore')}>Start Ordering 🍃</button>
-              <button onClick={()=>go('about')} style={{ background:'rgba(255,255,255,0.12)', backdropFilter:'blur(10px)', border:'1.5px solid rgba(255,255,255,0.3)', color:'white', borderRadius:12, padding:'16px 32px', fontSize:14, fontWeight:600, cursor:'pointer', transition:'all 0.25s' }}
-                onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.22)'}
-                onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.12)'}>
-                Our Pledge →
-              </button>
+              <button className="btn-nature btn-ripple" onClick={() => go('explore')}>Start Ordering 🍃</button>
+              <button className="btn-ripple" onClick={() => go('about')}
+                style={{ background:'rgba(255,255,255,0.12)', backdropFilter:'blur(10px)', border:'1.5px solid rgba(255,255,255,0.3)', color:'white', borderRadius:12, padding:'12px 24px', fontSize:14, fontWeight:600, cursor:'pointer', transition:'all 0.25s', position:'relative', overflow:'hidden', minHeight:'var(--touch-min)' }}
+              >Our Pledge →</button>
             </div>
-            <div style={{ marginTop:40, display:'flex', gap:40, justifyContent:'center', flexWrap:'wrap' }}>
-              {[['12,000+','Trees Planted'],['50k+','Eco Members'],['100%','Biodegradable Packs']].map(([n,l])=>(
-                <div key={l} style={{ textAlign:'center' }}>
-                  <div style={{ fontFamily:'Cormorant Garamond,serif', fontSize:32, fontWeight:700, color:'white', lineHeight:1 }}>{n}</div>
-                  <div style={{ fontSize:11, color:'rgba(200,223,197,0.75)', textTransform:'uppercase', letterSpacing:'0.1em', marginTop:4 }}>{l}</div>
-                </div>
-              ))}
-            </div>
-          </Rv>
+          </Reveal>
         </div>
       </section>
-
       <Footer go={go} />
     </div>
   );
 }
 
-/* ─── EXPLORE PAGE ────────────────────────────────────────── */
-function ExplorePage({ go, addToCart, goRestaurant, initCat }) {
-  const [filter, setFilter] = useState(initCat || 'All');
-  const [sort, setSort] = useState('rating');
-  const [search, setSearch] = useState('');
-  const filters = ['All','North Indian','American','Italian','Chinese','Japanese','South Indian','Desserts'];
+/* ═══════════════════════════════════════════════════════════════
+   ── REUSABLE RESTAURANT CARD — memoized ──────────────────────
+   ═══════════════════════════════════════════════════════════════ */
+const RestCard = memo(function RestCard({ r, onClick }) {
+  return (
+    <div className="rest-card" onClick={onClick} role="button" tabIndex={0}
+      onKeyDown={e => e.key === 'Enter' && onClick()}
+    >
+      <div className="rest-img">
+        <img src={r.img} alt={r.name} loading="lazy" />
+        {r.badge    && <span className="rest-badge">{r.badge}</span>}
+        {r.discount && <span className="rest-discount">{r.discount}</span>}
+      </div>
+      <div className="rest-body">
+        <div className="rest-name">{r.name}</div>
+        <div className="rest-cuisine">{r.cuisine}</div>
+        <div className="rest-meta">
+          <Stars r={r.rating} />
+          <span className="rest-time">⏱ {r.time}</span>
+          <span className="rest-price">{r.price}</span>
+        </div>
+      </div>
+    </div>
+  );
+});
 
-  const list = RESTAURANTS
-    .filter(r => {
-      const matchFilter = filter === 'All' || r.cuisine.toLowerCase().includes(filter.toLowerCase());
-      const matchSearch = r.name.toLowerCase().includes(search.toLowerCase()) || r.cuisine.toLowerCase().includes(search.toLowerCase());
-      return matchFilter && matchSearch;
-    })
-    .sort((a,b) => sort==='rating' ? b.rating-a.rating : a.time.localeCompare(b.time));
+/* ═══════════════════════════════════════════════════════════════
+   ── TRENDING SECTION — memoized, horizontal-scroll on mobile ─
+   ═══════════════════════════════════════════════════════════════ */
+const TrendingSection = memo(function TrendingSection({ addToCart, goRestaurant, goDish }) {
+  const [added, setAdded] = useState({});
+
+  const handleAdd = useCallback((item) => {
+    addToCart(item);
+    setAdded(p => ({ ...p, [item.id]: true }));
+    setTimeout(() => setAdded(p => ({ ...p, [item.id]: false })), 1200);
+  }, [addToCart]);
+
+  return (
+    <section className="section" style={{ paddingBottom:40, overflow:'hidden' }}>
+      <div className="container">
+        <Reveal>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginBottom:28 }}>
+            <div className="section-head" style={{ marginBottom:0 }}>
+              <span className="section-label">🔥 Hot right now</span>
+              <h2 className="section-title">Trending Now</h2>
+              <p className="section-sub">Tap a dish to find where to order it</p>
+            </div>
+          </div>
+        </Reveal>
+        {/* negative margin trick so horizontal scroll bleeds to screen edge on mobile */}
+        <div className="trending-scroll">
+          {TRENDING.map((item, i) => (
+            <Reveal key={item.id} delay={i * 0.05}>
+              <div className="trending-card">
+                <div className="trending-img" onClick={() => goDish && goDish(item.name)}>
+                  <img src={item.img} alt={item.name} loading="lazy" />
+                  <span className="trending-tag">{item.tag}</span>
+                  <div className="trending-veg" style={{ borderColor: item.veg ? '#2D7A22' : '#E53E3E', color: item.veg ? '#2D7A22' : '#E53E3E' }}>●</div>
+                </div>
+                <div className="trending-body">
+                  <div className="trending-name" onClick={() => goDish && goDish(item.name)} style={{ cursor:'pointer' }}>{item.name}</div>
+                  <div className="trending-rest" onClick={() => goRestaurant(item.restId)}>🏪 {item.rest}</div>
+                  <div className="trending-meta">
+                    <div className="trending-price">₹{item.price}</div>
+                    <div className="trending-rating">
+                      <span style={{ color:T.amber }}>★</span>
+                      <span style={{ fontWeight:700, color:T.forest }}>{item.rating}</span>
+                      <span>({item.reviews})</span>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  className="trending-add-btn btn-ripple"
+                  onClick={() => handleAdd(item)}
+                  style={added[item.id] ? { background:'#4CAF50' } : {}}
+                >
+                  {added[item.id] ? '✓ Added!' : `+ Add — ₹${item.price}`}
+                </button>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+});
+
+/* ═══════════════════════════════════════════════════════════════
+   ── RESTAURANTS PAGE ──────────────────────────────────────────
+   ═══════════════════════════════════════════════════════════════ */
+function RestaurantsPage({ go, goRestaurant }) {
+  const { loading, error, retry } = useAsyncLoad(900);
+  const [search, setSearch] = useState('');
+
+  const list = RESTAURANTS.filter(r =>
+    r.name.toLowerCase().includes(search.toLowerCase()) ||
+    r.cuisine.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="page">
-      <div className="explore-hero">
-        <div className="explore-hero-bg">
-          <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1400&q=85" alt="Food spread" loading="eager" />
-          <div style={{ position:'absolute',inset:0,background:'linear-gradient(135deg, rgba(247,243,236,0.96) 0%, rgba(237,230,214,0.90) 55%, rgba(200,223,197,0.55) 100%)' }} />
+      <PageBanner
+        eyebrow="All Restaurants"
+        title={`${RESTAURANTS.length} Restaurants Near You`}
+        subtitle="Every cuisine, every craving — handpicked partners who care about quality."
+        imgUrl="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1600&q=90"
+        overlay="linear-gradient(135deg, rgba(10,35,20,0.90) 0%, rgba(26,58,42,0.70) 55%, rgba(10,35,20,0.55) 100%)"
+      >
+        {/* Search bar inside banner */}
+        <div style={{ marginTop:28, position:'relative', maxWidth:520 }}>
+          <span style={{ position:'absolute', left:16, top:'50%', transform:'translateY(-50%)', fontSize:18, zIndex:1 }}>🔍</span>
+          <input
+            className="field"
+            placeholder="Search by name or cuisine…"
+            style={{ paddingLeft:48, background:'rgba(255,255,255,0.95)', color:T.forest, backdropFilter:'blur(8px)', border:'none', boxShadow:'0 8px 32px rgba(0,0,0,0.2)' }}
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            aria-label="Search restaurants"
+          />
         </div>
-        <div className="container" style={{ position:'relative',zIndex:1 }}>
-          <Rv>
-            <span className="section-label">Discover</span>
-            <h1 className="serif" style={{ fontSize:'clamp(36px,5vw,60px)',fontWeight:700,color:T.forest,lineHeight:1.1,marginBottom:8 }}>Explore Restaurants</h1>
-            <p style={{ color:T.moss,fontSize:15,fontWeight:300,marginBottom:28 }}>{RESTAURANTS.length} handpicked restaurants near you — click any to view menu</p>
-          </Rv>
-          <Rv delay={0.06}>
-            <div style={{ display:'grid',gridTemplateColumns:'1fr auto',gap:12,marginBottom:16,maxWidth:700 }}>
-              <div style={{ position:'relative' }}>
-                <span style={{ position:'absolute',left:16,top:'50%',transform:'translateY(-50%)',fontSize:18 }}>🔍</span>
-                <input className="field" placeholder="Search restaurants or cuisines…" style={{ paddingLeft:48 }} value={search} onChange={e=>setSearch(e.target.value)} />
-              </div>
-              <div style={{ display:'flex',gap:8 }}>
-                {['rating','time'].map(s=>(
-                  <button key={s} className="chip" style={{ borderColor: sort===s?T.sage:'', background: sort===s?'rgba(74,124,89,0.1)':'' }}
-                    onClick={()=>setSort(s)}>{s==='rating'?'⭐ Top Rated':'⚡ Fastest'}</button>
-                ))}
-              </div>
-            </div>
-            <div style={{ display:'flex',gap:8,flexWrap:'wrap' }}>
-              {filters.map(f=>(
-                <button key={f} className={`chip${filter===f?' active':''}`} onClick={()=>setFilter(f)}>{f}</button>
-              ))}
-            </div>
-          </Rv>
-        </div>
-      </div>
-
+      </PageBanner>
       <section className="section" style={{ paddingTop:48 }}>
         <div className="container">
-          {list.length > 0 ? (
-            <>
-              <Rv>
-                <p style={{ color:T.moss,fontSize:13,marginBottom:24 }}>Showing {list.length} restaurant{list.length!==1?'s':''} · Click to view full menu</p>
-              </Rv>
-              <div className="rest-grid">
-                {list.map((r,i)=>(
-                  <Rv key={r.id} delay={i*.04}>
-                    <div className="rest-card" onClick={()=>goRestaurant(r.id)}>
-                      <div className="rest-img">
-                        <img src={r.img} alt={r.name} loading="lazy" />
-                        {r.badge && <span className="rest-badge">{r.badge}</span>}
-                        {r.discount && <span className="rest-discount">{r.discount}</span>}
-                      </div>
-                      <div className="rest-body">
-                        <div className="rest-name">{r.name}</div>
-                        <div className="rest-cuisine">{r.cuisine}</div>
-                        <div className="rest-meta">
-                          <Stars r={r.rating} />
-                          <span className="rest-time">⏱ {r.time} min</span>
-                          <span className="rest-price">{r.price}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </Rv>
-                ))}
-              </div>
-            </>
+          {loading ? (
+            <SkeletonRestaurantList count={8} />
+          ) : error ? (
+            <ErrorState message={error} onRetry={retry} />
+          ) : list.length === 0 ? (
+            <EmptySearch query={search} onClear={() => setSearch('')} />
           ) : (
-            <div style={{ textAlign:'center',padding:'80px 20px' }}>
-              <div style={{ fontSize:56,marginBottom:16 }}>🌿</div>
-              <h3 style={{ fontFamily:'Cormorant Garamond,serif',fontSize:26,color:T.forest,marginBottom:8 }}>No restaurants found</h3>
-              <p style={{ color:T.moss }}>Try adjusting your filters</p>
+            <div className="rest-grid">
+              {list.map((r, i) => (
+                <Reveal key={r.id} delay={i * 0.05}>
+                  <RestCard r={r} onClick={() => goRestaurant(r.id)} />
+                </Reveal>
+              ))}
             </div>
           )}
         </div>
@@ -1868,90 +2087,89 @@ function ExplorePage({ go, addToCart, goRestaurant, initCat }) {
   );
 }
 
-/* ─── ABOUT PAGE ──────────────────────────────────────────── */
-function AboutPage({ go }) {
+/* ═══════════════════════════════════════════════════════════════
+   ── EXPLORE PAGE ──────────────────────────────────────────────
+   ═══════════════════════════════════════════════════════════════ */
+function ExplorePage({ go, goRestaurant, initCat }) {
+  const [filter, setFilter] = useState(initCat || 'All');
+  const [sort,   setSort]   = useState('rating');
+  const [search, setSearch] = useState('');
+  const { loading, error, retry } = useAsyncLoad(800);
+  const filters = ['All','North Indian','American','Italian','Chinese','Japanese','South Indian','Desserts'];
+
+  const list = RESTAURANTS
+    .filter(r => {
+      const mF = filter === 'All' || r.cuisine.toLowerCase().includes(filter.toLowerCase());
+      const mS = r.name.toLowerCase().includes(search.toLowerCase()) || r.cuisine.toLowerCase().includes(search.toLowerCase());
+      return mF && mS;
+    })
+    .sort((a, b) => sort === 'rating' ? b.rating - a.rating : a.time.localeCompare(b.time));
+
   return (
     <div className="page">
-      <div style={{ position:'relative', overflow:'hidden', minHeight:460, display:'flex', alignItems:'center' }}>
-        {/* Banner image */}
+      <div style={{ position:'relative', overflow:'hidden', minHeight:360, display:'flex', alignItems:'center' }}>
         <div style={{ position:'absolute', inset:0, zIndex:0 }}>
-          <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1400&q=90" alt="Restaurant kitchen" style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 50%' }} />
-          <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(10,35,20,0.88) 0%, rgba(26,58,42,0.70) 50%, rgba(10,35,20,0.55) 100%)' }} />
+          <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1600&q=90" alt="" style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 40%' }} loading="eager" />
+          <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(10,35,20,0.88) 0%, rgba(26,58,42,0.72) 50%, rgba(10,35,20,0.60) 100%)' }} />
         </div>
-        <div style={{ padding:'80px 0 100px', position:'relative', zIndex:1, width:'100%' }}>
-        <div className="container" style={{ position:'relative',zIndex:1 }}>
-          <Rv>
-            <span className="section-label" style={{ color:T.fern }}>Our Story</span>
-            <h1 style={{ fontFamily:'Cormorant Garamond,serif',fontSize:'clamp(40px,6vw,80px)',fontWeight:700,color:'white',lineHeight:1.05,marginBottom:18 }}>
-              Rooted in nature,<br/><em style={{fontStyle:'italic'}}>crafted with love</em>
-            </h1>
-            <p style={{ color:T.mist,fontSize:16,fontWeight:300,maxWidth:540,lineHeight:1.8 }}>
-              Terra Eats was born from a simple belief: that food should nourish both body and planet. We partner with responsible restaurants and local farmers to bring you meals that feel good — truly good.
-            </p>
-          </Rv>
-        </div>
-        </div>
-      </div>
-
-      <section className="section">
-        <div className="container">
-          <div className="story-grid">
-            <Rv>
-              <div className="story-img">
-                <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=90" alt="Our kitchen" />
-                <div className="story-img-leaf">🌿</div>
-              </div>
-            </Rv>
-            <Rv delay={0.12}>
-              <div>
-                <span className="section-label">Our Mission</span>
-                <h2 style={{ fontFamily:'Cormorant Garamond,serif',fontSize:'clamp(28px,3vw,42px)',fontWeight:700,color:T.forest,lineHeight:1.2,marginBottom:20 }}>
-                  Every meal is a chance to do better
-                </h2>
-                <p style={{ color:T.earth,fontSize:15,fontWeight:300,lineHeight:1.85,marginBottom:20 }}>
-                  We carefully select restaurant partners who share our values — using seasonal, locally sourced ingredients, minimizing waste, and treating their teams with dignity.
-                </p>
-                <div style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:20,marginTop:36 }}>
-                  {[['12K+','Trees Planted'],['500+','Partner Restaurants'],['50K+','Happy Customers']].map(([n,l])=>(
-                    <div key={l} style={{ textAlign:'center',padding:'20px 16px',background:T.snow,borderRadius:16,border:`1px solid rgba(107,158,122,0.12)` }}>
-                      <div style={{ fontFamily:'Cormorant Garamond,serif',fontSize:32,fontWeight:700,color:T.sage }}>{n}</div>
-                      <div style={{ fontSize:11,color:T.moss,marginTop:4,fontWeight:500 }}>{l}</div>
-                    </div>
+        <div style={{ padding:'80px 0 88px', position:'relative', zIndex:1, width:'100%' }}>
+          <div className="container">
+            <Reveal>
+              <span className="section-label" style={{ color:T.fern }}>Discover</span>
+              <h1 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:'clamp(36px,5vw,60px)', fontWeight:700, color:'white', lineHeight:1.1, marginBottom:10, textShadow:'0 3px 20px rgba(0,0,0,0.4)' }}>
+                Explore Restaurants
+              </h1>
+              <p style={{ color:T.mist, fontSize:15, fontWeight:300, marginBottom:32 }}>{RESTAURANTS.length} handpicked restaurants near you</p>
+            </Reveal>
+            <Reveal delay={0.06}>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr auto', gap:12, maxWidth:700 }}>
+                <div style={{ position:'relative' }}>
+                  <span style={{ position:'absolute', left:16, top:'50%', transform:'translateY(-50%)', fontSize:18 }}>🔍</span>
+                  <input className="field" placeholder="Search restaurants or cuisines…"
+                    style={{ paddingLeft:48, background:'rgba(255,255,255,0.92)', color:T.forest }}
+                    value={search} onChange={e => setSearch(e.target.value)}
+                  />
+                </div>
+                <div style={{ display:'flex', gap:8 }}>
+                  {['rating','time'].map(s => (
+                    <button key={s} onClick={() => setSort(s)}
+                      style={{ background: sort === s ? 'white' : 'rgba(255,255,255,0.12)', border: sort === s ? 'none' : '1px solid rgba(255,255,255,0.25)', color: sort === s ? T.forest : 'white', borderRadius:10, padding:'10px 18px', fontSize:12, fontWeight:600, cursor:'pointer', transition:'all 0.2s', textTransform:'capitalize', whiteSpace:'nowrap' }}
+                    >{sort === s ? '↓ ' : ''}{s === 'rating' ? 'Top Rated' : 'Fastest'}</button>
                   ))}
                 </div>
               </div>
-            </Rv>
+            </Reveal>
+          </div>
+        </div>
+      </div>
+
+      <section className="section" style={{ background:T.snow, padding:'24px 0 16px' }}>
+        <div className="container">
+          <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
+            {filters.map(f => (
+              <button key={f} className={`chip${filter === f ? ' active' : ''}`} onClick={() => setFilter(f)}>{f}</button>
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="section" style={{ background:T.snow }}>
+      <section className="section" style={{ paddingTop:40 }}>
         <div className="container">
-          <Rv>
-            <div className="section-head" style={{ textAlign:'center' }}>
-              <span className="section-label">Meet the Team</span>
-              <h2 className="section-title">The Chefs Behind the Magic</h2>
+          {loading ? (
+            <SkeletonRestaurantList count={8} />
+          ) : error ? (
+            <ErrorState message={error} onRetry={retry} />
+          ) : list.length === 0 ? (
+            <EmptySearch query={search || filter} onClear={() => { setSearch(''); setFilter('All'); }} />
+          ) : (
+            <div className="rest-grid">
+              {list.map((r, i) => (
+                <Reveal key={r.id} delay={i * 0.05}>
+                  <RestCard r={r} onClick={() => goRestaurant(r.id)} />
+                </Reveal>
+              ))}
             </div>
-          </Rv>
-          <div className="chefs-grid">
-            {CHEFS.map((chef,i)=>(
-              <Rv key={chef.name} delay={i*.08}>
-                <div className="chef-card">
-                  <div className="chef-img">
-                    <img src={chef.img} alt={chef.name} loading="lazy" />
-                    <div className="chef-img-overlay" />
-                    <div className="chef-emoji">{chef.emoji}</div>
-                  </div>
-                  <div className="chef-body">
-                    <div className="chef-name">{chef.name}</div>
-                    <div className="chef-spec">{chef.specialty}</div>
-                    <div className="chef-exp">🏅 {chef.exp}</div>
-                    <p className="chef-bio">{chef.bio}</p>
-                  </div>
-                </div>
-              </Rv>
-            ))}
-          </div>
+          )}
         </div>
       </section>
       <Footer go={go} />
@@ -1959,47 +2177,251 @@ function AboutPage({ go }) {
   );
 }
 
-/* ─── CART PAGE ───────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   ── RESTAURANT MENU PAGE ──────────────────────────────────────
+   ═══════════════════════════════════════════════════════════════ */
+function RestaurantMenuPage({ restaurant, cart, addToCart, go }) {
+  const menu = RESTAURANT_MENUS[restaurant.id] || {};
+  const categories = Object.keys(menu);
+  const [activeTab, setActiveTab] = useState(categories[0] || '');
+  const { loading, error, retry } = useAsyncLoad(700);
+
+  const increment = (item) => addToCart({ ...item, restId: restaurant.id });
+  const decrement = (item) => addToCart({ ...item, _remove: true });
+  const getQty    = (id)   => (cart.find(c => c.id === id) || {}).qty || 0;
+
+  return (
+    <div style={{ paddingTop:68, minHeight:'100vh' }}>
+      {/* Hero */}
+      <div className="menu-hero" style={{ paddingBottom:0 }}>
+        <div className="container" style={{ paddingBottom:0 }}>
+          <button style={{ background:'none', border:'1px solid rgba(200,223,197,0.3)', color:T.mist, borderRadius:8, padding:'8px 16px', fontSize:12, fontWeight:600, cursor:'pointer', display:'inline-flex', alignItems:'center', gap:6, marginBottom:20, transition:'all 0.2s' }}
+            onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.1)'}
+            onMouseLeave={e => e.currentTarget.style.background='none'}
+            onClick={() => go('restaurants')}
+          >← Back</button>
+          <div style={{ display:'flex', alignItems:'flex-start', gap:24 }}>
+            <div style={{ width:100, height:100, borderRadius:16, overflow:'hidden', border:'3px solid rgba(200,223,197,0.3)', flexShrink:0 }}>
+              <img src={restaurant.img} alt={restaurant.name} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+            </div>
+            <div style={{ flex:1 }}>
+              <h1 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:'clamp(28px,4vw,42px)', fontWeight:700, color:'white', marginBottom:8, textShadow:'0 2px 12px rgba(0,0,0,0.3)' }}>{restaurant.name}</h1>
+              <div style={{ color:T.mist, fontSize:13, display:'flex', alignItems:'center', gap:16, flexWrap:'wrap' }}>
+                <Stars r={restaurant.rating} />
+                <span>⏱ {restaurant.time} min</span>
+                <span>{restaurant.price}</span>
+                {restaurant.badge && <span style={{ background:'rgba(255,255,255,0.15)', padding:'3px 10px', borderRadius:6, fontSize:11, fontWeight:700 }}>{restaurant.badge}</span>}
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Sticky category tabs */}
+        <div className="menu-sticky-cats" style={{ marginTop:24 }}>
+          <div className="menu-cat-tabs">
+            {categories.map(cat => (
+              <button key={cat} className={`menu-cat-tab${activeTab === cat ? ' active' : ''}`}
+                onClick={() => setActiveTab(cat)}
+              >{cat}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <section className="section" style={{ paddingTop:40 }}>
+        <div className="container">
+          {loading ? (
+            <SkeletonMenuList count={6} />
+          ) : error ? (
+            <ErrorState message={error} onRetry={retry} />
+          ) : (
+            <div className="menu-items-grid">
+              {(menu[activeTab] || []).map((item, i) => {
+                const qty = getQty(item.id);
+                return (
+                  <Reveal key={item.id} delay={i * 0.05}>
+                    <div className="menu-item-card">
+                      <div className="menu-item-img">
+                        <img src={item.img} alt={item.name} loading="lazy" />
+                        {item.badge && (
+                          <div style={{ position:'absolute', top:8, left:8 }}>
+                            <span className="menu-item-badge">{item.badge}</span>
+                          </div>
+                        )}
+                        <div style={{ position:'absolute', top:8, right:8, width:18, height:18, borderRadius:3, border:`2px solid ${item.veg ? '#2D7A22' : '#E53E3E'}`, background:'white', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                          <div style={{ width:8, height:8, borderRadius:'50%', background: item.veg ? '#2D7A22' : '#E53E3E' }} />
+                        </div>
+                      </div>
+                      <div className="menu-item-body">
+                        <div>
+                          <div className="menu-item-name">{item.name}</div>
+                          <div className="menu-item-desc">{item.desc}</div>
+                          <div style={{ display:'flex', alignItems:'center', gap:4, fontSize:11, color:T.moss, marginBottom:4 }}>
+                            <span style={{ color:T.amber }}>★</span><span style={{ fontWeight:700 }}>{item.rating}</span>
+                          </div>
+                        </div>
+                        <div className="menu-item-bottom">
+                          <div className="menu-item-price">₹{item.price}</div>
+                          {qty === 0 ? (
+                            <button className="menu-add-btn btn-ripple" onClick={() => increment(item)}>+ Add</button>
+                          ) : (
+                            <div className="menu-qty-ctrl">
+                              <button className="menu-qty-btn" onClick={() => decrement(item)}>−</button>
+                              <span className="menu-qty-num">{qty}</span>
+                              <button className="menu-qty-btn" onClick={() => increment(item)}>+</button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </Reveal>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Cart nudge */}
+          {cart.length > 0 && (
+            <div className="cart-nudge" style={{ marginTop:40 }}>
+              <div style={{ color:'white' }}>
+                <div style={{ fontSize:14, fontWeight:600 }}>🛒 {cart.reduce((s, c) => s + c.qty, 0)} items in cart</div>
+                <div style={{ fontSize:12, color:T.mist, marginTop:2 }}>₹{cart.reduce((s, c) => s + c.price * c.qty, 0)} total</div>
+              </div>
+              <button className="btn-nature btn-ripple" style={{ padding:'10px 24px', fontSize:13 }} onClick={() => go('cart')}>View Cart →</button>
+            </div>
+          )}
+        </div>
+      </section>
+      <Footer go={go} />
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ── DISH RECOMMENDATIONS PAGE ─────────────────────────────────
+   ═══════════════════════════════════════════════════════════════ */
+function DishRecommendationsPage({ dishName, go, goRestaurant, addToCart }) {
+  const { loading, error, retry } = useAsyncLoad(800);
+  const [added, setAdded] = useState({});
+
+  const restIds = DISH_RESTAURANTS[dishName] || [];
+  const restaurants = RESTAURANTS.filter(r => restIds.includes(r.id));
+
+  const dishItems = restaurants.flatMap(rest => {
+    const menu = RESTAURANT_MENUS[rest.id] || {};
+    return Object.values(menu).flat().filter(i => i.name.toLowerCase().includes(dishName.toLowerCase()))
+      .map(i => ({ ...i, restName: rest.name, restId: rest.id }));
+  });
+
+  const handleAdd = (item) => {
+    addToCart(item);
+    setAdded(p => ({ ...p, [item.id]: true }));
+    setTimeout(() => setAdded(p => ({ ...p, [item.id]: false })), 1200);
+  };
+
+  return (
+    <div className="page">
+      <div style={{ position:'relative', overflow:'hidden', minHeight:340, display:'flex', alignItems:'center', background:`linear-gradient(135deg, ${T.forest} 0%, ${T.leaf} 100%)` }}>
+        <div className="container" style={{ padding:'80px 28px 60px', position:'relative', zIndex:1 }}>
+          <Reveal>
+            <button style={{ background:'none', border:'1px solid rgba(200,223,197,0.3)', color:T.mist, borderRadius:8, padding:'7px 16px', fontSize:12, fontWeight:600, cursor:'pointer', marginBottom:20, transition:'all 0.2s' }}
+              onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.1)'}
+              onMouseLeave={e => e.currentTarget.style.background='none'}
+              onClick={() => go('explore')}
+            >← Back to Explore</button>
+            <span className="section-label" style={{ color:T.fern }}>Dish Search</span>
+            <h1 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:'clamp(32px,4.5vw,56px)', fontWeight:700, color:'white', lineHeight:1.1, marginBottom:10 }}>{dishName}</h1>
+            <p style={{ color:T.mist, fontSize:14, fontWeight:300 }}>Found at {restaurants.length} restaurant{restaurants.length !== 1 ? 's' : ''} near you</p>
+          </Reveal>
+        </div>
+      </div>
+
+      <section className="section" style={{ paddingTop:48 }}>
+        <div className="container">
+          {loading ? (
+            <SkeletonDishList count={4} />
+          ) : error ? (
+            <ErrorState message={error} onRetry={retry} />
+          ) : dishItems.length === 0 ? (
+            <EmptyDish dishName={dishName} go={go} />
+          ) : (
+            <>
+              <Reveal>
+                <h2 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:28, color:T.forest, marginBottom:24 }}>Available at {restaurants.length} restaurant{restaurants.length > 1 ? 's' : ''}</h2>
+              </Reveal>
+              <div className="rest-grid">
+                {dishItems.map((item, i) => (
+                  <Reveal key={`${item.id}-${item.restId}`} delay={i * 0.07}>
+                    <div className="rest-card" style={{ cursor:'default' }}>
+                      <div className="rest-img" style={{ cursor:'pointer' }} onClick={() => goRestaurant(item.restId)}>
+                        <img src={item.img} alt={item.name} loading="lazy" />
+                        {item.badge && <span className="rest-badge">{item.badge}</span>}
+                      </div>
+                      <div className="rest-body">
+                        <div className="rest-name">{item.name}</div>
+                        <div className="rest-cuisine" style={{ cursor:'pointer', color:T.sage }} onClick={() => goRestaurant(item.restId)}>🏪 {item.restName}</div>
+                        <div style={{ fontSize:12, color:T.moss, marginBottom:12 }}>{item.desc}</div>
+                        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                          <div style={{ fontFamily:'Cormorant Garamond,serif', fontSize:22, fontWeight:700, color:T.leaf }}>₹{item.price}</div>
+                          <button
+                            className="btn-ripple"
+                            style={{ background: added[item.id] ? '#4CAF50' : T.forest, color:'white', border:'none', borderRadius:8, padding:'8px 16px', fontSize:12, fontWeight:700, cursor:'pointer', transition:'all 0.2s', position:'relative', overflow:'hidden' }}
+                            onClick={() => handleAdd(item)}
+                          >{added[item.id] ? '✓ Added' : '+ Add'}</button>
+                        </div>
+                      </div>
+                    </div>
+                  </Reveal>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+      <Footer go={go} />
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ── CART PAGE ─────────────────────────────────────────────────
+   ═══════════════════════════════════════════════════════════════ */
 function CartPage({ cart, setCart, go }) {
-  const { user } = useAuth();
-  const [promo, setPromo] = useState('');
-  const [applied, setApplied] = useState(false);
-  const [msg, setMsg] = useState('');
+  const { user, setUser } = useAuth();
+  const [promo, setPromo]       = useState('');
+  const [applied, setApplied]   = useState(false);
+  const [msg, setMsg]           = useState('');
   const [showAddrModal, setShowAddrModal] = useState(false);
-  const { setUser } = useAuth();
+
   const CODES = {TERRA30:'percent30',FIRST100:'flat100',FREEDEL:'delivery',NIGHT20:'percent20',FLAT50:'flat50',FIRSTORDER:'percent15'};
-  const chQ = (id,d) => setCart(p=>p.map(c=>c.id===id?{...c,qty:c.qty+d}:c).filter(c=>c.qty>0));
-  const sub = cart.reduce((s,c)=>s+c.price*c.qty,0);
-  const del = sub>299?0:29; const tax=Math.round(sub*.05);
+  const chQ = (id, d) => setCart(p => p.map(c => c.id === id ? { ...c, qty: c.qty + d } : c).filter(c => c.qty > 0));
+  const sub = cart.reduce((s, c) => s + c.price * c.qty, 0);
+  const del = sub > 299 ? 0 : 29;
+  const tax = Math.round(sub * 0.05);
   const getDiscount = () => {
     if (!applied || !CODES[promo.toUpperCase()]) return 0;
     const type = CODES[promo.toUpperCase()];
-    if (type==='percent30') return Math.round(sub*0.30);
-    if (type==='flat100') return 100;
-    if (type==='delivery') return del;
-    if (type==='percent20') return Math.round(sub*0.20);
-    if (type==='flat50') return 50;
-    if (type==='percent15') return Math.round(sub*0.15);
+    if (type === 'percent30') return Math.round(sub * 0.30);
+    if (type === 'flat100')   return 100;
+    if (type === 'delivery')  return del;
+    if (type === 'percent20') return Math.round(sub * 0.20);
+    if (type === 'flat50')    return 50;
+    if (type === 'percent15') return Math.round(sub * 0.15);
     return 0;
   };
-  const disc = getDiscount();
-  const total = Math.max(0, sub + (applied && CODES[promo.toUpperCase()]==='delivery' ? 0 : del) + tax - disc);
-  const applyP=()=>{
+  const disc  = getDiscount();
+  const total = Math.max(0, sub + (applied && CODES[promo.toUpperCase()] === 'delivery' ? 0 : del) + tax - disc);
+
+  const applyP = () => {
     const code = promo.toUpperCase();
-    if(CODES[code]){
+    if (CODES[code]) {
       setApplied(true);
-      const type = CODES[code];
-      if(type==='percent30') setMsg('✅ 30% discount applied! You\'re saving big.');
-      else if(type==='flat100') setMsg('✅ ₹100 off applied! Welcome to Terra Eats.');
-      else if(type==='delivery') setMsg('✅ Free delivery unlocked! No delivery charge.');
-      else if(type==='percent20') setMsg('✅ 20% night owl discount applied!');
-      else if(type==='flat50') setMsg('✅ ₹50 flat discount applied!');
-      else if(type==='percent15') setMsg('✅ 15% first order discount applied!');
+      const msgs = {percent30:'✅ 30% discount applied!',flat100:'✅ ₹100 off applied!',delivery:'✅ Free delivery unlocked!',percent20:'✅ 20% night owl discount!',flat50:'✅ ₹50 flat discount!',percent15:'✅ 15% first order discount!'};
+      setMsg(msgs[CODES[code]]);
     } else {
       setMsg('❌ Invalid code. Try TERRA30, FLAT50, or FIRSTORDER');
       setApplied(false);
     }
-  };;
+  };
 
   const placeO = () => {
     if (!user) { go('login'); return; }
@@ -2007,324 +2429,142 @@ function CartPage({ cart, setCart, go }) {
     go('checkout');
   };
 
-  if(cart.length===0) return (
-    <div className="page" style={{ display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minHeight:'80vh',textAlign:'center',padding:24 }}>
-      <div style={{ fontSize:80,marginBottom:20 }}>🛒</div>
-      <h2 className="serif" style={{ fontSize:36,fontWeight:700,color:T.forest,marginBottom:10 }}>Your cart is empty</h2>
-      <p style={{ color:T.moss,fontSize:15,fontWeight:300,marginBottom:32 }}>Add something delicious to get started 🌿</p>
-      <button className="btn-nature" style={{ fontSize:15 }} onClick={()=>go('explore')}>Explore Restaurants</button>
-    </div>
-  );
+  if (cart.length === 0) return <EmptyCart go={go} />;
 
   return (
     <>
-    {showAddrModal && (
-      <AddressModal
-        onSave={(addr) => { setUser(u => ({...u, address: addr})); setShowAddrModal(false); go('checkout'); }}
-        onClose={() => setShowAddrModal(false)}
-      />
-    )}
-    <div className="page">
-      <div style={{ position:'relative', overflow:'hidden' }}>
-        <div style={{ position:'absolute', inset:0, zIndex:0 }}>
-          <img src="https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=1400&q=85" alt="Food cart" style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 55%' }} />
-          <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(247,243,236,0.97) 0%, rgba(237,230,214,0.93) 60%, rgba(200,223,197,0.60) 100%)' }} />
-        </div>
-        <div className="explore-hero" style={{ background:'transparent', borderBottom:'none', position:'relative', zIndex:1 }}>
-          <div className="container">
-            <span className="section-label">Checkout</span>
-            <h1 className="serif" style={{ fontSize:'clamp(30px,4vw,52px)',fontWeight:700,color:T.forest }}>Your Cart</h1>
-            <p style={{ color:T.moss,fontSize:14,marginTop:6 }}>{cart.reduce((s,c)=>s+c.qty,0)} item{cart.reduce((s,c)=>s+c.qty,0)!==1?'s':''} ready to order</p>
+      {showAddrModal && (
+        <AddressModal
+          onSave={addr => { setUser(u => ({ ...u, address: addr })); setShowAddrModal(false); go('checkout'); }}
+          onClose={() => setShowAddrModal(false)}
+        />
+      )}
+      <div className="page">
+        {/* Cart Hero */}
+        <div style={{ position:'relative', overflow:'hidden', minHeight:260, display:'flex', alignItems:'center' }}>
+          <div style={{ position:'absolute', inset:0, zIndex:0 }}>
+            <img src="https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=1600&q=90" alt="" style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 55%' }} />
+            <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(10,35,20,0.85) 0%, rgba(26,58,42,0.70) 50%, rgba(10,35,20,0.58) 100%)' }} />
+          </div>
+          <div style={{ padding:'64px 0 72px', position:'relative', zIndex:1, width:'100%' }}>
+            <div className="container">
+              <span className="section-label" style={{ color:T.fern }}>Checkout</span>
+              <h1 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:'clamp(30px,4vw,52px)', fontWeight:700, color:'white', lineHeight:1.1, textShadow:'0 3px 20px rgba(0,0,0,0.4)' }}>Your Cart</h1>
+              <p style={{ color:T.mist, fontSize:14, marginTop:8 }}>{cart.reduce((s, c) => s + c.qty, 0)} items ready to order</p>
+            </div>
           </div>
         </div>
-      </div>
-      <section className="section" style={{ paddingTop:40 }}>
-        <div className="container">
-          <div className="cart-layout">
-            <div>
-              {del===0&&<div style={{ background:'rgba(45,90,61,0.08)',border:'1px solid rgba(45,90,61,0.2)',borderRadius:12,padding:'12px 18px',marginBottom:18,fontSize:13,color:T.leaf,fontWeight:600 }}>🎉 Free delivery unlocked!</div>}
-              {cart.map((item,i)=>(
-                <Rv key={item.id} delay={i*.04}>
-                  <div className="cart-item">
+
+        <section className="section" style={{ paddingTop:40 }}>
+          <div className="container">
+            <div className="cart-layout">
+              <div>
+                {del === 0 && (
+                  <div style={{ background:'rgba(45,90,61,0.08)', border:'1px solid rgba(45,90,61,0.2)', borderRadius:12, padding:'12px 18px', marginBottom:18, fontSize:13, color:T.leaf, fontWeight:600 }}>
+                    🎉 Free delivery unlocked!
+                  </div>
+                )}
+                {cart.map((item, i) => (
+                  <div key={item.id} className="cart-item" style={{ animationDelay:`${i * 50}ms` }}>
                     <div className="cart-item-img"><img src={item.img} alt={item.name} /></div>
                     <div style={{ flex:1 }}>
-                      <div style={{ fontWeight:600,fontSize:15,color:T.forest }}>{item.name}</div>
-                      {item.restName && <div style={{ fontSize:11,color:T.moss,marginTop:2 }}>🏪 {item.restName}</div>}
-                      <div style={{ color:T.sage,fontWeight:700,fontSize:15,marginTop:4 }}>₹{item.price*item.qty}</div>
+                      <div style={{ fontWeight:700, fontSize:15, color:T.forest, marginBottom:2 }}>{item.name}</div>
+                      <div style={{ fontSize:12, color:T.moss }}>₹{item.price} each</div>
                     </div>
                     <div className="qty-ctrl">
-                      <button className="qty-btn" onClick={()=>chQ(item.id,-1)}>−</button>
-                      <span style={{ fontWeight:700,fontSize:15,minWidth:22,textAlign:'center',color:T.forest }}>{item.qty}</span>
-                      <button className="qty-btn fill" onClick={()=>chQ(item.id,1)}>+</button>
+                      <button className="qty-btn" onClick={() => chQ(item.id, -1)}>−</button>
+                      <span style={{ fontWeight:700, fontSize:15, minWidth:24, textAlign:'center' }}>{item.qty}</span>
+                      <button className="qty-btn" onClick={() => chQ(item.id, 1)}>+</button>
                     </div>
-                  </div>
-                </Rv>
-              ))}
-            </div>
-            <div>
-              <div className="cart-summary" style={{ marginBottom:16 }}>
-                <h3 className="serif" style={{ fontSize:20,fontWeight:700,color:T.forest,marginBottom:16 }}>Apply Promo</h3>
-                <div style={{ display:'flex',gap:8 }}>
-                  <input className="field" placeholder="e.g. TERRA30" value={promo} onChange={e=>setPromo(e.target.value.toUpperCase())} />
-                  <button className="btn-primary" style={{ padding:'0 18px',whiteSpace:'nowrap',borderRadius:12 }} onClick={applyP}>Apply</button>
-                </div>
-                {msg&&<p style={{ marginTop:9,fontSize:12,color:applied?'#4CAF50':'#E53E3E',fontWeight:600 }}>{msg}</p>}
-              </div>
-              <div className="cart-summary">
-                <h3 className="serif" style={{ fontSize:22,fontWeight:700,color:T.forest,marginBottom:20 }}>Bill Summary</h3>
-                {[['Item Total',`₹${sub}`],['Delivery',del===0?'Free 🎉':`₹${del}`],['Taxes & Fees',`₹${tax}`],applied&&['Promo Discount',`−₹${disc}`]].filter(Boolean).map(([l,v])=>(
-                  <div key={l} style={{ display:'flex',justifyContent:'space-between',marginBottom:14,fontSize:14 }}>
-                    <span style={{ color:T.moss,fontWeight:300 }}>{l}</span>
-                    <span style={{ color:l==='Promo Discount'?T.leaf:T.forest,fontWeight:l==='Promo Discount'?700:500 }}>{v}</span>
+                    <div style={{ fontFamily:'Cormorant Garamond,serif', fontSize:20, fontWeight:700, color:T.leaf, minWidth:60, textAlign:'right' }}>₹{item.price * item.qty}</div>
                   </div>
                 ))}
-                <hr style={{ border:'none',borderTop:`1px solid rgba(107,158,122,0.15)`,margin:'18px 0' }} />
-                <div style={{ display:'flex',justifyContent:'space-between',fontSize:20,fontWeight:700,marginBottom:24 }}>
-                  <span className="serif">Grand Total</span>
-                  <span style={{ color:T.leaf }}>₹{total}</span>
+              </div>
+
+              <div className="cart-summary">
+                <h3 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:22, fontWeight:700, color:T.forest, marginBottom:20 }}>Order Summary</h3>
+                <div style={{ marginBottom:20 }}>
+                  <div className="coupon-input-row">
+                    <input className="field" placeholder="Promo code (try TERRA30)" value={promo}
+                      onChange={e => { setPromo(e.target.value); setMsg(''); setApplied(false); }}
+                      onKeyDown={e => e.key === 'Enter' && applyP()}
+                      style={{ fontSize:13 }}
+                    />
+                    <button className="btn-primary btn-ripple" style={{ padding:'12px 18px', fontSize:13, flexShrink:0 }} onClick={applyP}>Apply</button>
+                  </div>
+                  {msg && <p className={msg.startsWith('✅') ? 'coupon-msg-success' : 'coupon-msg-error'}>{msg}</p>}
                 </div>
-                {!user && (
-                  <div className="auth-gate" style={{ marginBottom:14 }}>
-                    <div style={{ fontSize:28,marginBottom:8 }}>🔐</div>
-                    <p style={{ color:'rgba(200,223,197,0.9)',fontSize:13,fontWeight:400,marginBottom:12 }}>Login required to place an order</p>
-                    <button className="btn-nature" style={{ padding:'10px 24px',fontSize:13 }} onClick={()=>go('login')}>Login / Sign Up</button>
+                {[['Subtotal', `₹${sub}`],['Delivery', del === 0 ? 'Free 🎉' : `₹${del}`],['Tax (5%)', `₹${tax}`],disc > 0 ? ['Discount', `-₹${disc}`] : null].filter(Boolean).map(([l, v]) => (
+                  <div key={l} style={{ display:'flex', justifyContent:'space-between', marginBottom:10, fontSize:13, color: l === 'Discount' ? '#4CAF50' : T.moss }}>
+                    <span>{l}</span><span style={{ fontWeight: l === 'Discount' ? 700 : 400 }}>{v}</span>
                   </div>
-                )}
-                {user && !user.address && (
-                  <div className="auth-gate" style={{ marginBottom:14 }}>
-                    <div style={{ fontSize:28,marginBottom:8 }}>📍</div>
-                    <p style={{ color:'rgba(200,223,197,0.9)',fontSize:13,fontWeight:400,marginBottom:12 }}>Add a delivery address to continue</p>
-                    <button className="btn-nature" style={{ padding:'10px 24px',fontSize:13 }} onClick={()=>setShowAddrModal(true)}>Add Address</button>
-                  </div>
-                )}
-                <button className="btn-nature" style={{ width:'100%',padding:'16px',fontSize:15,opacity:(!user||!user.address)?0.5:1 }} onClick={placeO}>
-                  {!user ? '🔒 Login to Checkout' : !user.address ? '📍 Add Address to Continue' : `Proceed to Checkout · ₹${total}`}
+                ))}
+                <div style={{ borderTop:`1px solid rgba(107,158,122,0.15)`, paddingTop:16, marginTop:6, display:'flex', justifyContent:'space-between', fontFamily:'Cormorant Garamond,serif', fontSize:24, fontWeight:700, color:T.forest }}>
+                  <span>Total</span><span>₹{total}</span>
+                </div>
+                <button className="btn-nature btn-ripple" style={{ width:'100%', marginTop:20, fontSize:15, padding:'16px' }} onClick={placeO}>
+                  Place Order →
                 </button>
-                {user && user.address && <p style={{ textAlign:'center',color:T.moss,fontSize:11,marginTop:12 }}>📍 Delivering to: {user.address.line1}, {user.address.city}</p>}
-                <p style={{ textAlign:'center',color:T.moss,fontSize:11,marginTop:8 }}>🔒 Secure payment · 100% refund guarantee</p>
+                <p style={{ fontSize:11, color:T.moss, textAlign:'center', marginTop:10 }}>🔒 Secure checkout · 100% safe</p>
               </div>
             </div>
           </div>
-        </div>
-      </section>
-      <Footer go={go} />
-    </div>
+        </section>
+        <Footer go={go} />
+      </div>
     </>
   );
 }
 
-/* ─── TRACK PAGE ──────────────────────────────────────────── */
-function TrackPage({ go }) {
-  const [step, setStep] = useState(1);
-  const [sim, setSim] = useState(false);
-  useEffect(()=>{
-    if(!sim) return;
-    if(step>=3){setSim(false);return;}
-    const tm = setTimeout(()=>setStep(s=>s+1),2500);
-    return ()=>clearTimeout(tm);
-  },[step,sim]);
-
-  return (
-    <div className="page">
-      <div style={{ position:'relative', overflow:'hidden' }}>
-        <div style={{ position:'absolute', inset:0, zIndex:0 }}>
-          <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1400&q=90" alt="Delivery tracking" style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 60%' }} />
-          <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(247,243,236,0.97) 0%, rgba(237,230,214,0.92) 60%, rgba(200,223,197,0.65) 100%)' }} />
-        </div>
-        <div className="explore-hero" style={{ background:'transparent', borderBottom:'none', position:'relative', zIndex:1 }}>
-          <div className="container">
-            <span className="section-label">Live Tracking</span>
-            <h1 className="serif" style={{ fontSize:'clamp(30px,4vw,52px)',fontWeight:700,color:T.forest }}>Order Tracking</h1>
-            <p style={{ color:T.moss,fontSize:14,marginTop:6 }}>Order #TE28741 · Spice Garden · Estimated {step===3?'Delivered ✓':'18 min'}</p>
-          </div>
-        </div>
-      </div>
-      <section className="section" style={{ paddingTop:40 }}>
-        <div className="container" style={{ maxWidth:780 }}>
-          <Rv>
-            <LiveTrackMap step={step} />
-            <div className="track-steps" style={{ marginBottom:32 }}>
-              {TRACK_STEPS.map((s,i)=>(
-                <div key={s.label} className={`track-step ${i<=step?'done':i===step+1?'current':''}`}>
-                  <div className="track-icon">{s.icon}</div>
-                  <div className="track-label">{s.label}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{ background:'white',borderRadius:18,padding:24,border:'1px solid rgba(107,158,122,0.12)',boxShadow:`0 4px 20px ${T.shadow}`,marginBottom:24 }}>
-              <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16 }}>
-                <div>
-                  <div style={{ fontFamily:'Cormorant Garamond,serif',fontSize:22,fontWeight:700,color:T.forest }}>
-                    {TRACK_STEPS[Math.min(step,3)].label}
-                  </div>
-                  <div style={{ color:T.moss,fontSize:13,fontWeight:300,marginTop:4 }}>{TRACK_STEPS[Math.min(step,3)].desc}</div>
-                </div>
-                <div style={{ textAlign:'right' }}>
-                  <div style={{ fontFamily:'Cormorant Garamond,serif',fontSize:32,fontWeight:700,color:T.sage }}>{step<3?`${18-step*5} min`:'🎉'}</div>
-                  {step<3&&<div style={{ fontSize:11,color:T.moss }}>estimated</div>}
-                </div>
-              </div>
-              <hr style={{ border:'none',borderTop:'1px solid rgba(107,158,122,0.12)',margin:'0 0 16px' }} />
-              <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12 }}>
-                <div style={{ background:T.snow,borderRadius:10,padding:'12px 14px' }}>
-                  <div style={{ fontSize:10,color:T.moss,fontWeight:600,textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:4 }}>From</div>
-                  <div style={{ fontSize:13,color:T.forest,fontWeight:500 }}>🏪 Spice Garden, MG Road</div>
-                </div>
-                <div style={{ background:T.snow,borderRadius:10,padding:'12px 14px' }}>
-                  <div style={{ fontSize:10,color:T.moss,fontWeight:600,textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:4 }}>To</div>
-                  <div style={{ fontSize:13,color:T.forest,fontWeight:500 }}>📍 Your Location, Mysuru</div>
-                </div>
-              </div>
-              {step>=2&&(
-                <div style={{ marginTop:12,background:'rgba(74,124,89,0.08)',borderRadius:10,padding:'10px 14px',fontSize:13,color:T.leaf,fontWeight:600 }}>
-                  🛵 Rider: Rajan Kumar · ⭐ 4.9 rating · 📱 Contact
-                </div>
-              )}
-            </div>
-            <div style={{ display:'flex',gap:12 }}>
-              <button className="btn-nature" style={{ flex:1 }} onClick={()=>{setSim(true);}} disabled={sim||step>=3}>
-                {sim?'🛵 Simulating…':step>=3?'Order Delivered! 🎉':'▶ Simulate Delivery'}
-              </button>
-              <button className="btn-outline" onClick={()=>setStep(1)}>Reset</button>
-            </div>
-          </Rv>
-        </div>
-      </section>
-      <Footer go={go} />
-    </div>
-  );
-}
-
-/* ─── OFFERS PAGE ─────────────────────────────────────────── */
-const COUPON_DETAILS = {
-  TERRA30:   { discount:'30% off', type:'percent', value:30, minOrder:500,  desc:'30% off on orders above ₹500', saving:'Save up to ₹180' },
-  FIRST100:  { discount:'₹100 off', type:'flat', value:100, minOrder:0,    desc:'₹100 off on your very first order', saving:'Save ₹100' },
-  FREEDEL:   { discount:'Free Delivery', type:'delivery', value:29, minOrder:0, desc:'Zero delivery charges on any order', saving:'Save ₹29' },
-  NIGHT20:   { discount:'20% off', type:'percent', value:20, minOrder:0,   desc:'20% off on orders after 9 PM', saving:'Save up to ₹120' },
-  FLAT50:    { discount:'₹50 off', type:'flat', value:50, minOrder:199,    desc:'Flat ₹50 off on any order above ₹199', saving:'Save ₹50' },
-  FIRSTORDER:{ discount:'15% off', type:'percent', value:15, minOrder:0,   desc:'15% off for first time app users', saving:'Save up to ₹90' },
-};
-
-const OFFERS_FULL = [
-  {code:"TERRA30",   title:"Weekend Feast",   expires:"Valid this weekend", color:T.sage},
-  {code:"FIRST100",  title:"Welcome Gift",    expires:"New users only",     color:T.earth},
-  {code:"FREEDEL",   title:"Free Delivery",   expires:"This week",          color:T.moss},
-  {code:"NIGHT20",   title:"Night Owl",       expires:"Daily 9PM–1AM",      color:T.dusk},
-  {code:"FLAT50",    title:"Flash Deal",      expires:"Limited time",       color:T.sunset},
-  {code:"FIRSTORDER",title:"First Timer",     expires:"One-time use",       color:T.amber},
+/* ═══════════════════════════════════════════════════════════════
+   ── OFFERS PAGE ───────────────────────────────────────────────
+   ═══════════════════════════════════════════════════════════════ */
+const OFFERS_DATA = [
+  {code:"TERRA30",title:"Weekend Feast",desc:"30% off on orders above ₹500",saving:"Save up to ₹180",expires:"Valid this weekend",color:T.sage},
+  {code:"FIRST100",title:"Welcome Gift",desc:"₹100 off on your very first order",saving:"Save ₹100",expires:"New users only",color:T.earth},
+  {code:"FREEDEL",title:"Free Delivery",desc:"Zero delivery charges on any order",saving:"Save ₹29",expires:"This week",color:T.moss},
+  {code:"NIGHT20",title:"Night Owl",desc:"20% off on orders after 9 PM",saving:"Save up to ₹120",expires:"Daily 9PM–1AM",color:T.dusk},
+  {code:"FLAT50",title:"Midweek Special",desc:"Flat ₹50 off on all orders",saving:"Save ₹50",expires:"Mon–Wed only",color:T.bark},
+  {code:"FIRSTORDER",title:"First Order",desc:"15% off on your first order",saving:"Save up to ₹90",expires:"One-time use",color:T.amber},
 ];
 
 function OffersPage({ go }) {
-  const [copied, setCopied] = useState(null);
-  const [claimed, setClaimed] = useState({});
-  const [claimMsg, setClaimMsg] = useState('');
-
+  const [copied, setCopied] = useState({});
   const copy = (code) => {
-    navigator.clipboard?.writeText(code).catch(()=>{});
-    setCopied(code);
-    setTimeout(()=>setCopied(null),2000);
-  };
-
-  const claim = (code) => {
-    if (claimed[code]) return;
-    setClaimed(c=>({...c,[code]:true}));
-    setClaimMsg(`✅ Coupon "${code}" claimed! Use it at checkout.`);
-    setTimeout(()=>setClaimMsg(''),3500);
+    navigator.clipboard.writeText(code).catch(() => {});
+    setCopied(p => ({ ...p, [code]: true }));
+    setTimeout(() => setCopied(p => ({ ...p, [code]: false })), 1500);
   };
 
   return (
     <div className="page">
-      <div style={{ position:'relative', overflow:'hidden' }}>
-        {/* Offers banner image */}
-        <div style={{ position:'absolute', inset:0, zIndex:0 }}>
-          <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1400&q=90" alt="Food offers" style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 55%' }} />
-          <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(10,35,20,0.90) 0%, rgba(45,90,61,0.78) 50%, rgba(10,35,20,0.70) 100%)' }} />
-        </div>
-        <div style={{ padding:'70px 0 88px', position:'relative', zIndex:1 }}>
-        <div className="container" style={{ textAlign:'center',position:'relative',zIndex:1 }}>
-          <Rv>
-            <div style={{ fontSize:52,marginBottom:14, filter:'drop-shadow(0 4px 12px rgba(0,0,0,0.4))' }}>🏷️</div>
-            <h1 style={{ fontFamily:'Cormorant Garamond,serif',fontSize:'clamp(36px,5vw,64px)',fontWeight:700,color:'white',lineHeight:1.1,marginBottom:12 }}>Exclusive Offers</h1>
-            <p style={{ color:T.mist,fontSize:15,fontWeight:300,marginBottom:16 }}>Claim a coupon, then apply it at checkout for instant savings</p>
-            <div style={{ display:'flex',gap:10,justifyContent:'center',flexWrap:'wrap' }}>
-              {['FLAT50','FIRSTORDER'].map(code=>(
-                <div key={code} style={{ background:'rgba(255,255,255,0.12)',backdropFilter:'blur(8px)',borderRadius:10,padding:'8px 18px',display:'inline-flex',alignItems:'center',gap:8,border:'1px solid rgba(255,255,255,0.2)' }}>
-                  <span style={{ fontSize:11,color:T.mist }}>Try:</span>
-                  <span style={{ fontWeight:800,letterSpacing:'0.1em',color:'white',fontSize:13 }}>{code}</span>
-                </div>
-              ))}
-            </div>
-          </Rv>
-        </div>
-        </div>
-      </div>
-
-      {/* Global claim message */}
-      {claimMsg && (
-        <div style={{ position:'fixed',top:84,left:'50%',transform:'translateX(-50%)',background:T.leaf,color:'white',padding:'12px 24px',borderRadius:30,fontSize:13,fontWeight:600,zIndex:9999,boxShadow:`0 8px 30px rgba(0,0,0,0.2)`,whiteSpace:'nowrap',animation:'toastIn 0.3s ease both' }}>
-          {claimMsg}
-        </div>
-      )}
-
+      <PageBanner
+        eyebrow="Save Big"
+        title={<>Offers &amp; Discounts</>}
+        subtitle="Hand-picked deals that put more food on your table for less. Grab them before they expire."
+        imgUrl="https://images.unsplash.com/photo-1556742031-c6961e8560b0?w=1600&q=90"
+        overlay="linear-gradient(135deg, rgba(10,35,20,0.88) 0%, rgba(26,58,42,0.68) 55%, rgba(10,35,20,0.50) 100%)"
+      />
       <section className="section" style={{ paddingTop:48 }}>
         <div className="container">
-          {/* How it works */}
-          <Rv>
-            <div style={{ background:'linear-gradient(135deg, rgba(74,124,89,0.08), rgba(107,158,122,0.05))',borderRadius:16,padding:'20px 24px',marginBottom:40,border:`1px solid rgba(107,158,122,0.2)`,display:'flex',gap:32,flexWrap:'wrap',justifyContent:'center' }}>
-              {[['1️⃣','Claim','Click "Claim Coupon" on any offer below'],['2️⃣','Copy Code','Copy the coupon code to your clipboard'],['3️⃣','Apply','Paste it in the promo field at Cart/Checkout']].map(([num,title,desc])=>(
-                <div key={title} style={{ textAlign:'center',flex:'1',minWidth:160 }}>
-                  <div style={{ fontSize:24,marginBottom:6 }}>{num}</div>
-                  <div style={{ fontWeight:700,color:T.forest,fontSize:14,marginBottom:4 }}>{title}</div>
-                  <div style={{ color:T.moss,fontSize:12,fontWeight:300 }}>{desc}</div>
-                </div>
-              ))}
-            </div>
-          </Rv>
-
           <div className="offers-grid">
-            {OFFERS_FULL.map((o,i)=>{
-              const det = COUPON_DETAILS[o.code] || {};
-              const isClaimed = claimed[o.code];
-              return (
-                <Rv key={o.code} delay={i*.07}>
-                  <div className="offer-card" style={{ borderLeft:`4px solid ${o.color}`, position:'relative', overflow:'hidden' }}>
-                    {isClaimed && (
-                      <div style={{ position:'absolute',top:12,right:12,background:'#4CAF50',color:'white',fontSize:9,fontWeight:700,padding:'3px 9px',borderRadius:10,letterSpacing:'0.06em' }}>✓ CLAIMED</div>
-                    )}
-                    <span className="offer-code">{o.code}</span>
-                    <h3 style={{ fontFamily:'Cormorant Garamond,serif',fontSize:24,fontWeight:700,color:T.forest,marginBottom:8 }}>{o.title}</h3>
-                    <p style={{ color:T.moss,fontSize:14,fontWeight:300,lineHeight:1.6,marginBottom:6 }}>{det.desc}</p>
-                    <p style={{ color:o.color,fontSize:13,fontWeight:700,marginBottom:4 }}>{det.saving}</p>
-                    {det.minOrder > 0 && <p style={{ color:T.moss,fontSize:11,marginBottom:4 }}>Min order: ₹{det.minOrder}</p>}
-                    <p style={{ color:T.moss,fontSize:11,marginBottom:12 }}>⏱ {o.expires}</p>
-
-                    <button
-                      className={`offer-claim-btn${isClaimed?' claimed':''}`}
-                      onClick={()=>claim(o.code)}
-                      style={{ background:isClaimed?'#4CAF50':`linear-gradient(135deg, ${o.color}, ${T.leaf})` }}
-                      disabled={isClaimed}
-                    >
-                      {isClaimed ? '✅ Coupon Claimed!' : '🎁 Claim Coupon'}
-                    </button>
-
-                    <button className="offer-copy" onClick={()=>copy(o.code)} style={{ background:copied===o.code?o.color:undefined,color:copied===o.code?'white':undefined,borderColor:copied===o.code?o.color:undefined }}>
-                      {copied===o.code?'✓ Copied to clipboard!':'📋 Copy Code'}
-                    </button>
-                  </div>
-                </Rv>
-              );
-            })}
+            {OFFERS_DATA.map((offer, i) => (
+              <Reveal key={offer.code} delay={i * 0.06}>
+                <div className="offer-card">
+                  <div style={{ width:48, height:48, borderRadius:12, background:`${offer.color}22`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, marginBottom:16 }}>💚</div>
+                  <div className="offer-code">{offer.code}</div>
+                  <h3 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:22, fontWeight:700, color:T.forest, marginBottom:8 }}>{offer.title}</h3>
+                  <p style={{ fontSize:13, color:T.moss, marginBottom:8, fontWeight:300 }}>{offer.desc}</p>
+                  <div style={{ fontSize:12, fontWeight:700, color:offer.color, marginBottom:4 }}>{offer.saving}</div>
+                  <div style={{ fontSize:11, color:T.moss, marginBottom:16 }}>⏱ {offer.expires}</div>
+                  <button
+                    style={{ display:'block', width:'100%', background: copied[offer.code] ? '#4CAF50' : T.forest, color:'white', border:'none', borderRadius:8, padding:'10px 18px', fontSize:12, fontWeight:700, cursor:'pointer', transition:'all 0.25s', letterSpacing:'0.04em' }}
+                    onClick={() => copy(offer.code)}
+                  >{copied[offer.code] ? '✓ Copied!' : 'Copy Code'}</button>
+                </div>
+              </Reveal>
+            ))}
           </div>
-
-          {/* How to apply at cart note */}
-          <Rv>
-            <div style={{ marginTop:48,background:T.snow,borderRadius:16,padding:'24px 28px',border:`1px solid rgba(107,158,122,0.15)`,textAlign:'center' }}>
-              <div style={{ fontSize:32,marginBottom:12 }}>🛒</div>
-              <h3 style={{ fontFamily:'Cormorant Garamond,serif',fontSize:24,fontWeight:700,color:T.forest,marginBottom:8 }}>Ready to save?</h3>
-              <p style={{ color:T.moss,fontSize:14,fontWeight:300,marginBottom:20,maxWidth:480,margin:'0 auto 20px' }}>Add items to your cart and enter a coupon code in the "Apply Promo" section. Active codes: <strong style={{color:T.leaf}}>TERRA30, FIRST100, FREEDEL, NIGHT20, FLAT50, FIRSTORDER</strong></p>
-              <button className="btn-nature" onClick={()=>go('explore')}>Start Ordering →</button>
-            </div>
-          </Rv>
         </div>
       </section>
       <Footer go={go} />
@@ -2332,495 +2572,367 @@ function OffersPage({ go }) {
   );
 }
 
-/* ─── HELP PAGE ───────────────────────────────────────────── */
-function HelpPage({ go }) {
-  const [open, setOpen] = useState(null);
-  const [hovered, setHovered] = useState(null);
-  const isMobile = typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches;
+/* ═══════════════════════════════════════════════════════════════
+   ── TRACK PAGE ────────────────────────────────────────────────
+   ═══════════════════════════════════════════════════════════════ */
+const TRACK_STEPS = [
+  {label:"Order Placed",icon:"📋",desc:"Confirmed & being processed"},
+  {label:"Preparing",icon:"👨‍🍳",desc:"Chef is crafting your meal"},
+  {label:"Out for Delivery",icon:"🛵",desc:"Rider heading your way"},
+  {label:"Delivered",icon:"🎉",desc:"Enjoy your meal!"},
+];
 
-  const handleMouseEnter = (i) => { if (!isMobile) { setHovered(i); setOpen(i); } };
-  const handleMouseLeave = () => { if (!isMobile) { setHovered(null); setOpen(null); } };
-  const handleClick = (i) => { if (isMobile) { setOpen(open === i ? null : i); setHovered(open === i ? null : i); } };
+function TrackPage({ go }) {
+  const [step, setStep] = useState(0);
+  const [auto, setAuto] = useState(true);
+
+  useEffect(() => {
+    if (!auto) return;
+    if (step >= TRACK_STEPS.length - 1) { setAuto(false); return; }
+    const t = setTimeout(() => setStep(s => s + 1), 3500);
+    return () => clearTimeout(t);
+  }, [step, auto]);
+
+  const etaMin = step >= 3 ? 0 : 18 - step * 5;
 
   return (
     <div className="page">
-      <div style={{ position:'relative', overflow:'hidden' }}>
-        <div style={{ position:'absolute', inset:0, zIndex:0 }}>
-          <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1400&q=85" alt="Support" style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 45%' }} />
-          <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(237,230,214,0.97) 0%, rgba(247,243,236,0.94) 60%, rgba(200,223,197,0.6) 100%)' }} />
-        </div>
-        <div style={{ background:'transparent', padding:'72px 0 80px', borderBottom:`1px solid rgba(107,158,122,0.12)`, position:'relative', zIndex:1 }}>
-        <div className="container">
-          <Rv>
-            <span className="section-label">Support</span>
-            <h1 className="serif" style={{ fontSize:'clamp(36px,5vw,60px)',fontWeight:700,color:T.forest,lineHeight:1.1,marginBottom:12 }}>How can we help?</h1>
-            <p style={{ color:T.moss,fontSize:15,fontWeight:300 }}>Browse FAQs or reach out — our team responds in under 5 minutes.</p>
-          </Rv>
-        </div>
-        </div>
-      </div>
-      <section className="section" style={{ paddingTop:56 }}>
-        <div className="container" style={{ display:'grid',gridTemplateColumns:'1fr 1.4fr',gap:60,alignItems:'start' }}>
-          <Rv>
-            <div>
-              <h2 className="serif" style={{ fontSize:28,fontWeight:700,color:T.forest,marginBottom:24 }}>Reach Us</h2>
-              {[
-                {icon:'📱',label:'WhatsApp Support',val:'+91 98765 43210',sub:'Daily 8AM–11PM'},
-                {icon:'📧',label:'Email',val:'support@terraeats.in',sub:'Reply in 2 hours'},
-                {icon:'💬',label:'Live Chat',val:'Available in-app',sub:'Instant response'},
-              ].map(c=>(
-                <div key={c.label} style={{ background:'white',borderRadius:14,padding:'18px 20px',marginBottom:12,border:'1px solid rgba(107,158,122,0.12)',display:'flex',gap:16,alignItems:'flex-start',transition:'all 0.2s',cursor:'pointer' }}
-                  onMouseEnter={e=>{ e.currentTarget.style.boxShadow=`0 8px 24px ${T.shadow}`; e.currentTarget.style.transform='translateY(-2px)'; }}
-                  onMouseLeave={e=>{ e.currentTarget.style.boxShadow='none'; e.currentTarget.style.transform='none'; }}>
-                  <div style={{ fontSize:24,flexShrink:0 }}>{c.icon}</div>
-                  <div>
-                    <div style={{ fontWeight:600,fontSize:14,color:T.forest }}>{c.label}</div>
-                    <div style={{ color:T.sage,fontSize:14,marginTop:2 }}>{c.val}</div>
-                    <div style={{ color:T.moss,fontSize:11,marginTop:2,fontWeight:300 }}>{c.sub}</div>
-                  </div>
+      <PageBanner
+        eyebrow="Live Tracking"
+        title="Track Your Order"
+        subtitle={`Order #TER-2025-8847 · ${step >= 3 ? 'Delivered! 🎉' : `ETA: ${etaMin} minutes`}`}
+        imgUrl="https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=1600&q=90"
+        overlay="linear-gradient(135deg, rgba(10,35,20,0.92) 0%, rgba(26,58,42,0.75) 60%, rgba(10,35,20,0.55) 100%)"
+      />
+      <section className="section" style={{ paddingTop:48 }}>
+        <div className="container" style={{ maxWidth:720 }}>
+          <div style={{ background:'white', borderRadius:20, padding:32, boxShadow:`0 4px 20px ${T.shadow}`, border:`1px solid rgba(107,158,122,0.1)`, marginBottom:24 }}>
+            <div className="track-steps">
+              {TRACK_STEPS.map((s, i) => (
+                <div key={s.label} className={`track-step${i <= step ? ' done' : ''}${i === step ? ' current' : ''}`}>
+                  <div className="track-icon">{i <= step ? (i < step ? '✓' : s.icon) : s.icon}</div>
+                  <div className="track-label">{s.label}</div>
+                  <div style={{ fontSize:10, color:T.moss, textAlign:'center', marginTop:2 }}>{s.desc}</div>
                 </div>
               ))}
             </div>
-          </Rv>
-          <Rv delay={0.08}>
-            <div>
-              <h2 className="serif" style={{ fontSize:28,fontWeight:700,color:T.forest,marginBottom:8 }}>Frequently Asked</h2>
-              <p style={{ fontSize:13,color:T.moss,marginBottom:24,fontWeight:300 }}>{isMobile ? 'Tap a question to see the answer.' : 'Hover over a question to reveal the answer.'}</p>
-              {FAQS.map((faq,i)=>(
-                <div key={i} className={`faq-item${hovered===i?' hovered':''}`}
-                  onMouseEnter={()=>handleMouseEnter(i)} onMouseLeave={handleMouseLeave} onClick={()=>handleClick(i)}>
-                  <div className="faq-highlight-bar" />
-                  <button className="faq-q" style={{ cursor:'pointer' }}>
-                    <span>{faq.q}</span>
-                    <span className={`faq-icon${open===i?' open':''}`}>+</span>
-                  </button>
-                  <div className={`faq-ans${open===i?' open':''}`}>
-                    <p>{faq.a}</p>
-                  </div>
+            <div style={{ background:`linear-gradient(135deg, rgba(74,124,89,0.06), rgba(45,90,61,0.04))`, borderRadius:14, padding:'20px 24px', display:'flex', alignItems:'center', gap:16 }}>
+              <div style={{ width:48, height:48, borderRadius:12, background:`linear-gradient(135deg, ${T.sage}, ${T.leaf})`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, flexShrink:0 }}>
+                {TRACK_STEPS[step].icon}
+              </div>
+              <div>
+                <div style={{ fontFamily:'Cormorant Garamond,serif', fontSize:20, fontWeight:700, color:T.forest }}>{TRACK_STEPS[step].label}</div>
+                <div style={{ fontSize:13, color:T.moss, fontWeight:300 }}>{TRACK_STEPS[step].desc}</div>
+              </div>
+              {step < 3 && (
+                <div style={{ marginLeft:'auto', background:T.forest, color:'white', borderRadius:10, padding:'8px 16px', fontSize:13, fontWeight:700 }}>
+                  🛵 {etaMin} min
                 </div>
-              ))}
+              )}
             </div>
-          </Rv>
-        </div>
-      </section>
-      <Footer go={go} />
-    </div>
-  );
-}
-
-/* ─── LOGIN PAGE ──────────────────────────────────────────── */
-function LoginPage({ go }) {
-  const { setUser } = useAuth();
-  const [tab, setTab] = useState('login');
-  const [form, setForm] = useState({ email:'', password:'', name:'' });
-  const [loading, setLoading] = useState(false);
-  const [showAddr, setShowAddr] = useState(false);
-  const pendingUser = useRef(null);
-
-  const submit = () => {
-    setLoading(true);
-    setTimeout(()=>{
-      setLoading(false);
-      const u = { name: tab==='signup' ? (form.name||'User') : 'Aarav', email: form.email, address: null };
-      pendingUser.current = u;
-      setShowAddr(true);
-    }, 1400);
-  };
-
-  const handleAddrSave = (addr) => {
-    const u = { ...pendingUser.current, address: addr };
-    setUser(u);
-    setShowAddr(false);
-    go('home');
-  };
-
-  const skipAddr = () => {
-    setUser(pendingUser.current);
-    setShowAddr(false);
-    go('home');
-  };
-
-  return (
-    <>
-      {showAddr && (
-        <AddressModal
-          onSave={handleAddrSave}
-          onClose={skipAddr}
-        />
-      )}
-      <div className="login-page" style={{ paddingTop:70, minHeight:'100vh' }}>
-        <div className="login-art">
-          <div className="login-art-img">
-            <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=900&q=95" alt="" />
-          </div>
-          <div style={{ position:'absolute', inset:0, background:'linear-gradient(160deg, rgba(10,35,20,0.78) 0%, rgba(26,58,42,0.55) 50%, rgba(10,35,20,0.70) 100%)' }} />
-          <div className="login-art-content">
-            <div style={{ fontSize:64, marginBottom:20, filter:'drop-shadow(0 6px 18px rgba(0,0,0,0.4))' }}>🌿</div>
-            <h2 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:52, fontWeight:700, lineHeight:1.08, marginBottom:18, textShadow:'0 3px 20px rgba(0,0,0,0.5)' }}>Nature's table<br/><em style={{ fontStyle:'italic', color:T.fern }}>awaits you</em></h2>
-            <p style={{ color:'rgba(200,223,197,0.85)', fontSize:15, fontWeight:300, maxWidth:300, margin:'0 auto 36px', lineHeight:1.75 }}>Join 50,000+ food lovers who order consciously and eat beautifully.</p>
-            <div style={{ display:'flex', gap:24, justifyContent:'center' }}>
-              {[['🌱','Eco-First'],['⚡','30-Min Delivery'],['⭐','Top Rated']].map(([icon,label])=>(
-                <div key={label} style={{ textAlign:'center' }}>
-                  <div style={{ fontSize:22, marginBottom:5, filter:'drop-shadow(0 2px 8px rgba(0,0,0,0.3))' }}>{icon}</div>
-                  <div style={{ fontSize:10, fontWeight:700, color:'rgba(200,223,197,0.8)', textTransform:'uppercase', letterSpacing:'0.08em' }}>{label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="login-form-side">
-          <div className="login-form">
-            <div style={{ fontFamily:'Cormorant Garamond,serif', fontSize:36, fontWeight:700, color:T.forest, marginBottom:6 }}>Welcome{tab==='login'?' back':''}! 👋</div>
-            <p style={{ color:T.moss, fontSize:14, fontWeight:300, marginBottom:32 }}>
-              {tab==='login'?'Sign in to your Terra Eats account':'Create your Terra Eats account'}
-            </p>
-            <div style={{ display:'flex', background:T.sand, borderRadius:12, padding:4, marginBottom:28 }}>
-              {['login','signup'].map(t=>(
-                <button key={t} onClick={()=>setTab(t)} style={{ flex:1, padding:'10px', borderRadius:9, border:'none', cursor:'pointer', fontSize:13, fontWeight:600,
-                  background:tab===t?'white':'transparent', color:tab===t?T.forest:T.moss,
-                  boxShadow:tab===t?`0 2px 10px ${T.shadow}`:'none', transition:'all 0.2s' }}>{t==='login'?'Sign In':'Sign Up'}</button>
-              ))}
-            </div>
-            {tab==='signup'&&(
-              <div style={{ marginBottom:16 }}>
-                <label style={{ display:'block', fontSize:11, fontWeight:700, color:T.moss, letterSpacing:'0.08em', textTransform:'uppercase', marginBottom:7 }}>Full Name</label>
-                <input className="field" placeholder="Aarav Sharma" value={form.name} onChange={e=>setForm(x=>({...x,name:e.target.value}))} />
+            {step < 3 && (
+              <button className="btn-outline" style={{ marginTop:20, width:'100%' }} onClick={() => { setAuto(false); setStep(s => Math.min(s + 1, 3)); }}>
+                Advance Step (Demo) →
+              </button>
+            )}
+            {step === 3 && (
+              <div style={{ marginTop:20, textAlign:'center' }}>
+                <div style={{ fontSize:48, marginBottom:8, animation:'bounceIn 0.5s ease' }}>🎉</div>
+                <div style={{ fontFamily:'Cormorant Garamond,serif', fontSize:24, fontWeight:700, color:T.forest, marginBottom:6 }}>Enjoy your meal!</div>
+                <button className="btn-nature btn-ripple" onClick={() => go('home')}>Order Again →</button>
               </div>
             )}
-            <div style={{ marginBottom:16 }}>
-              <label style={{ display:'block', fontSize:11, fontWeight:700, color:T.moss, letterSpacing:'0.08em', textTransform:'uppercase', marginBottom:7 }}>Email Address</label>
-              <input className="field" type="email" placeholder="you@email.com" value={form.email} onChange={e=>setForm(x=>({...x,email:e.target.value}))} />
+          </div>
+
+          <div style={{ background:'white', borderRadius:20, padding:32, boxShadow:`0 4px 20px ${T.shadow}`, border:`1px solid rgba(107,158,122,0.1)` }}>
+            <h3 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:20, fontWeight:700, color:T.forest, marginBottom:16 }}>🗺️ Live Map</h3>
+            <div className="realistic-map">
+              <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15626.14!2d76.6488!3d12.3053!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3baf6b4e6b5d5555%3A0x1!2sMG+Road%2C+Mysuru!5e0!3m2!1sen!2sin!4v1710000000000!5m2!1sen!2sin"
+                width="100%" height="100%" style={{ border:'none', display:'block' }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" title="Delivery map"
+              />
+              <div className="map-eta-chip">{step >= 3 ? '✅ Delivered!' : `🛵 ETA: ${etaMin} min`}</div>
             </div>
-            <div style={{ marginBottom:28 }}>
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:7 }}>
-                <label style={{ fontSize:11, fontWeight:700, color:T.moss, letterSpacing:'0.08em', textTransform:'uppercase' }}>Password</label>
-                {tab==='login'&&<span style={{ fontSize:12, color:T.sage, cursor:'pointer', fontWeight:500 }}>Forgot?</span>}
-              </div>
-              <input className="field" type="password" placeholder="••••••••" value={form.password} onChange={e=>setForm(x=>({...x,password:e.target.value}))} />
-            </div>
-            <button className="btn-nature" style={{ width:'100%', fontSize:15, padding:'16px' }} onClick={submit} disabled={loading}>
-              {loading?'🌿 Please wait…':tab==='login'?'Sign In →':'Create Account →'}
-            </button>
-            <div style={{ textAlign:'center', marginTop:20, fontSize:13, color:T.moss }}>
-              {tab==='login'?<>Don't have an account? <span style={{ color:T.sage, cursor:'pointer', fontWeight:600 }} onClick={()=>setTab('signup')}>Sign up</span></>:<>Have an account? <span style={{ color:T.sage, cursor:'pointer', fontWeight:600 }} onClick={()=>setTab('login')}>Sign in</span></>}
-            </div>
-            <div style={{ textAlign:'center', marginTop:32, fontSize:11, color:T.mist }}>🔒 256-bit SSL encrypted · Your data is safe</div>
           </div>
         </div>
-      </div>
-    </>
+      </section>
+      <Footer go={go} />
+    </div>
   );
 }
 
-/* ─── CHECKOUT PAGE ───────────────────────────────────────── */
-function CheckoutPage({ cart, setCart, go }) {
-  const [form, setForm] = useState({ name:'', phone:'', email:'', address:'', city:'', pincode:'', notes:'' });
-  const [payment, setPayment] = useState('cod');
-  const [placing, setPlacing] = useState(false);
-  const [errors, setErrors] = useState({});
-
-  const sub = cart.reduce((s,c)=>s+c.price*c.qty,0);
-  const del = sub>299?0:29;
-  const tax = Math.round(sub*.05);
-  const total = sub+del+tax;
-
-  const validate = () => {
-    const e = {};
-    if(!form.name.trim()) e.name = 'Name is required';
-    if(!form.phone.trim()||!/^[6-9]\d{9}$/.test(form.phone.trim())) e.phone = 'Enter valid 10-digit mobile number';
-    if(!form.address.trim()) e.address = 'Delivery address is required';
-    if(!form.city.trim()) e.city = 'City is required';
-    if(!form.pincode.trim()||!/^\d{6}$/.test(form.pincode.trim())) e.pincode = 'Enter valid 6-digit pincode';
-    return e;
-  };
-
-  const placeOrder = () => {
-    const e = validate();
-    if(Object.keys(e).length>0){ setErrors(e); return; }
-    setPlacing(true);
-    setTimeout(()=>{ setPlacing(false); setCart([]); go('track'); }, 2000);
-  };
-
-  if(cart.length===0) return (
-    <div className="page" style={{ display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minHeight:'80vh',textAlign:'center',padding:24 }}>
-      <div style={{ fontSize:80,marginBottom:20 }}>🛒</div>
-      <h2 className="serif" style={{ fontSize:36,fontWeight:700,color:T.forest,marginBottom:10 }}>Nothing to checkout</h2>
-      <p style={{ color:T.moss,fontSize:15,fontWeight:300,marginBottom:32 }}>Add some delicious items to your cart first 🌿</p>
-      <button className="btn-nature" style={{ fontSize:15 }} onClick={()=>go('explore')}>Explore Restaurants</button>
-    </div>
-  );
-
-  const Field = ({ label, field, placeholder, type='text', half=false }) => (
-    <div className="form-group" style={half?{}:{}}>
-      <label>{label}</label>
-      <input className="field" type={type} placeholder={placeholder} value={form[field]}
-        onChange={e=>{ setForm(x=>({...x,[field]:e.target.value})); setErrors(x=>({...x,[field]:undefined})); }}
-        style={errors[field]?{borderColor:'#E53E3E',boxShadow:'0 0 0 3px rgba(229,62,62,0.1)'}:{}} />
-      {errors[field]&&<p style={{ marginTop:5,fontSize:11,color:'#E53E3E',fontWeight:600 }}>⚠ {errors[field]}</p>}
-    </div>
-  );
-
-  const PAYMENT_OPTIONS = [
-    { id:'cod',   icon:'💵', label:'Cash on Delivery',      sub:'Pay when your order arrives' },
-    { id:'upi',   icon:'📱', label:'UPI / GPay / PhonePe',  sub:'Instant & secure payment' },
-    { id:'card',  icon:'💳', label:'Credit / Debit Card',   sub:'Visa, Mastercard, RuPay' },
-    { id:'wallet',icon:'👜', label:'Terra Wallet',           sub:'Balance: ₹0.00' },
-  ];
-
+/* ═══════════════════════════════════════════════════════════════
+   ── HELP PAGE ─────────────────────────────────────────────────
+   ═══════════════════════════════════════════════════════════════ */
+function HelpPage({ go }) {
   return (
     <div className="page">
-      <div style={{ position:'relative', overflow:'hidden' }}>
+      <PageBanner
+        eyebrow="Support Centre"
+        title="Help & FAQ"
+        subtitle="Hover or tap any question to reveal the answer. Our team is always here if you need more."
+        imgUrl="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1600&q=90"
+        overlay="linear-gradient(135deg, rgba(10,35,20,0.90) 0%, rgba(26,58,42,0.72) 55%, rgba(10,35,20,0.55) 100%)"
+      />
+
+      <section className="section" style={{ paddingTop:52 }}>
+        <div className="container" style={{ maxWidth:740 }}>
+
+          {/* Subtle intro line */}
+          <Reveal>
+            <p style={{ fontSize:13, color:T.moss, fontWeight:400, marginBottom:32, display:'flex', alignItems:'center', gap:8 }}>
+              <span style={{ display:'inline-block', width:20, height:1.5, background:T.fern, borderRadius:2 }} />
+              {FAQS.length} frequently asked questions
+            </p>
+          </Reveal>
+
+          {/* Hover-expand FAQ accordion */}
+          {FAQS.map((faq, i) => (
+            <FaqItem key={i} faq={faq} index={i} />
+          ))}
+
+          {/* CTA card */}
+          <Reveal delay={0.32}>
+            <div style={{
+              background: `linear-gradient(135deg, ${T.forest}, ${T.leaf})`,
+              borderRadius: 20, padding: '36px 40px',
+              textAlign: 'center', marginTop: 44, color: 'white',
+              position: 'relative', overflow: 'hidden',
+            }}>
+              {/* decorative circle */}
+              <div style={{ position:'absolute', top:-40, right:-40, width:160, height:160, borderRadius:'50%', background:'rgba(255,255,255,0.04)', pointerEvents:'none' }} />
+              <div style={{ fontSize:40, marginBottom:14 }}>💬</div>
+              <h3 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:26, fontWeight:700, marginBottom:10, lineHeight:1.2 }}>
+                Still need help?
+              </h3>
+              <p style={{ fontSize:14, color:T.mist, marginBottom:24, fontWeight:300, lineHeight:1.65, maxWidth:360, margin:'0 auto 24px' }}>
+                Our support team is available 24 / 7. Average response time is under 3 minutes.
+              </p>
+              <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap' }}>
+                <button
+                  className="btn-ripple"
+                  style={{ background:'rgba(255,255,255,0.18)', border:'1.5px solid rgba(255,255,255,0.35)', color:'white', borderRadius:12, padding:'13px 30px', fontSize:13, fontWeight:700, cursor:'pointer', transition:'all 0.2s', position:'relative', overflow:'hidden' }}
+                  onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.3)'; e.currentTarget.style.transform='translateY(-2px)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.18)'; e.currentTarget.style.transform=''; }}
+                >
+                  💬 Chat with Support
+                </button>
+                <button
+                  className="btn-ripple"
+                  style={{ background:'transparent', border:'1.5px solid rgba(255,255,255,0.25)', color:'rgba(255,255,255,0.85)', borderRadius:12, padding:'13px 24px', fontSize:13, fontWeight:600, cursor:'pointer', transition:'all 0.2s', position:'relative', overflow:'hidden' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(255,255,255,0.5)'; e.currentTarget.style.color='white'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor='rgba(255,255,255,0.25)'; e.currentTarget.style.color='rgba(255,255,255,0.85)'; }}
+                  onClick={() => go('home')}
+                >
+                  ← Back to Home
+                </button>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+      <Footer go={go} />
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ── ABOUT PAGE ────────────────────────────────────────────────
+   ═══════════════════════════════════════════════════════════════ */
+const CHEFS = [
+  {name:"Chef Aryan Kapoor",specialty:"North Indian & Mughlai",exp:"18 yrs experience",bio:"Former head chef at The Leela Palace, Aryan brings royal Mughlai secrets into every dish.",img:"https://images.unsplash.com/photo-1566554273541-37a9ca77b91f?w=400&q=80",emoji:"🌿"},
+  {name:"Chef Meera Nair",specialty:"South Indian & Coastal",exp:"14 yrs experience",bio:"Born in Kerala's spice coast, Meera crafts dishes that tell stories of monsoon forests.",img:"https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?w=400&q=80",emoji:"🌊"},
+  {name:"Chef Ravi Shetty",specialty:"Fusion & Desserts",exp:"11 yrs experience",bio:"A Mumbai-trained pastry wizard who blends East and West into unforgettable dessert experiences.",img:"https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=400&q=80",emoji:"🍃"},
+];
+
+function AboutPage({ go }) {
+  return (
+    <div className="page">
+      <div style={{ position:'relative', overflow:'hidden', minHeight:480, display:'flex', alignItems:'center' }}>
         <div style={{ position:'absolute', inset:0, zIndex:0 }}>
-          <img src="https://images.unsplash.com/photo-1476224203421-9ac39bcb3b27?w=1400&q=85" alt="Checkout food" style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 40%' }} />
-          <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(247,243,236,0.97) 0%, rgba(237,230,214,0.93) 60%, rgba(200,223,197,0.60) 100%)' }} />
+          <img src="https://images.unsplash.com/photo-1466442929976-97f336a657be?w=1600&q=90" alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+          <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(10,35,20,0.88) 0%, rgba(26,58,42,0.72) 50%, rgba(10,35,20,0.60) 100%)' }} />
         </div>
-        <div className="explore-hero" style={{ background:'transparent', borderBottom:'none', position:'relative', zIndex:1 }}>
-        <div className="container">
-          <button style={{ background:'none',border:'none',cursor:'pointer',fontSize:13,color:T.sage,fontWeight:600,padding:'0 0 12px',display:'flex',alignItems:'center',gap:6 }} onClick={()=>go('cart')}>
-            ← Back to Cart
-          </button>
-          <span className="section-label">Final Step</span>
-          <h1 className="serif" style={{ fontSize:'clamp(30px,4vw,52px)',fontWeight:700,color:T.forest }}>Checkout</h1>
-          <p style={{ color:T.moss,fontSize:14,marginTop:6 }}>Review your order and enter delivery details</p>
-        </div>
+        <div className="container" style={{ padding:'120px 28px', position:'relative', zIndex:1 }}>
+          <Reveal>
+            <span className="section-label" style={{ color:T.fern }}>Our Story</span>
+            <h1 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:'clamp(42px,6vw,76px)', fontWeight:700, color:'white', lineHeight:1.0, marginBottom:16, textShadow:'0 3px 24px rgba(0,0,0,0.4)' }}>
+              Food with a<br/><em style={{ fontStyle:'italic', color:T.fern }}>soul</em>
+            </h1>
+            <p style={{ color:'rgba(220,240,220,0.90)', fontSize:17, fontWeight:300, maxWidth:520, lineHeight:1.7 }}>
+              Terra Eats was founded on a simple belief: great food comes from the earth, not a factory. We connect mindful eaters with restaurants who care.
+            </p>
+          </Reveal>
         </div>
       </div>
 
+      <section className="section">
+        <div className="container">
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:72, alignItems:'center' }}>
+            <Reveal>
+              <span className="section-label">Our Mission</span>
+              <h2 className="section-title">We carefully select partners who share our values</h2>
+              <p style={{ color:T.earth, fontSize:15, fontWeight:300, lineHeight:1.85, marginBottom:20 }}>
+                Seasonal ingredients, minimal waste, and treating their teams with dignity. Every restaurant on Terra Eats passes our 12-point sustainability check.
+              </p>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:20, marginTop:36 }}>
+                {[['12K+','Trees Planted'],['500+','Partners'],['50K+','Happy Customers']].map(([n, l]) => (
+                  <div key={l} style={{ textAlign:'center', padding:'20px 16px', background:T.snow, borderRadius:16, border:`1px solid rgba(107,158,122,0.12)` }}>
+                    <div style={{ fontFamily:'Cormorant Garamond,serif', fontSize:32, fontWeight:700, color:T.sage }}>{n}</div>
+                    <div style={{ fontSize:11, color:T.moss, marginTop:4, fontWeight:500 }}>{l}</div>
+                  </div>
+                ))}
+              </div>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <div style={{ borderRadius:24, overflow:'hidden', boxShadow:`0 20px 60px ${T.shadowD}` }}>
+                <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=90" alt="Restaurant" style={{ width:'100%', height:440, objectFit:'cover' }} />
+              </div>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      <section className="section" style={{ background:T.snow }}>
+        <div className="container">
+          <Reveal>
+            <div className="section-head" style={{ textAlign:'center' }}>
+              <span className="section-label">Meet the Team</span>
+              <h2 className="section-title">The Chefs Behind the Magic</h2>
+            </div>
+          </Reveal>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:28, marginTop:48 }}>
+            {CHEFS.map((chef, i) => (
+              <Reveal key={chef.name} delay={i * 0.08}>
+                <div style={{ background:'white', borderRadius:20, overflow:'hidden', boxShadow:`0 4px 24px ${T.shadow}`, border:`1px solid rgba(107,158,122,0.1)`, transition:'all 0.35s cubic-bezier(0.4,0,0.2,1)' }}
+                  onMouseEnter={e => { e.currentTarget.style.transform='translateY(-8px)'; e.currentTarget.style.boxShadow=`0 24px 60px ${T.shadowD}`; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform=''; e.currentTarget.style.boxShadow=`0 4px 24px ${T.shadow}`; }}
+                >
+                  <div style={{ position:'relative', height:300, overflow:'hidden' }}>
+                    <img src={chef.img} alt={chef.name} style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'top', transition:'transform 0.5s' }}
+                      onMouseEnter={e => e.target.style.transform='scale(1.06)'}
+                      onMouseLeave={e => e.target.style.transform=''}
+                    />
+                    <div style={{ position:'absolute', inset:0, background:'linear-gradient(to top, rgba(26,58,42,0.7) 0%, transparent 50%)' }} />
+                    <div style={{ position:'absolute', bottom:16, right:16, fontSize:28 }}>{chef.emoji}</div>
+                  </div>
+                  <div style={{ padding:'22px 24px 26px' }}>
+                    <div style={{ fontFamily:'Cormorant Garamond,serif', fontSize:22, fontWeight:700, color:T.forest }}>{chef.name}</div>
+                    <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:T.sage, margin:'6px 0 10px' }}>{chef.specialty}</div>
+                    <div style={{ fontSize:11, color:T.moss, marginBottom:12 }}>🏅 {chef.exp}</div>
+                    <p style={{ fontSize:13, color:T.earth, lineHeight:1.7, fontWeight:300 }}>{chef.bio}</p>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+      <Footer go={go} />
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ── CHECKOUT PAGE ─────────────────────────────────────────────
+   ═══════════════════════════════════════════════════════════════ */
+function CheckoutPage({ go, cart }) {
+  const { user } = useAuth();
+  const [done, setDone]         = useState(false);
+  const [loading, setLoading]   = useState(false);
+  const [payOpt, setPayOpt]     = useState('upi');
+  const sub   = cart.reduce((s, c) => s + c.price * c.qty, 0);
+  const del   = sub > 299 ? 0 : 29;
+  const tax   = Math.round(sub * 0.05);
+  const total = sub + del + tax;
+
+  const placeOrder = () => {
+    setLoading(true);
+    setTimeout(() => { setLoading(false); setDone(true); }, 1800);
+  };
+
+  if (done) return (
+    <div className="page" style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:'80vh', textAlign:'center', padding:24 }}>
+      <div style={{ fontSize:80, marginBottom:20, animation:'bounceIn 0.5s ease' }}>🎉</div>
+      <h2 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:36, fontWeight:700, color:T.forest, marginBottom:10 }}>Order Placed!</h2>
+      <p style={{ color:T.moss, fontSize:15, fontWeight:300, marginBottom:8 }}>Your food is being prepared with love.</p>
+      <p style={{ color:T.moss, fontSize:13, marginBottom:32 }}>Order #TER-2025-8847 · Estimated delivery: 30 min</p>
+      <div style={{ display:'flex', gap:12 }}>
+        <button className="btn-nature btn-ripple" onClick={() => go('track')}>Track Order →</button>
+        <button className="btn-outline" onClick={() => go('home')}>Back to Home</button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="page">
+      <div style={{ background:`linear-gradient(135deg, ${T.forest} 0%, ${T.leaf} 100%)`, padding:'80px 0 60px' }}>
+        <div className="container">
+          <Reveal>
+            <span className="section-label" style={{ color:T.fern }}>Final Step</span>
+            <h1 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:'clamp(30px,4vw,52px)', fontWeight:700, color:'white' }}>Checkout</h1>
+          </Reveal>
+        </div>
+      </div>
       <section className="section" style={{ paddingTop:40 }}>
         <div className="container">
           <div className="checkout-layout">
-
-            {/* LEFT — Form */}
             <div>
-              {/* Delivery Details */}
-              <div className="checkout-section">
-                <h3>📍 Delivery Details</h3>
-                <Field label="Full Name" field="name" placeholder="Aarav Sharma" />
-                <div className="form-row">
-                  <Field label="Phone Number" field="phone" placeholder="9876543210" type="tel" half />
-                  <Field label="Email (optional)" field="email" placeholder="you@email.com" type="email" half />
-                </div>
-                <Field label="Delivery Address" field="address" placeholder="Flat / House No, Street, Landmark" />
-                <div className="form-row">
-                  <Field label="City" field="city" placeholder="Bengaluru" half />
-                  <Field label="Pincode" field="pincode" placeholder="560001" half />
-                </div>
-                <div className="form-group" style={{ marginBottom:0 }}>
-                  <label>Delivery Instructions (optional)</label>
-                  <textarea className="field" placeholder="Leave at door, ring bell twice, avoid calling…" value={form.notes}
-                    onChange={e=>setForm(x=>({...x,notes:e.target.value}))}
-                    style={{ resize:'vertical',minHeight:80 }} />
-                </div>
+              <div className="checkout-section animate-fade-up">
+                <h3>📍 Delivery Address</h3>
+                {user?.address ? (
+                  <div style={{ background:T.snow, borderRadius:12, padding:'16px 20px', border:`1px solid rgba(107,158,122,0.15)` }}>
+                    <div style={{ fontWeight:600, color:T.forest, marginBottom:4 }}>{user.address.line1}</div>
+                    <div style={{ fontSize:13, color:T.moss }}>{user.address.city} — {user.address.pincode}</div>
+                  </div>
+                ) : (
+                  <div className="form-row">
+                    {[['Full Name',''],['Phone','']].map(([ph]) => (
+                      <div key={ph} className="form-group"><input className="field" placeholder={ph} /></div>
+                    ))}
+                    <div className="form-group" style={{ gridColumn:'1/-1' }}><input className="field" placeholder="Street / Flat / Building" /></div>
+                    <div className="form-group"><input className="field" placeholder="City" /></div>
+                    <div className="form-group"><input className="field" placeholder="Pincode" /></div>
+                  </div>
+                )}
               </div>
-
-              {/* Payment */}
-              <div className="checkout-section">
-                <h3>💳 Payment Method</h3>
-                {PAYMENT_OPTIONS.map(opt=>(
-                  <div key={opt.id} className={`payment-option${payment===opt.id?' selected':''}`} onClick={()=>setPayment(opt.id)}>
-                    <div className="payment-radio">
-                      <div className="payment-radio-dot" />
+              <div className="checkout-section animate-fade-up" style={{ animationDelay:'0.08s' }}>
+                <h3>💳 Payment</h3>
+                {[['upi','UPI / GPay / PhonePe','⚡'],['card','Credit / Debit Card','💳'],['cod','Cash on Delivery','💵']].map(([id, label, icon]) => (
+                  <div key={id} onClick={() => setPayOpt(id)} style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 18px', borderRadius:12, border:`1.5px solid ${payOpt === id ? T.sage : 'rgba(107,158,122,0.2)'}`, background: payOpt === id ? 'rgba(107,158,122,0.06)' : 'transparent', cursor:'pointer', transition:'all 0.2s', marginBottom:10 }}>
+                    <div style={{ width:18, height:18, borderRadius:'50%', border:`2px solid ${payOpt === id ? T.sage : T.fern}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                      {payOpt === id && <div style={{ width:9, height:9, borderRadius:'50%', background:T.sage }} />}
                     </div>
-                    <span style={{ fontSize:20 }}>{opt.icon}</span>
-                    <div style={{ flex:1 }}>
-                      <div style={{ fontWeight:600,fontSize:14,color:T.forest }}>{opt.label}</div>
-                      <div style={{ fontSize:12,color:T.moss,fontWeight:300 }}>{opt.sub}</div>
-                    </div>
+                    <span style={{ fontSize:22 }}>{icon}</span>
+                    <span style={{ fontSize:14, fontWeight:600, color:T.forest }}>{label}</span>
                   </div>
                 ))}
               </div>
             </div>
-
-            {/* RIGHT — Order Summary */}
             <div>
-              <div className="cart-summary" style={{ position:'sticky',top:90 }}>
-                <h3 className="serif" style={{ fontSize:22,fontWeight:700,color:T.forest,marginBottom:20 }}>Order Summary</h3>
-
-                {/* Items */}
-                <div style={{ maxHeight:260,overflowY:'auto',marginBottom:16 }}>
-                  {cart.map(item=>(
-                    <div key={item.id} style={{ display:'flex',alignItems:'center',gap:12,marginBottom:14 }}>
-                      <div style={{ width:52,height:52,borderRadius:10,overflow:'hidden',flexShrink:0,border:`1px solid rgba(107,158,122,0.15)` }}>
-                        <img src={item.img} alt={item.name} style={{ width:'100%',height:'100%',objectFit:'cover' }} />
-                      </div>
-                      <div style={{ flex:1,minWidth:0 }}>
-                        <div style={{ fontWeight:600,fontSize:13,color:T.forest,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis' }}>{item.name}</div>
-                        {item.restName&&<div style={{ fontSize:11,color:T.moss }}>🏪 {item.restName}</div>}
-                        <div style={{ fontSize:11,color:T.moss }}>Qty: {item.qty}</div>
-                      </div>
-                      <div style={{ fontWeight:700,fontSize:13,color:T.leaf,flexShrink:0 }}>₹{item.price*item.qty}</div>
-                    </div>
+              <div className="cart-summary" style={{ position:'sticky', top:88 }}>
+                <h3 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:22, fontWeight:700, color:T.forest, marginBottom:20 }}>Order Summary</h3>
+                {cart.slice(0, 3).map(item => (
+                  <div key={item.id} style={{ display:'flex', justifyContent:'space-between', marginBottom:10, fontSize:13, color:T.forest }}>
+                    <span>{item.name} ×{item.qty}</span>
+                    <span>₹{item.price * item.qty}</span>
+                  </div>
+                ))}
+                {cart.length > 3 && <div style={{ fontSize:12, color:T.moss, marginBottom:10 }}>+{cart.length - 3} more items</div>}
+                <div style={{ borderTop:`1px solid rgba(107,158,122,0.15)`, paddingTop:12, marginTop:12 }}>
+                  {[['Subtotal', `₹${sub}`],['Delivery', del === 0 ? 'Free' : `₹${del}`],['Tax (5%)', `₹${tax}`]].map(([l, v]) => (
+                    <div key={l} style={{ display:'flex', justifyContent:'space-between', marginBottom:8, fontSize:13, color:T.moss }}><span>{l}</span><span>{v}</span></div>
                   ))}
                 </div>
-
-                <hr style={{ border:'none',borderTop:`1px solid rgba(107,158,122,0.12)`,margin:'16px 0' }} />
-
-                {/* Bill */}
-                {[['Item Total',`₹${sub}`],['Delivery',del===0?'Free 🎉':`₹${del}`],['Taxes & Fees',`₹${tax}`]].map(([l,v])=>(
-                  <div key={l} style={{ display:'flex',justifyContent:'space-between',marginBottom:12,fontSize:14 }}>
-                    <span style={{ color:T.moss,fontWeight:300 }}>{l}</span>
-                    <span style={{ color:T.forest,fontWeight:500 }}>{v}</span>
-                  </div>
-                ))}
-                <hr style={{ border:'none',borderTop:`1px solid rgba(107,158,122,0.12)`,margin:'16px 0' }} />
-                <div style={{ display:'flex',justifyContent:'space-between',fontSize:20,fontWeight:700,marginBottom:6 }}>
-                  <span className="serif">Grand Total</span>
-                  <span style={{ color:T.leaf }}>₹{total}</span>
+                <div style={{ borderTop:`1px solid rgba(107,158,122,0.15)`, paddingTop:16, display:'flex', justifyContent:'space-between', fontFamily:'Cormorant Garamond,serif', fontSize:24, fontWeight:700, color:T.forest }}>
+                  <span>Total</span><span>₹{total}</span>
                 </div>
-                <div style={{ fontSize:12,color:T.moss,marginBottom:20,fontWeight:300 }}>
-                  Payment via {PAYMENT_OPTIONS.find(o=>o.id===payment)?.label}
-                </div>
-
-                <button className="btn-nature" style={{ width:'100%',padding:'16px',fontSize:15 }} onClick={placeOrder} disabled={placing}>
-                  {placing ? <span style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:10 }}>
-                    <span style={{ display:'inline-block',width:16,height:16,border:'2.5px solid rgba(255,255,255,0.4)',borderTopColor:'white',borderRadius:'50%',animation:'spin 0.8s linear infinite' }} />
-                    Placing your order…
-                  </span> : `🌿 Place Order · ₹${total}`}
+                <button className="btn-nature btn-ripple" style={{ width:'100%', marginTop:20, fontSize:15, padding:'16px', opacity: loading ? 0.8 : 1 }} onClick={placeOrder} disabled={loading}>
+                  {loading ? <span style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10 }}><span className="spinner" style={{ width:20, height:20 }} /> Placing Order…</span> : 'Confirm & Pay →'}
                 </button>
-                <p style={{ textAlign:'center',color:T.moss,fontSize:11,marginTop:12 }}>🔒 Secure & encrypted · 100% refund guarantee</p>
+                <p style={{ fontSize:11, color:T.moss, textAlign:'center', marginTop:10 }}>🔒 256-bit SSL secured</p>
               </div>
             </div>
-
           </div>
-        </div>
-      </section>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      <Footer go={go} />
-    </div>
-  );
-}
-
-/* ─── RESTAURANTS PAGE ────────────────────────────────────── */
-function RestaurantsPage({ go, goRestaurant }) {
-  const [search, setSearch] = useState('');
-  const [sort, setSort] = useState('rating');
-  const [cuisine, setCuisine] = useState('All');
-  const [offerOnly, setOfferOnly] = useState(false);
-  const cuisines = ['All', ...Array.from(new Set(RESTAURANTS.map(r => r.cuisine)))];
-
-  const list = RESTAURANTS
-    .filter(r => {
-      const matchSearch = r.name.toLowerCase().includes(search.toLowerCase()) || r.cuisine.toLowerCase().includes(search.toLowerCase()) || r.tags.some(t => t.toLowerCase().includes(search.toLowerCase()));
-      const matchCuisine = cuisine === 'All' || r.cuisine === cuisine;
-      const matchOffer = !offerOnly || !!r.discount;
-      return matchSearch && matchCuisine && matchOffer;
-    })
-    .sort((a, b) => sort === 'rating' ? b.rating - a.rating : sort === 'time' ? parseInt(a.time) - parseInt(b.time) : 0);
-
-  return (
-    <div className="page">
-      {/* Hero with banner image */}
-      <div style={{ position: 'relative', overflow: 'hidden' }}>
-        {/* Banner image */}
-        <div style={{ position:'absolute', inset:0, zIndex:0 }}>
-          <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1400&q=90" alt="Restaurant" style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 60%' }} />
-          <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(10,35,20,0.88) 0%, rgba(26,58,42,0.75) 50%, rgba(10,35,20,0.60) 100%)' }} />
-        </div>
-        <div style={{ padding: '88px 0 96px', position: 'relative', zIndex:1 }}>
-        <div className="container" style={{ position: 'relative', zIndex: 1 }}>
-          <Rv>
-            <span className="section-label" style={{ color: T.fern }}>🏪 All Restaurants</span>
-            <h1 style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: 'clamp(36px,5vw,64px)', fontWeight: 700, color: 'white', lineHeight: 1.1, marginBottom: 10 }}>
-              Discover Every<br /><em style={{ fontStyle: 'italic', fontWeight: 400 }}>Restaurant Near You</em>
-            </h1>
-            <p style={{ color: T.mist, fontSize: 15, fontWeight: 300, marginBottom: 32 }}>{RESTAURANTS.length} handpicked restaurants · Fresh menus · Fast delivery</p>
-          </Rv>
-          {/* Search bar */}
-          <Rv delay={0.08}>
-            <div style={{ background: 'white', borderRadius: 16, padding: '6px 6px 6px 18px', display: 'flex', alignItems: 'center', gap: 10, maxWidth: 640, boxShadow: `0 12px 40px rgba(0,0,0,0.25)` }}>
-              <span style={{ fontSize: 20 }}>🔍</span>
-              <input
-                value={search} onChange={e => setSearch(e.target.value)}
-                placeholder="Search restaurants, cuisines, dishes…"
-                style={{ flex: 1, border: 'none', outline: 'none', fontSize: 14, color: T.forest, background: 'transparent', padding: '10px 0' }}
-              />
-              {search && <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: T.moss }}>✕</button>}
-              <button className="btn-nature" style={{ padding: '12px 24px', fontSize: 13, borderRadius: 12 }}>Search</button>
-            </div>
-          </Rv>
-        </div>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div style={{ background: T.snow, borderBottom: `1px solid rgba(107,158,122,0.1)`, padding: '18px 0' }}>
-        <div className="container">
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: T.moss, textTransform: 'uppercase', letterSpacing: '0.08em', marginRight: 4 }}>Sort:</span>
-            {[['rating', '⭐ Top Rated'], ['time', '⚡ Fastest']].map(([s, l]) => (
-              <button key={s} className={`chip${sort === s ? ' active' : ''}`} onClick={() => setSort(s)}>{l}</button>
-            ))}
-            <div style={{ width: 1, height: 24, background: 'rgba(107,158,122,0.2)', margin: '0 4px' }} />
-            <span style={{ fontSize: 12, fontWeight: 700, color: T.moss, textTransform: 'uppercase', letterSpacing: '0.08em', marginRight: 4 }}>Cuisine:</span>
-            {cuisines.map(c => (
-              <button key={c} className={`chip${cuisine === c ? ' active' : ''}`} onClick={() => setCuisine(c)}>{c}</button>
-            ))}
-            <div style={{ width: 1, height: 24, background: 'rgba(107,158,122,0.2)', margin: '0 4px' }} />
-            <button
-              className={`chip${offerOnly ? ' active' : ''}`}
-              onClick={() => setOfferOnly(v => !v)}
-              style={{ display: 'flex', alignItems: 'center', gap: 5 }}
-            >
-              🏷️ Offers Only
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Restaurant Grid */}
-      <section className="section" style={{ paddingTop: 40 }}>
-        <div className="container">
-          <Rv>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
-              <p style={{ color: T.moss, fontSize: 13 }}>
-                Showing <strong style={{ color: T.forest }}>{list.length}</strong> restaurant{list.length !== 1 ? 's' : ''}
-                {search && <> matching <em>"{search}"</em></>}
-              </p>
-              {(search || cuisine !== 'All' || offerOnly) && (
-                <button className="btn-outline" style={{ padding: '8px 16px', fontSize: 12 }} onClick={() => { setSearch(''); setCuisine('All'); setOfferOnly(false); }}>
-                  Clear filters ✕
-                </button>
-              )}
-            </div>
-          </Rv>
-          {list.length > 0 ? (
-            <div className="rest-grid">
-              {list.map((r, i) => (
-                <Rv key={r.id} delay={i * 0.04}>
-                  <div className="rest-card" onClick={() => goRestaurant(r.id)} style={{ cursor: 'pointer' }}>
-                    <div className="rest-img">
-                      <img src={r.img} alt={r.name} loading="lazy" />
-                      {r.badge && <span className="rest-badge">{r.badge}</span>}
-                      {r.discount && <span className="rest-discount">{r.discount}</span>}
-                    </div>
-                    <div className="rest-body">
-                      <div className="rest-name">{r.name}</div>
-                      <div className="rest-cuisine">{r.cuisine}</div>
-                      <div className="rest-meta">
-                        <Stars r={r.rating} />
-                        <span className="rest-time">⏱ {r.time} min</span>
-                        <span className="rest-price">{r.price}</span>
-                      </div>
-                      {r.tags.length > 0 && (
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 10 }}>
-                          {r.tags.slice(0, 3).map(tag => (
-                            <span key={tag} style={{ fontSize: 10, fontWeight: 600, color: T.sage, background: 'rgba(107,158,122,0.1)', borderRadius: 6, padding: '2px 8px' }}>{tag}</span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </Rv>
-              ))}
-            </div>
-          ) : (
-            <div style={{ textAlign: 'center', padding: '80px 20px' }}>
-              <div style={{ fontSize: 64, marginBottom: 16 }}>🌿</div>
-              <h3 style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: 28, color: T.forest, marginBottom: 10 }}>No restaurants found</h3>
-              <p style={{ color: T.moss, fontSize: 14, marginBottom: 24 }}>Try a different search or clear your filters</p>
-              <button className="btn-outline" onClick={() => { setSearch(''); setCuisine('All'); setOfferOnly(false); }}>Clear filters</button>
-            </div>
-          )}
         </div>
       </section>
       <Footer go={go} />
@@ -2828,305 +2940,158 @@ function RestaurantsPage({ go, goRestaurant }) {
   );
 }
 
-/* ─── DISH RECOMMENDATIONS PAGE ───────────────────────────── */
-function DishRecommendationsPage({ go, goRestaurant, addToCart, dishName }) {
-  // Find all restaurants that serve this dish
-  const restIds = DISH_RESTAURANTS[dishName] || [];
-  const restaurants = restIds.map(id => RESTAURANTS.find(r => r.id === id)).filter(Boolean);
+/* ═══════════════════════════════════════════════════════════════
+   ── LOGIN PAGE ────────────────────────────────────────────────
+   ═══════════════════════════════════════════════════════════════ */
+function LoginPage({ go }) {
+  const { setUser } = useAuth();
+  const [form, setForm]   = useState({ name:'', email:'', pass:'' });
+  const [err, setErr]     = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // Find the dish item across all menus
-  const dishItems = [];
-  Object.entries(RESTAURANT_MENUS).forEach(([restId, categories]) => {
-    Object.values(categories).forEach(items => {
-      items.forEach(item => {
-        if (item.name.toLowerCase() === dishName.toLowerCase()) {
-          const rest = RESTAURANTS.find(r => r.id === Number(restId));
-          if (rest) dishItems.push({ ...item, restName: rest.name, restId: rest.id, restRating: rest.rating, restTime: rest.time });
-        }
-      });
-    });
-  });
-
-  // Also gather similar dishes (same category name or keyword match)
-  const similarDishes = [];
-  const keywords = dishName.toLowerCase().split(' ');
-  Object.entries(RESTAURANT_MENUS).forEach(([restId, categories]) => {
-    Object.values(categories).forEach(items => {
-      items.forEach(item => {
-        const isMatch = keywords.some(kw => kw.length > 3 && item.name.toLowerCase().includes(kw));
-        const alreadyIncluded = dishItems.find(d => d.id === item.id);
-        if (isMatch && !alreadyIncluded && item.name.toLowerCase() !== dishName.toLowerCase()) {
-          const rest = RESTAURANTS.find(r => r.id === Number(restId));
-          if (rest) similarDishes.push({ ...item, restName: rest.name, restId: rest.id });
-        }
-      });
-    });
-  });
-
-  return (
-    <div className="page">
-      {/* Hero with banner */}
-      <div style={{ position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position:'absolute', inset:0, zIndex:0 }}>
-          <img
-            src={dishItems[0]?.img || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1400&q=85"}
-            alt={dishName}
-            style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center 50%' }}
-          />
-          <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(10,35,20,0.86) 0%, rgba(45,90,61,0.72) 50%, rgba(10,35,20,0.55) 100%)' }} />
-        </div>
-        <div style={{ padding: '88px 0 100px', position: 'relative', zIndex: 1 }}>
-        <div className="container" style={{ position: 'relative', zIndex: 1 }}>
-          <Rv>
-            <button
-              style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)', color: 'white', borderRadius: 10, padding: '8px 18px', fontSize: 13, cursor: 'pointer', marginBottom: 20, fontWeight: 600, backdropFilter:'blur(8px)' }}
-              onClick={() => go('home')}
-            >← Back to Home</button>
-            <span style={{ display: 'inline-block', background: 'rgba(232,116,42,0.9)', color: 'white', fontSize: 10, fontWeight: 700, padding: '4px 12px', borderRadius: 6, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>🍽️ Dish Finder</span>
-            <h1 style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: 'clamp(36px,5vw,68px)', fontWeight: 700, color: 'white', lineHeight: 1.1, marginBottom: 10, textShadow:'0 2px 20px rgba(0,0,0,0.4)' }}>
-              {dishName}
-            </h1>
-            <p style={{ color: 'rgba(220,240,220,0.88)', fontSize: 15, fontWeight: 300 }}>
-              {restaurants.length > 0 ? `Available at ${restaurants.length} restaurant${restaurants.length !== 1 ? 's' : ''} near you` : 'Searching across our partner restaurants'}
-            </p>
-          </Rv>
-        </div>
-        </div>
-      </div>
-
-      {/* Dish versions across restaurants */}
-      {dishItems.length > 0 && (
-        <section className="section" style={{ paddingTop: 48 }}>
-          <div className="container">
-            <Rv>
-              <div className="section-head" style={{ marginBottom: 32 }}>
-                <span className="section-label">🏪 Compare Versions</span>
-                <h2 className="section-title">Where to Order {dishName}</h2>
-                <p className="section-sub">Compare prices and ratings across restaurants</p>
-              </div>
-            </Rv>
-            <div className="menu-items-grid">
-              {dishItems.map((item, i) => (
-                <Rv key={`${item.id}-${item.restId}`} delay={i * 0.06}>
-                  <div className="menu-item-card" style={{ position: 'relative', cursor: 'pointer' }} onClick={() => goRestaurant(item.restId)}>
-                    <div className="menu-item-img">
-                      <img src={item.img} alt={item.name} loading="lazy" />
-                    </div>
-                    <div className="menu-item-body">
-                      <div className="menu-item-top">
-                        <div style={{ fontSize: 11, color: T.sage, fontWeight: 700, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 5 }}>
-                          🏪 {item.restName}
-                          <span style={{ fontSize: 10, color: T.amber }}>★ {item.restRating}</span>
-                          <span style={{ fontSize: 10, color: T.moss }}>⏱ {item.restTime} min</span>
-                        </div>
-                        <div className="menu-item-name">{item.name}</div>
-                        <p className="menu-item-desc">{item.desc}</p>
-                        {item.badge && <span className="menu-item-badge">{item.badge}</span>}
-                      </div>
-                      <div className="menu-item-bottom">
-                        <div className="menu-item-price">₹{item.price}</div>
-                        <button className="menu-add-btn" onClick={e => { e.stopPropagation(); addToCart({ id: item.id, name: item.name, price: item.price, img: item.img, restName: item.restName }); }}>
-                          + Add
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </Rv>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Restaurants serving this dish */}
-      {restaurants.length > 0 && (
-        <section className="section" style={{ background: T.snow, paddingTop: 48 }}>
-          <div className="container">
-            <Rv>
-              <div className="section-head" style={{ marginBottom: 32 }}>
-                <span className="section-label">📍 Nearby Options</span>
-                <h2 className="section-title">Restaurants Serving This Dish</h2>
-                <p className="section-sub">Click to view the full menu</p>
-              </div>
-            </Rv>
-            <div className="rest-grid">
-              {restaurants.map((r, i) => (
-                <Rv key={r.id} delay={i * 0.07}>
-                  <div className="rest-card" onClick={() => goRestaurant(r.id)} style={{ cursor: 'pointer' }}>
-                    <div className="rest-img">
-                      <img src={r.img} alt={r.name} loading="lazy" />
-                      {r.badge && <span className="rest-badge">{r.badge}</span>}
-                      {r.discount && <span className="rest-discount">{r.discount}</span>}
-                    </div>
-                    <div className="rest-body">
-                      <div className="rest-name">{r.name}</div>
-                      <div className="rest-cuisine">{r.cuisine}</div>
-                      <div className="rest-meta">
-                        <Stars r={r.rating} />
-                        <span className="rest-time">⏱ {r.time} min</span>
-                        <span className="rest-price">{r.price}</span>
-                      </div>
-                    </div>
-                  </div>
-                </Rv>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Similar dishes */}
-      {similarDishes.length > 0 && (
-        <section className="section" style={{ paddingTop: 48 }}>
-          <div className="container">
-            <Rv>
-              <div className="section-head" style={{ marginBottom: 32 }}>
-                <span className="section-label">✨ You Might Also Like</span>
-                <h2 className="section-title">Similar Dishes</h2>
-              </div>
-            </Rv>
-            <div className="menu-items-grid">
-              {similarDishes.slice(0, 6).map((item, i) => (
-                <Rv key={`sim-${item.id}`} delay={i * 0.05}>
-                  <div className="menu-item-card">
-                    <div className="menu-item-img"><img src={item.img} alt={item.name} loading="lazy" /></div>
-                    <div className="menu-item-body">
-                      <div className="menu-item-top">
-                        <div style={{ fontSize: 11, color: T.sage, fontWeight: 700, marginBottom: 4 }}>🏪 {item.restName}</div>
-                        <div className="menu-item-name">{item.name}</div>
-                        <p className="menu-item-desc">{item.desc}</p>
-                      </div>
-                      <div className="menu-item-bottom">
-                        <div className="menu-item-price">₹{item.price}</div>
-                        <button className="menu-add-btn" onClick={() => addToCart({ id: item.id, name: item.name, price: item.price, img: item.img, restName: item.restName })}>+ Add</button>
-                      </div>
-                    </div>
-                  </div>
-                </Rv>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Empty state */}
-      {restaurants.length === 0 && dishItems.length === 0 && (
-        <section className="section">
-          <div className="container" style={{ textAlign: 'center', padding: '80px 20px' }}>
-            <div style={{ fontSize: 64, marginBottom: 16 }}>🍽️</div>
-            <h3 style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: 28, color: T.forest, marginBottom: 10 }}>Dish not found</h3>
-            <p style={{ color: T.moss, fontSize: 14, marginBottom: 28 }}>We couldn't find "{dishName}" at any restaurant right now</p>
-            <button className="btn-nature" onClick={() => go('explore')}>Explore All Restaurants</button>
-          </div>
-        </section>
-      )}
-
-      <Footer go={go} />
-    </div>
-  );
-}
-
-/* ─── APP ─────────────────────────────────────────────────── */
-// Top-level application component that manages global state and page routing.
-// It keeps the cart, current page, active restaurant, user session, and toast messages.
-// The `go`, `goRestaurant`, and `goDish` helpers control navigation from any page.
-export default function App() {
-  const [page, setPage] = useState('home');
-  const [pageParams, setPageParams] = useState({});
-  const [cart, setCart] = useState(DEFAULT_CART);
-  const [toast, setToast] = useState(null);
-  const [activeRestaurant, setActiveRestaurant] = useState(null);
-  const [user, setUser] = useState(null);
-  const cnt = cart.reduce((s,c)=>s+c.qty,0);
-
-  // Add or remove items from the shared cart state.
-  // If item._remove is present, the quantity is decreased; otherwise the item is added or incremented.
-  const addToCart = useCallback((item)=>{
-    if (item._remove) {
-      setCart(p => p.map(c => c.id === item.id ? {...c, qty: Math.max(0, c.qty - 1)} : c).filter(c => c.qty > 0));
-      return;
-    }
-    setCart(p=>{ const ex=p.find(c=>c.id===item.id); return ex?p.map(c=>c.id===item.id?{...c,qty:c.qty+1}:c):[...p,{...item,qty:1}]; });
-    setToast(`${item.name} added to cart 🌿`);
-    setTimeout(()=>setToast(null),2200);
-  },[]);
-
-  const go = useCallback((p, params={})=>{
-    setPage(p);
-    setPageParams(params);
-    window.scrollTo({top:0,behavior:'smooth'});
-  },[]);
-
-  // Navigate directly to a restaurant menu page by ID.
-  const goRestaurant = useCallback((restId)=>{
-    const rest = RESTAURANTS.find(r => r.id === restId);
-    if (rest) {
-      setActiveRestaurant(rest);
-      setPage('restaurant');
-      window.scrollTo({top:0,behavior:'smooth'});
-    }
-  },[]);
-
-  const goDish = useCallback((dishName)=>{
-    setPageParams({ dishName });
-    setPage('dish');
-    window.scrollTo({top:0,behavior:'smooth'});
-  },[]);
-
-  // Restaurant menu page
-  if (page === 'restaurant' && activeRestaurant) {
-    return (
-      <AuthContext.Provider value={{ user, setUser }}>
-        <style>{CSS}</style>
-        <Navbar page={page} go={go} cnt={cnt} user={user} />
-        <div key={`rest-${activeRestaurant.id}`}>
-          <RestaurantMenuPage restaurant={activeRestaurant} cart={cart} addToCart={addToCart} go={go} />
-        </div>
-        <MobNav page={page} go={go} cnt={cnt} />
-        {toast && <div className="toast">{toast}</div>}
-      </AuthContext.Provider>
-    );
-  }
-
-  // Dish recommendations page
-  if (page === 'dish' && pageParams.dishName) {
-    return (
-      <AuthContext.Provider value={{ user, setUser }}>
-        <style>{CSS}</style>
-        <Navbar page={page} go={go} cnt={cnt} user={user} />
-        <div key={`dish-${pageParams.dishName}`}>
-          <DishRecommendationsPage dishName={pageParams.dishName} go={go} goRestaurant={goRestaurant} addToCart={addToCart} />
-        </div>
-        <MobNav page={page} go={go} cnt={cnt} />
-        {toast && <div className="toast">{toast}</div>}
-      </AuthContext.Provider>
-    );
-  }
-
-  const PAGES = {
-    home: (props) => <HomePage {...props} goRestaurant={goRestaurant} goDish={goDish} />,
-    restaurants: (props) => <RestaurantsPage {...props} goRestaurant={goRestaurant} />,
-    explore: (props) => <ExplorePage {...props} goRestaurant={goRestaurant} initCat={pageParams.catFilter} />,
-    about: AboutPage,
-    cart: CartPage,
-    checkout: (props) => <CheckoutPage {...props} />,
-    track: TrackPage,
-    offers: OffersPage,
-    help: HelpPage,
-    login: LoginPage,
+  const submit = () => {
+    if (!form.name.trim() || !form.email.trim() || !form.pass.trim()) { setErr('Please fill all fields'); return; }
+    if (!form.email.includes('@')) { setErr('Enter a valid email'); return; }
+    if (form.pass.length < 6)      { setErr('Password must be at least 6 characters'); return; }
+    setLoading(true);
+    setTimeout(() => {
+      setUser({ name: form.name, email: form.email });
+      go('home');
+    }, 1000);
   };
 
-  const PageComp = PAGES[page] || PAGES.home;
+  return (
+    <div className="login-page">
+      <div className="login-art">
+        <div style={{ position:'absolute', inset:0 }}>
+          <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=90" alt="" style={{ width:'100%', height:'100%', objectFit:'cover', opacity:0.25 }} />
+        </div>
+        <div style={{ position:'relative', zIndex:1, color:'white' }}>
+          <div style={{ fontFamily:'Cormorant Garamond,serif', fontSize:36, fontWeight:700, marginBottom:16 }}>🌿 Terra Eats</div>
+          <h2 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:28, fontWeight:700, marginBottom:12, lineHeight:1.2 }}>Food that feels good,<br/><em>for you & the planet.</em></h2>
+          <p style={{ fontSize:14, opacity:0.8, fontWeight:300, lineHeight:1.7, maxWidth:340 }}>Join 50,000+ eco-conscious food lovers who choose seasonal, sustainable, and utterly delicious.</p>
+        </div>
+      </div>
+      <div className="login-form-side">
+        <div className="login-form">
+          <h2 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:32, fontWeight:700, color:T.forest, marginBottom:6 }}>Welcome back</h2>
+          <p style={{ color:T.moss, fontSize:14, marginBottom:32, fontWeight:300 }}>Sign in to continue ordering</p>
+          {[['Full Name','name','text','Chef Priya Sharma'],['Email Address','email','email','you@example.com'],['Password','pass','password','••••••••']].map(([label, key, type, ph]) => (
+            <div key={key} style={{ marginBottom:18 }}>
+              <label style={{ display:'block', fontSize:11, fontWeight:700, color:T.moss, letterSpacing:'0.08em', textTransform:'uppercase', marginBottom:7 }}>{label}</label>
+              <input type={type} className="field" placeholder={ph} value={form[key]}
+                onChange={e => { setForm(f => ({ ...f, [key]: e.target.value })); setErr(''); }}
+                onKeyDown={e => e.key === 'Enter' && submit()}
+              />
+            </div>
+          ))}
+          {err && <p style={{ color:'#E53E3E', fontSize:12, marginBottom:16, fontWeight:600 }}>⚠️ {err}</p>}
+          <button className="btn-nature btn-ripple" style={{ width:'100%', fontSize:15, padding:'15px', marginBottom:16, opacity: loading ? 0.8 : 1 }} onClick={submit} disabled={loading}>
+            {loading ? <span style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}><span className="spinner" style={{ width:18, height:18 }} /> Signing in…</span> : 'Sign In →'}
+          </button>
+          <p style={{ fontSize:13, color:T.moss, textAlign:'center' }}>Don't have an account?{' '}
+            <button style={{ background:'none', border:'none', color:T.sage, fontWeight:600, cursor:'pointer', fontSize:13 }} onClick={() => {}}>Sign up free</button>
+          </p>
+          <button style={{ marginTop:16, background:'none', border:'none', color:T.moss, cursor:'pointer', fontSize:12, display:'block', textAlign:'center', width:'100%' }} onClick={() => go('home')}>← Back to home</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ── APP ROOT ──────────────────────────────────────────────────
+   ═══════════════════════════════════════════════════════════════ */
+const DEFAULT_CART = [];
+
+export default function App() {
+  const [page, setPage]           = useState('home');
+  const [pageParams, setPageParams] = useState({});
+  const [cart, setCart]           = useState(DEFAULT_CART);
+  const [toast, setToast]         = useState(null);
+  const [activeRestaurant, setActiveRestaurant] = useState(null);
+  const [user, setUser]           = useState(null);
+
+  // useMemo so cnt doesn't cause MobNav/Navbar re-renders on unrelated state changes
+  const cnt = useMemo(() => cart.reduce((s, c) => s + c.qty, 0), [cart]);
+
+  const addToCart = useCallback((item) => {
+    if (item._remove) {
+      setCart(p => p.map(c => c.id === item.id ? { ...c, qty: Math.max(0, c.qty - 1) } : c).filter(c => c.qty > 0));
+      return;
+    }
+    setCart(p => {
+      const ex = p.find(c => c.id === item.id);
+      return ex ? p.map(c => c.id === item.id ? { ...c, qty: c.qty + 1 } : c) : [...p, { ...item, qty:1 }];
+    });
+    setToast(`${item.name} added to cart 🌿`);
+    setTimeout(() => setToast(null), 2200);
+  }, []);
+
+  const go = useCallback((p, params = {}) => {
+    setPage(p);
+    setPageParams(params);
+    window.scrollTo({ top:0, behavior:'smooth' });
+  }, []);
+
+  const goRestaurant = useCallback((restId) => {
+    const rest = RESTAURANTS.find(r => r.id === restId);
+    if (rest) { setActiveRestaurant(rest); setPage('restaurant'); window.scrollTo({ top:0, behavior:'smooth' }); }
+  }, []);
+
+  const goDish = useCallback((dishName) => {
+    setPageParams({ dishName });
+    setPage('dish');
+    window.scrollTo({ top:0, behavior:'smooth' });
+  }, []);
+
+  // Memoize commonProps object reference to avoid child re-renders
+  const commonProps = useMemo(() => ({ go, cart, setCart, addToCart }), [go, cart, addToCart]);
+
+  const renderPage = () => {
+    if (page === 'restaurant' && activeRestaurant) {
+      return <RestaurantMenuPage key={`rest-${activeRestaurant.id}`} restaurant={activeRestaurant} cart={cart} addToCart={addToCart} go={go} />;
+    }
+    if (page === 'dish' && pageParams.dishName) {
+      return (
+        <DishComparisonDashboard
+          dishName={pageParams.dishName}
+          go={go}
+          goRestaurant={goRestaurant}
+          addToCart={addToCart}
+          RESTAURANTS={RESTAURANTS}
+          RESTAURANT_MENUS={RESTAURANT_MENUS}
+          DISH_RESTAURANTS={DISH_RESTAURANTS}
+          T={T}
+        />
+      );
+    }
+
+    const pages = {
+      home:        <HomePage        {...commonProps} goRestaurant={goRestaurant} goDish={goDish} />,
+      restaurants: <RestaurantsPage {...commonProps} goRestaurant={goRestaurant} />,
+      explore:     <ExplorePage     {...commonProps} goRestaurant={goRestaurant} initCat={pageParams.catFilter} />,
+      offers:      <OffersPage      {...commonProps} />,
+      track:       <TrackPage       {...commonProps} />,
+      help:        <HelpPage        {...commonProps} />,
+      about:       <AboutPage       {...commonProps} />,
+      cart:        <CartPage        {...commonProps} />,
+      checkout:    <CheckoutPage    {...commonProps} />,
+      login:       <LoginPage       {...commonProps} />,
+    };
+
+    return pages[page] || pages.home;
+  };
 
   return (
     <AuthContext.Provider value={{ user, setUser }}>
       <style>{CSS}</style>
       {page !== 'login' && <Navbar page={page} go={go} cnt={cnt} user={user} />}
-      <div key={page}>
-        <PageComp go={go} cart={cart} setCart={setCart} addToCart={addToCart} />
+      <div key={page} className="page-enter">
+        {renderPage()}
       </div>
       {page !== 'login' && <MobNav page={page} go={go} cnt={cnt} />}
-      {toast && <div className="toast">{toast}</div>}
+      {toast && <div className="toast" role="status" aria-live="polite">{toast}</div>}
     </AuthContext.Provider>
   );
 }

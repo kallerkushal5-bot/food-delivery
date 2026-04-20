@@ -24,7 +24,7 @@ export default function Navbar({ page, go, cnt, user }) {
   }, []);
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', darkMode);
+    document.documentElement.classList.toggle('dark-mode', darkMode);
   }, [darkMode]);
 
   const links = [
@@ -38,7 +38,7 @@ export default function Navbar({ page, go, cnt, user }) {
   ];
 
   return (
-    <nav className={`navbar ${scrolled ? 'scrolled' : ''} ${hidden ? 'nav-hidden' : 'nav-visible'} ${darkMode ? 'dark' : ''}`}>
+    <nav className={`navbar ${scrolled ? 'scrolled' : ''} ${hidden ? 'nav-hidden' : 'nav-visible'} ${darkMode ? 'dark-mode' : ''}`}>
       <div className="nav-inner">
         <button className="nav-logo" onClick={() => go('home')}>
           <div className="logo-leaf">🌿</div>
@@ -76,7 +76,7 @@ export default function Navbar({ page, go, cnt, user }) {
               {user.name[0].toUpperCase()}
             </div>
           ) : (
-            <button className="nav-btn" onClick={() => go('login')}>
+            <button className="nav-btn-sm" onClick={() => go('login')}>
               <User size={20} />
               Login
             </button>
