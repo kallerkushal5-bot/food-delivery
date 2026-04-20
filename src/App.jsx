@@ -15,22 +15,22 @@ const BP = { sm: 480, md: 768, lg: 1024, xl: 1240 };
 
 /* ─── DESIGN TOKENS ──────────────────────────────────────────── */
 const T = {
-  forest:  "#1A3A2A",
-  leaf:    "#2D5A3D",
-  sage:    "#4A7C59",
-  moss:    "#6B9E7A",
-  fern:    "#8FBA99",
-  mist:    "#C8DFC5",
-  cream:   "#F7F3EC",
-  sand:    "#EDE6D6",
-  earth:   "#8B6F47",
-  sunset:  "#E8742A",
-  amber:   "#D4A017",
-  dusk:    "#C45B1A",
-  bark:    "#5C3D1E",
-  snow:    "#FDFAF5",
-  shadow:  "rgba(26,58,42,0.15)",
-  shadowD: "rgba(26,58,42,0.3)",
+  forest:  "#162E21",
+  leaf:    "#24503A",
+  sage:    "#3D7254",
+  moss:    "#5E9472",
+  fern:    "#84B598",
+  mist:    "#BDD8C4",
+  cream:   "#F5F1EA",
+  sand:    "#EAE3D2",
+  earth:   "#7A6040",
+  sunset:  "#E06A22",
+  amber:   "#C99510",
+  dusk:    "#B85218",
+  bark:    "#52351A",
+  snow:    "#FDFBF7",
+  shadow:  "rgba(22,46,33,0.12)",
+  shadowD: "rgba(22,46,33,0.28)",
 };
 
 /* ─── DATA ───────────────────────────────────────────────────── */
@@ -197,13 +197,13 @@ const FAQS = [
    Progressive enhancement via min-width media queries.
    ═══════════════════════════════════════════════════════════════ */
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Bricolage+Grotesque:wght@300;400;500;600;700&display=swap&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,500;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,300;1,9..40,400&display=swap');
 
 /* ─── RESET & BASE ─── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 body {
-  font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   background: ${T.cream}; color: ${T.forest};
   -webkit-font-smoothing: antialiased;
   /* Prevent horizontal scroll on mobile */
@@ -222,14 +222,16 @@ a, button, [role="button"] { touch-action: manipulation; }
   --nav-h: 60px;
   --mob-nav-h: 64px;
   --container-px: 16px;
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --shadow-sm: 0 2px 10px rgba(26,58,42,0.07);
-  --shadow-md: 0 4px 20px rgba(26,58,42,0.12);
-  --shadow-lg: 0 12px 40px rgba(26,58,42,0.18);
-  --touch-min: 44px; /* WCAG minimum touch target */
-  --section-py: 48px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --shadow-sm: 0 1px 6px rgba(22,46,33,0.06), 0 4px 16px rgba(22,46,33,0.06);
+  --shadow-md: 0 4px 16px rgba(22,46,33,0.10), 0 12px 32px rgba(22,46,33,0.08);
+  --shadow-lg: 0 8px 32px rgba(22,46,33,0.14), 0 24px 56px rgba(22,46,33,0.10);
+  --shadow-card: 0 2px 8px rgba(22,46,33,0.05), 0 8px 24px rgba(22,46,33,0.07);
+  --touch-min: 44px;
+  --section-py: 52px;
 }
 @media (min-width: 768px) {
   :root {
@@ -246,12 +248,12 @@ a, button, [role="button"] { touch-action: manipulation; }
   100% { background-position: 400px 0; }
 }
 .skel {
-  background: linear-gradient(90deg, #e8e2d9 25%, #f0ebe4 50%, #e8e2d9 75%);
+  background: linear-gradient(90deg, #e6e0d6 25%, #ede8e0 50%, #e6e0d6 75%);
   background-size: 800px 100%;
   animation: shimmer 1.4s ease-in-out infinite;
   border-radius: 8px;
 }
-.skel-card { background: white; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid rgba(107,158,122,0.1); }
+.skel-card { background: white; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid rgba(61,114,84,0.08); box-shadow: var(--shadow-card); }
 .skel-img  { width: 100%; height: 180px; border-radius: 0; }
 @media (min-width: 768px) { .skel-img { height: 200px; } }
 .skel-body { padding: 14px 16px 18px; display: flex; flex-direction: column; gap: 10px; }
@@ -355,30 +357,29 @@ a, button, [role="button"] { touch-action: manipulation; }
 
 /* Logo */
 .nav-logo {
-  font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 700;
+  font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700;
   color: white; background: none; border: none; cursor: pointer;
-  display: flex; align-items: center; gap: 8px;
+  display: flex; align-items: center; gap: 9px;
   transition: all 0.25s cubic-bezier(0.22,1,0.36,1);
   padding: 8px 6px; border-radius: 10px;
-  /* Ensure min touch target */
   min-height: var(--touch-min);
-  flex-shrink: 0;
+  flex-shrink: 0; letter-spacing: -0.01em;
 }
-@media (min-width: 768px) { .nav-logo { font-size: 22px; } }
+@media (min-width: 768px) { .nav-logo { font-size: 21px; } }
 :not(.dark-mode) .nav-logo { color: ${T.forest}; }
 .dark-mode .nav-logo { color: white; }
 .navbar.scrolled .nav-logo, .navbar.solid .nav-logo { color: ${T.forest}; }
 .dark-mode .navbar.scrolled .nav-logo, .dark-mode .navbar.solid .nav-logo { color: white; }
-.nav-logo:hover { opacity: 0.88; transform: scale(1.02); }
+.nav-logo:hover { opacity: 0.85; transform: scale(1.01); }
 .logo-leaf {
   width: 32px; height: 32px;
   background: linear-gradient(135deg, ${T.sage}, ${T.leaf});
   border-radius: 9px; display: flex; align-items: center; justify-content: center;
-  font-size: 15px; box-shadow: 0 3px 12px rgba(74,124,89,0.4);
-  border: 1.5px solid rgba(143,186,153,0.3);
+  font-size: 15px; box-shadow: 0 3px 12px rgba(36,80,58,0.35);
+  border: 1.5px solid rgba(132,181,152,0.25);
   transition: transform 0.25s cubic-bezier(0.22,1,0.36,1); flex-shrink: 0;
 }
-.nav-logo:hover .logo-leaf { transform: rotate(-8deg) scale(1.12); }
+.nav-logo:hover .logo-leaf { transform: rotate(-8deg) scale(1.1); }
 
 /* Desktop nav links — hidden on mobile */
 .nav-links { display: none; gap: 2px; flex: 1; justify-content: center; }
@@ -492,12 +493,11 @@ a, button, [role="button"] { touch-action: manipulation; }
 .mob-nav {
   display: flex;
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 800;
-  background: rgba(253,250,245,0.98);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-top: 1px solid rgba(107,158,122,0.12);
-  box-shadow: 0 -4px 24px rgba(26,58,42,0.1);
-  /* Safe area for iPhone home indicator */
+  background: rgba(253,251,247,0.98);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-top: 1px solid rgba(61,114,84,0.10);
+  box-shadow: 0 -4px 24px rgba(22,46,33,0.08);
   padding-bottom: env(safe-area-inset-bottom, 0px);
   height: calc(var(--mob-nav-h) + env(safe-area-inset-bottom, 0px));
 }
@@ -508,15 +508,14 @@ a, button, [role="button"] { touch-action: manipulation; }
   padding: 8px 4px 10px;
   display: flex; flex-direction: column; align-items: center; gap: 3px;
   font-size: 9px; font-weight: 600;
-  color: ${T.moss}; text-transform: uppercase; letter-spacing: 0.05em;
+  color: ${T.moss}; text-transform: uppercase; letter-spacing: 0.06em;
   transition: all 0.18s cubic-bezier(0.22,1,0.36,1); position: relative;
-  /* Ensure minimum touch target */
   min-width: var(--touch-min);
 }
 .mob-btn.active { color: ${T.forest}; }
 .mob-btn.active::before {
-  content: ''; position: absolute; top: 0; left: 20%; right: 20%;
-  height: 2.5px; background: ${T.sage}; border-radius: 0 0 4px 4px;
+  content: ''; position: absolute; top: 0; left: 25%; right: 25%;
+  height: 2px; background: ${T.sage}; border-radius: 0 0 3px 3px;
 }
 .mob-btn:active { transform: scale(0.88); }
 .mob-btn-icon { font-size: 20px; position: relative; line-height: 1; }
@@ -539,60 +538,60 @@ a, button, [role="button"] { touch-action: manipulation; }
 @media (min-width: ${BP.md}px) { .video-hero-content { padding: 100px 28px 80px; } }
 
 .hero-h1 {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(38px, 8vw, 84px); font-weight: 700;
-  color: white; line-height: 1.0; margin-bottom: 16px;
-  text-shadow: 0 4px 24px rgba(0,0,0,0.35);
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(38px, 8vw, 88px); font-weight: 900;
+  color: white; line-height: 1.0; margin-bottom: 18px;
+  text-shadow: 0 4px 28px rgba(0,0,0,0.3);
+  letter-spacing: -0.01em;
 }
 .hero-sub {
-  font-size: clamp(14px, 2vw, 18px); color: rgba(220,235,220,0.92);
-  font-weight: 300; margin-bottom: 28px; line-height: 1.65; max-width: 480px;
+  font-size: clamp(14px, 2vw, 18px); color: rgba(220,235,220,0.9);
+  font-weight: 300; margin-bottom: 30px; line-height: 1.7; max-width: 480px;
 }
 .hero-search {
-  display: flex; align-items: center; background: rgba(255,255,255,0.96);
+  display: flex; align-items: center; background: rgba(255,255,255,0.97);
   border-radius: 14px; overflow: hidden; max-width: 540px;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.2);
-  border: 1px solid rgba(255,255,255,0.5); transition: box-shadow 0.3s;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.22), 0 4px 12px rgba(0,0,0,0.1);
+  border: 1px solid rgba(255,255,255,0.6); transition: box-shadow 0.3s;
 }
-.hero-search:focus-within { box-shadow: 0 16px 48px rgba(0,0,0,0.25), 0 0 0 3px rgba(107,158,122,0.3); }
+.hero-search:focus-within { box-shadow: 0 20px 56px rgba(0,0,0,0.26), 0 0 0 3px rgba(61,114,84,0.28); }
 .hero-search input {
   flex: 1; border: none; outline: none;
-  padding: 15px 12px; font-size: 14px;
+  padding: 16px 12px; font-size: 15px;
   color: ${T.forest}; background: transparent; font-family: inherit;
-  min-width: 0; /* prevent flex overflow */
+  min-width: 0;
 }
 @media (min-width: ${BP.md}px) { .hero-search input { padding: 18px 14px; } }
 .hero-search-btn {
   background: linear-gradient(135deg, ${T.sage}, ${T.leaf}); color: white;
-  border: none; cursor: pointer; padding: 15px 20px; font-size: 13px;
+  border: none; cursor: pointer; padding: 16px 24px; font-size: 13px;
   font-weight: 700; letter-spacing: 0.04em; transition: all 0.2s;
   white-space: nowrap; flex-shrink: 0;
 }
-@media (min-width: ${BP.md}px) { .hero-search-btn { padding: 16px 28px; } }
+@media (min-width: ${BP.md}px) { .hero-search-btn { padding: 17px 30px; } }
 .hero-search-btn:hover { filter: brightness(1.1); }
-.hero-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
+.hero-pills { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 20px; }
 .hero-pill {
-  background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.22);
-  color: rgba(255,255,255,0.9); border-radius: 20px;
-  padding: 7px 14px; font-size: 12px; font-weight: 500;
+  background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.20);
+  color: rgba(255,255,255,0.88); border-radius: 20px;
+  padding: 7px 15px; font-size: 12px; font-weight: 500;
   cursor: pointer; transition: all 0.2s; backdrop-filter: blur(8px);
-  /* Touch-friendly */
   min-height: 36px; display: inline-flex; align-items: center;
 }
-.hero-pill:hover { background: rgba(255,255,255,0.25); }
-.hero-stat-bar { display: flex; gap: 24px; margin-top: 36px; flex-wrap: wrap; }
-@media (min-width: ${BP.md}px) { .hero-stat-bar { gap: 40px; margin-top: 48px; } }
-.hero-stat { display: flex; flex-direction: column; gap: 2px; }
-.hero-stat-n { font-family: 'Cormorant Garamond',serif; font-size: clamp(24px,4vw,32px); font-weight: 700; color: white; line-height: 1; }
-.hero-stat-l { font-size: 10px; color: rgba(200,223,197,0.8); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 500; }
+.hero-pill:hover { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.38); }
+.hero-stat-bar { display: flex; gap: 28px; margin-top: 40px; flex-wrap: wrap; }
+@media (min-width: ${BP.md}px) { .hero-stat-bar { gap: 44px; margin-top: 52px; } }
+.hero-stat { display: flex; flex-direction: column; gap: 3px; }
+.hero-stat-n { font-family: 'Playfair Display',serif; font-size: clamp(22px,4vw,30px); font-weight: 700; color: white; line-height: 1; }
+.hero-stat-l { font-size: 10px; color: rgba(189,216,196,0.8); text-transform: uppercase; letter-spacing: 0.12em; font-weight: 500; }
 
 /* ─── SECTION HEADINGS ─── */
 .section-head { margin-bottom: 32px; }
 @media (min-width: ${BP.md}px) { .section-head { margin-bottom: 48px; } }
-.section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: ${T.sage}; display: inline-block; margin-bottom: 8px; }
-.section-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(24px, 4vw, 44px); font-weight: 700; color: ${T.forest}; line-height: 1.1; margin-bottom: 8px; }
-.section-sub { font-size: 13px; color: ${T.moss}; font-weight: 300; line-height: 1.6; max-width: 480px; }
-@media (min-width: ${BP.md}px) { .section-sub { font-size: 14px; } }
+.section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: ${T.sage}; display: inline-block; margin-bottom: 10px; }
+.section-title { font-family: 'Playfair Display', serif; font-size: clamp(26px, 4vw, 46px); font-weight: 700; color: ${T.forest}; line-height: 1.08; margin-bottom: 10px; }
+.section-sub { font-size: 14px; color: ${T.moss}; font-weight: 400; line-height: 1.65; max-width: 480px; opacity: 0.85; }
+@media (min-width: ${BP.md}px) { .section-sub { font-size: 15px; } }
 
 /* ─── CATEGORY CAROUSEL ─── */
 .cat-carousel-wrap { overflow: hidden; cursor: grab; padding: 12px 0; -webkit-overflow-scrolling: touch; }
@@ -669,27 +668,26 @@ a, button, [role="button"] { touch-action: manipulation; }
 
 .rest-card {
   background: white; border-radius: var(--radius-lg); overflow: hidden;
-  box-shadow: var(--shadow-sm); cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s;
-  border: 1px solid rgba(107,158,122,0.1);
-  /* Prevent tap highlight flash on mobile */
+  box-shadow: var(--shadow-card); cursor: pointer;
+  transition: transform 0.32s cubic-bezier(0.22,1,0.36,1), box-shadow 0.32s;
+  border: 1px solid rgba(61,114,84,0.08);
   -webkit-tap-highlight-color: transparent;
 }
-@media (hover: hover) { .rest-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: var(--shadow-lg); border-color: ${T.fern}; } }
-.rest-card:active { transform: scale(0.98); }
+@media (hover: hover) { .rest-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); border-color: rgba(132,181,152,0.4); } }
+.rest-card:active { transform: scale(0.985); }
 
 .rest-img { position: relative; height: 140px; overflow: hidden; }
 @media (min-width: ${BP.md}px) { .rest-img { height: 180px; } }
 @media (min-width: ${BP.lg}px) { .rest-img { height: 200px; } }
 .rest-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s cubic-bezier(0.4,0,0.2,1); }
 @media (hover: hover) { .rest-card:hover .rest-img img { transform: scale(1.08); } }
-.rest-badge { position:absolute; top:8px; left:8px; background:rgba(10,30,18,0.82); backdrop-filter:blur(8px); color:white; font-size:8px; font-weight:700; padding:3px 8px; border-radius:5px; letter-spacing:0.06em; text-transform:uppercase; border:1px solid rgba(255,255,255,0.15); }
-.rest-discount { position:absolute; top:8px; right:8px; background:linear-gradient(135deg,${T.sunset},${T.dusk}); color:white; font-size:8px; font-weight:700; padding:3px 8px; border-radius:5px; letter-spacing:0.04em; }
-.rest-body { padding: 12px 12px 14px; }
-@media (min-width: ${BP.md}px) { .rest-body { padding: 14px 16px 18px; } }
-.rest-name { font-family:'Cormorant Garamond',serif; font-size:16px; font-weight:700; color:${T.forest}; margin-bottom:2px; line-height:1.2; }
-@media (min-width: ${BP.md}px) { .rest-name { font-size: 19px; } }
-.rest-cuisine { font-size:11px; color:${T.moss}; margin-bottom:8px; }
+.rest-badge { position:absolute; top:10px; left:10px; background:rgba(22,46,33,0.88); backdrop-filter:blur(10px); color:white; font-size:8px; font-weight:700; padding:4px 9px; border-radius:6px; letter-spacing:0.07em; text-transform:uppercase; border:1px solid rgba(255,255,255,0.12); }
+.rest-discount { position:absolute; top:10px; right:10px; background:linear-gradient(135deg,${T.sunset},${T.dusk}); color:white; font-size:8px; font-weight:700; padding:4px 9px; border-radius:6px; letter-spacing:0.04em; }
+.rest-body { padding: 14px 14px 16px; }
+@media (min-width: ${BP.md}px) { .rest-body { padding: 16px 18px 20px; } }
+.rest-name { font-family:'Playfair Display',serif; font-size:15px; font-weight:700; color:${T.forest}; margin-bottom:3px; line-height:1.25; }
+@media (min-width: ${BP.md}px) { .rest-name { font-size: 17px; } }
+.rest-cuisine { font-size:11px; color:${T.moss}; margin-bottom:10px; font-weight:400; letter-spacing:0.01em; }
 .rest-meta { display:flex; align-items:center; gap:8px; font-size:11px; flex-wrap:wrap; }
 .star { color:${T.amber}; font-size:11px; }
 .rating { font-weight:700; color:${T.forest}; }
@@ -721,83 +719,82 @@ a, button, [role="button"] { touch-action: manipulation; }
 
 .trending-card {
   background: white; border-radius: var(--radius-lg); overflow: hidden;
-  box-shadow: var(--shadow-sm); border: 1px solid rgba(107,158,122,0.1);
-  cursor: pointer; transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s;
-  /* Snap for horizontal scroll */
+  box-shadow: var(--shadow-card); border: 1px solid rgba(61,114,84,0.08);
+  cursor: pointer; transition: transform 0.32s cubic-bezier(0.22,1,0.36,1), box-shadow 0.32s;
   scroll-snap-align: start;
   flex-shrink: 0;
   width: 240px;
   -webkit-tap-highlight-color: transparent;
 }
 @media (min-width: ${BP.md}px) { .trending-card { width: auto; } }
-@media (hover: hover) { .trending-card:hover { transform: translateY(-8px) scale(1.01); box-shadow: var(--shadow-lg); border-color:${T.fern}; } }
-.trending-card:active { transform: scale(0.98); }
+@media (hover: hover) { .trending-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); border-color: rgba(132,181,152,0.35); } }
+.trending-card:active { transform: scale(0.985); }
 .trending-img { position:relative; height:180px; overflow:hidden; }
 @media (min-width: ${BP.md}px) { .trending-img { height: 200px; } }
 @media (min-width: ${BP.lg}px) { .trending-img { height: 220px; } }
-.trending-img img { width:100%; height:100%; object-fit:cover; transition:transform 0.6s; }
-@media (hover: hover) { .trending-card:hover .trending-img img { transform:scale(1.08); } }
-.trending-tag { position:absolute; top:10px; left:10px; background:rgba(10,30,18,0.82); backdrop-filter:blur(10px); color:white; font-size:10px; font-weight:700; padding:4px 10px; border-radius:20px; letter-spacing:0.05em; border:1px solid rgba(255,255,255,0.15); }
+.trending-img img { width:100%; height:100%; object-fit:cover; transition:transform 0.55s cubic-bezier(0.4,0,0.2,1); }
+@media (hover: hover) { .trending-card:hover .trending-img img { transform:scale(1.07); } }
+.trending-tag { position:absolute; top:10px; left:10px; background:rgba(22,46,33,0.88); backdrop-filter:blur(10px); color:white; font-size:10px; font-weight:600; padding:4px 10px; border-radius:20px; letter-spacing:0.04em; border:1px solid rgba(255,255,255,0.12); }
 .trending-veg { position:absolute; top:10px; right:10px; width:20px; height:20px; border-radius:3px; border:2px solid; display:flex; align-items:center; justify-content:center; font-size:8px; font-weight:900; background:white; }
-.trending-body { padding: 14px 14px 10px; }
-.trending-name { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:700; color:${T.forest}; margin-bottom:2px; }
-.trending-rest { font-size:10px; color:${T.moss}; margin-bottom:10px; cursor:pointer; transition:color 0.2s; }
+.trending-body { padding: 14px 16px 10px; }
+.trending-name { font-family:'Playfair Display',serif; font-size:17px; font-weight:700; color:${T.forest}; margin-bottom:3px; line-height:1.25; }
+.trending-rest { font-size:10px; color:${T.moss}; margin-bottom:10px; cursor:pointer; transition:color 0.2s; font-weight:500; letter-spacing:0.01em; }
 @media (hover: hover) { .trending-rest:hover { color:${T.sage}; text-decoration:underline; } }
 .trending-meta { display:flex; align-items:center; justify-content:space-between; }
-.trending-price { font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:700; color:${T.leaf}; }
+.trending-price { font-family:'Playfair Display',serif; font-size:20px; font-weight:700; color:${T.leaf}; }
 .trending-rating { display:flex; align-items:center; gap:4px; font-size:11px; color:${T.moss}; }
 .trending-add-btn {
-  width: calc(100% - 24px); margin: 0 12px 12px;
+  width: calc(100% - 24px); margin: 0 12px 14px;
   background: linear-gradient(135deg,${T.sage},${T.leaf}); color:white;
-  border:none; cursor:pointer; padding:13px 12px; font-size:13px;
-  font-weight:600; letter-spacing:0.04em; border-radius:10px;
+  border:none; cursor:pointer; padding:12px 12px; font-size:13px;
+  font-weight:600; letter-spacing:0.03em; border-radius:10px;
   transition:all 0.22s; display:block;
-  /* Touch-friendly: ensure height */
   min-height: var(--touch-min);
+  box-shadow: 0 3px 12px rgba(36,80,58,0.22);
 }
-@media (hover: hover) { .trending-add-btn:hover { filter:brightness(1.1); transform:translateY(-2px); box-shadow:0 6px 20px rgba(45,90,61,0.3); } }
+@media (hover: hover) { .trending-add-btn:hover { filter:brightness(1.08); transform:translateY(-1px); box-shadow:0 6px 20px rgba(36,80,58,0.32); } }
 .trending-add-btn:active { transform:scale(0.97); }
 
 /* ─── MENU PAGE ─── */
-.menu-hero { background:linear-gradient(135deg,${T.forest} 0%,${T.leaf} 100%); padding:48px 0 0; position:relative; overflow:hidden; }
+.menu-hero { background:linear-gradient(150deg,${T.forest} 0%,${T.leaf} 100%); padding:48px 0 0; position:relative; overflow:hidden; }
 @media (min-width: ${BP.md}px) { .menu-hero { padding: 60px 0 0; } }
-.menu-sticky-cats { position:sticky; top:var(--nav-h); z-index:100; background:rgba(26,58,42,0.97); backdrop-filter:blur(16px); border-bottom:1px solid rgba(200,223,197,0.1); }
+.menu-sticky-cats { position:sticky; top:var(--nav-h); z-index:100; background:rgba(22,46,33,0.97); backdrop-filter:blur(16px); border-bottom:1px solid rgba(189,216,196,0.1); }
 .menu-cat-tabs { display:flex; gap:6px; overflow-x:auto; padding:10px 16px; scrollbar-width:none; -webkit-overflow-scrolling:touch; scroll-snap-type:x proximity; }
 @media (min-width: ${BP.md}px) { .menu-cat-tabs { padding: 12px 28px; } }
 .menu-cat-tabs::-webkit-scrollbar { display:none; }
 .menu-cat-tab {
-  background:rgba(255,255,255,0.08); border:1px solid rgba(200,223,197,0.15);
-  color:rgba(200,223,197,0.75); border-radius:20px; padding:8px 16px;
+  background:rgba(255,255,255,0.07); border:1px solid rgba(189,216,196,0.14);
+  color:rgba(189,216,196,0.72); border-radius:20px; padding:8px 18px;
   font-size:12px; font-weight:600; cursor:pointer; transition:all 0.2s; white-space:nowrap;
   min-height: 36px; display:inline-flex; align-items:center; scroll-snap-align:start;
-  flex-shrink:0;
+  flex-shrink:0; letter-spacing:0.02em;
 }
-.menu-cat-tab.active { background:white; color:${T.forest}; border-color:white; }
-@media (hover: hover) { .menu-cat-tab:hover:not(.active) { background:rgba(255,255,255,0.18); color:white; } }
-.menu-items-grid { display:grid; grid-template-columns:1fr; gap:14px; }
-@media (min-width: ${BP.md}px) { .menu-items-grid { grid-template-columns:repeat(2,1fr); gap:18px; } }
-@media (min-width: ${BP.xl}px) { .menu-items-grid { gap: 20px; } }
+.menu-cat-tab.active { background:white; color:${T.forest}; border-color:white; box-shadow:0 2px 8px rgba(0,0,0,0.12); }
+@media (hover: hover) { .menu-cat-tab:hover:not(.active) { background:rgba(255,255,255,0.16); color:white; } }
+.menu-items-grid { display:grid; grid-template-columns:1fr; gap:12px; }
+@media (min-width: ${BP.md}px) { .menu-items-grid { grid-template-columns:repeat(2,1fr); gap:16px; } }
+@media (min-width: ${BP.xl}px) { .menu-items-grid { gap: 18px; } }
 
 .menu-item-card {
   background:white; border-radius:var(--radius-md); overflow:hidden;
-  box-shadow:var(--shadow-sm); border:1px solid rgba(107,158,122,0.1);
-  transition:transform 0.25s cubic-bezier(0.22,1,0.36,1), box-shadow 0.25s;
+  box-shadow:var(--shadow-card); border:1px solid rgba(61,114,84,0.07);
+  transition:transform 0.25s cubic-bezier(0.22,1,0.36,1), box-shadow 0.25s, border-color 0.25s;
   display:flex; -webkit-tap-highlight-color:transparent;
 }
-@media (hover: hover) { .menu-item-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-md); border-color:${T.fern}; } }
+@media (hover: hover) { .menu-item-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-md); border-color:rgba(132,181,152,0.3); } }
 .menu-item-card:active { transform:scale(0.99); }
 .menu-item-img { width:110px; min-width:110px; height:120px; overflow:hidden; position:relative; flex-shrink:0; }
 @media (min-width: ${BP.md}px) { .menu-item-img { width:130px; min-width:130px; height:130px; } }
-.menu-item-img img { width:100%; height:100%; object-fit:cover; transition:transform 0.4s; }
+.menu-item-img img { width:100%; height:100%; object-fit:cover; transition:transform 0.4s cubic-bezier(0.4,0,0.2,1); }
 @media (hover: hover) { .menu-item-card:hover .menu-item-img img { transform:scale(1.06); } }
-.menu-item-body { padding:12px 14px; flex:1; display:flex; flex-direction:column; justify-content:space-between; min-width:0; }
-.menu-item-name { font-weight:700; font-size:14px; color:${T.forest}; margin-bottom:3px; }
+.menu-item-body { padding:13px 15px; flex:1; display:flex; flex-direction:column; justify-content:space-between; min-width:0; }
+.menu-item-name { font-weight:700; font-size:14px; color:${T.forest}; margin-bottom:4px; line-height:1.3; }
 @media (min-width: ${BP.md}px) { .menu-item-name { font-size:15px; } }
-.menu-item-desc { font-size:11px; color:${T.moss}; font-weight:300; line-height:1.5; margin-bottom:6px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.menu-item-desc { font-size:11px; color:${T.moss}; font-weight:400; line-height:1.55; margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; opacity:0.85; }
 .menu-item-bottom { display:flex; align-items:center; justify-content:space-between; gap:6px; flex-wrap:wrap; }
-.menu-item-price { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:700; color:${T.leaf}; }
-@media (min-width: ${BP.md}px) { .menu-item-price { font-size:20px; } }
-.menu-item-badge { font-size:8px; font-weight:700; padding:3px 7px; border-radius:5px; background:${T.forest}; color:white; letter-spacing:0.05em; white-space:nowrap; }
+.menu-item-price { font-family:'Playfair Display',serif; font-size:17px; font-weight:700; color:${T.leaf}; }
+@media (min-width: ${BP.md}px) { .menu-item-price { font-size:19px; } }
+.menu-item-badge { font-size:8px; font-weight:700; padding:3px 8px; border-radius:5px; background:${T.forest}; color:white; letter-spacing:0.05em; white-space:nowrap; }
 
 /* Touch-friendly add/qty buttons */
 .menu-add-btn {
@@ -834,103 +831,106 @@ a, button, [role="button"] { touch-action: manipulation; }
 @media (min-width: ${BP.lg}px) { .cart-layout { grid-template-columns:1fr 380px; gap:32px; } }
 .cart-item {
   display:flex; align-items:center; gap:12px; background:white;
-  border-radius:14px; padding:12px 14px; margin-bottom:10px;
-  box-shadow:var(--shadow-sm); border:1px solid rgba(107,158,122,0.1);
+  border-radius:var(--radius-md); padding:12px 14px; margin-bottom:10px;
+  box-shadow:var(--shadow-card); border:1px solid rgba(61,114,84,0.07);
   transition:box-shadow 0.2s; animation:fadeUp 0.3s cubic-bezier(0.22,1,0.36,1) both;
 }
 @media (min-width: ${BP.md}px) { .cart-item { padding:14px 16px; gap:16px; } }
 @media (hover: hover) { .cart-item:hover { box-shadow:var(--shadow-md); } }
-.cart-item-img { width:72px; height:72px; border-radius:10px; overflow:hidden; flex-shrink:0; }
+.cart-item-img { width:72px; height:72px; border-radius:var(--radius-sm); overflow:hidden; flex-shrink:0; }
 @media (min-width: ${BP.md}px) { .cart-item-img { width:80px; height:80px; } }
 .cart-item-img img { width:100%; height:100%; object-fit:cover; }
 .qty-ctrl { display:flex; align-items:center; gap:6px; flex-shrink:0; }
 .qty-btn {
-  width: 34px; height: 34px; border-radius:8px; border:1.5px solid ${T.fern};
+  width: 34px; height: 34px; border-radius:8px; border:1.5px solid rgba(61,114,84,0.3);
   background:none; color:${T.forest}; font-size:16px; font-weight:700; cursor:pointer;
   display:flex; align-items:center; justify-content:center; transition:all 0.15s;
 }
 @media (hover: hover) { .qty-btn:hover { background:${T.forest}; color:white; border-color:${T.forest}; } }
 .qty-btn:active { transform:scale(0.88); }
 .cart-summary {
-  background:white; border-radius:var(--radius-lg); padding:20px;
-  box-shadow:var(--shadow-sm); border:1px solid rgba(107,158,122,0.1);
+  background:white; border-radius:var(--radius-lg); padding:22px;
+  box-shadow:var(--shadow-card); border:1px solid rgba(61,114,84,0.07);
 }
-@media (min-width: ${BP.md}px) { .cart-summary { padding:24px; position:sticky; top:88px; } }
+@media (min-width: ${BP.md}px) { .cart-summary { padding:26px; position:sticky; top:88px; } }
 
 /* ─── BUTTONS — touch-friendly (min 44px height) ─── */
 .btn-primary {
   display:inline-flex; align-items:center; justify-content:center; gap:8px;
   background:${T.forest}; color:white; border:none; cursor:pointer;
-  padding:12px 24px; border-radius:12px; font-size:14px; font-weight:600;
-  transition:all 0.22s; box-shadow:var(--shadow-sm);
-  min-height: var(--touch-min);
+  padding:13px 26px; border-radius:11px; font-size:14px; font-weight:600;
+  transition:all 0.22s; box-shadow:0 2px 8px rgba(22,46,33,0.18);
+  min-height: var(--touch-min); letter-spacing:0.01em;
 }
-@media (min-width: ${BP.md}px) { .btn-primary { padding: 14px 30px; } }
-@media (hover: hover) { .btn-primary:hover { background:${T.leaf}; transform:translateY(-2px); box-shadow:var(--shadow-md); } }
+@media (min-width: ${BP.md}px) { .btn-primary { padding: 14px 32px; } }
+@media (hover: hover) { .btn-primary:hover { background:${T.leaf}; transform:translateY(-2px); box-shadow:0 6px 20px rgba(22,46,33,0.24); } }
 .btn-primary:active { transform:scale(0.97); }
 
 .btn-nature {
   display:inline-flex; align-items:center; justify-content:center; gap:8px;
-  background:linear-gradient(135deg,${T.sage},${T.leaf}); color:white;
-  border:none; cursor:pointer; padding:12px 24px; border-radius:12px;
-  font-size:14px; font-weight:600; transition:all 0.22s;
-  box-shadow:0 4px 16px rgba(74,124,89,0.28);
+  background:linear-gradient(135deg,${T.sage} 0%,${T.leaf} 100%); color:white;
+  border:none; cursor:pointer; padding:13px 26px; border-radius:11px;
+  font-size:14px; font-weight:600; transition:all 0.22s; letter-spacing:0.01em;
+  box-shadow:0 3px 14px rgba(36,80,58,0.28);
   min-height: var(--touch-min);
 }
-@media (min-width: ${BP.md}px) { .btn-nature { padding: 14px 30px; } }
-@media (hover: hover) { .btn-nature:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(74,124,89,0.38); filter:brightness(1.06); } }
+@media (min-width: ${BP.md}px) { .btn-nature { padding: 14px 32px; } }
+@media (hover: hover) { .btn-nature:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(36,80,58,0.36); filter:brightness(1.06); } }
 .btn-nature:active { transform:scale(0.97); }
 
 .btn-outline {
   display:inline-flex; align-items:center; justify-content:center; gap:8px;
   background:transparent; color:${T.sage}; cursor:pointer;
-  padding:11px 22px; border-radius:12px; font-size:14px; font-weight:600;
-  border:1.5px solid rgba(107,158,122,0.4); transition:all 0.22s;
+  padding:12px 22px; border-radius:11px; font-size:14px; font-weight:600;
+  border:1.5px solid rgba(61,114,84,0.35); transition:all 0.22s; letter-spacing:0.01em;
   min-height: var(--touch-min);
 }
-@media (hover: hover) { .btn-outline:hover { border-color:${T.sage}; background:rgba(107,158,122,0.08); color:${T.forest}; } }
+@media (hover: hover) { .btn-outline:hover { border-color:${T.sage}; background:rgba(61,114,84,0.07); color:${T.forest}; } }
 .btn-outline:active { transform:scale(0.97); }
 
 /* ─── FORM FIELDS — touch-friendly ─── */
 .field {
-  width:100%; background:${T.sand}; border:1.5px solid rgba(107,158,122,0.2);
-  color:${T.forest}; padding:14px 16px; font-size:16px; /* 16px prevents iOS zoom */
-  outline:none; transition:border-color 0.25s, box-shadow 0.25s;
-  border-radius:12px; font-family:inherit; -webkit-appearance:none;
+  width:100%; background:#F8F5EE; border:1.5px solid rgba(61,114,84,0.18);
+  color:${T.forest}; padding:13px 16px; font-size:16px;
+  outline:none; transition:border-color 0.22s, box-shadow 0.22s, background 0.22s;
+  border-radius:11px; font-family:inherit; -webkit-appearance:none;
   min-height: var(--touch-min);
 }
-.field:focus { border-color:${T.sage}; box-shadow:0 0 0 3px rgba(107,158,122,0.12); background:white; }
-.field::placeholder { color:${T.moss}; opacity:0.7; font-size:14px; }
+.field:focus { border-color:${T.sage}; box-shadow:0 0 0 3px rgba(61,114,84,0.10); background:white; }
+.field::placeholder { color:${T.moss}; opacity:0.65; font-size:14px; }
 
 /* ─── CHIPS ─── */
 .chip {
-  background:white; border:1.5px solid rgba(107,158,122,0.2); color:${T.sage};
-  border-radius:20px; padding:9px 16px; font-size:12px; font-weight:500;
-  cursor:pointer; transition:all 0.2s; white-space:nowrap;
-  min-height:36px; display:inline-flex; align-items:center;
+  background:white; border:1.5px solid rgba(61,114,84,0.18); color:${T.sage};
+  border-radius:20px; padding:8px 18px; font-size:12px; font-weight:500;
+  cursor:pointer; transition:all 0.18s; white-space:nowrap;
+  min-height:36px; display:inline-flex; align-items:center; letter-spacing:0.01em;
+  box-shadow: 0 1px 4px rgba(22,46,33,0.05);
 }
-.chip:hover, .chip.active { border-color:${T.sage}; background:rgba(107,158,122,0.1); color:${T.forest}; }
+.chip:hover, .chip.active { border-color:${T.sage}; background:rgba(61,114,84,0.08); color:${T.forest}; }
+.chip.active { background:${T.forest}; color:white; border-color:${T.forest}; box-shadow:0 2px 8px rgba(22,46,33,0.2); }
 .chip:active { transform:scale(0.96); }
 
 /* ─── TOAST — above mobile nav ─── */
 .toast {
-  position:fixed; bottom:calc(var(--mob-nav-h) + 12px); left:50%; transform:translateX(-50%);
-  background:${T.forest}; color:white; padding:12px 22px; border-radius:28px;
-  font-size:13px; font-weight:600; z-index:9999; box-shadow:var(--shadow-lg);
+  position:fixed; bottom:calc(var(--mob-nav-h) + 16px); left:50%; transform:translateX(-50%);
+  background:${T.forest}; color:white; padding:12px 24px; border-radius:100px;
+  font-size:13px; font-weight:600; z-index:9999; box-shadow:0 8px 32px rgba(22,46,33,0.28);
   animation:toastIn 0.3s cubic-bezier(0.4,0,0.2,1) both; white-space:nowrap;
-  max-width: calc(100vw - 32px); text-align:center;
+  max-width: calc(100vw - 32px); text-align:center; letter-spacing:0.01em;
+  border: 1px solid rgba(255,255,255,0.1);
 }
-@media (min-width: ${BP.lg}px) { .toast { bottom: 24px; } }
+@media (min-width: ${BP.lg}px) { .toast { bottom: 28px; } }
 
 /* ─── EMPTY / ERROR STATES ─── */
-.empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; text-align:center; }
-@media (min-width: ${BP.md}px) { .empty-state { padding: 80px 24px; } }
-.empty-state-icon { font-size:60px; margin-bottom:16px; animation:pulse 2.5s ease-in-out infinite; }
-@media (min-width: ${BP.md}px) { .empty-state-icon { font-size:72px; } }
-.empty-state h3 { font-family:'Cormorant Garamond',serif; font-size:26px; font-weight:700; color:${T.forest}; margin-bottom:8px; }
-.empty-state p { color:${T.moss}; font-size:13px; font-weight:300; margin-bottom:24px; max-width:300px; line-height:1.6; }
-.error-state { background:linear-gradient(135deg,rgba(232,116,42,0.06),rgba(196,91,26,0.04)); border:1px solid rgba(232,116,42,0.2); border-radius:var(--radius-lg); padding:28px 20px; text-align:center; }
-.error-state-icon { font-size:42px; margin-bottom:14px; }
+.empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:64px 20px; text-align:center; }
+@media (min-width: ${BP.md}px) { .empty-state { padding: 88px 24px; } }
+.empty-state-icon { font-size:58px; margin-bottom:18px; animation:pulse 2.5s ease-in-out infinite; }
+@media (min-width: ${BP.md}px) { .empty-state-icon { font-size:68px; } }
+.empty-state h3 { font-family:'Playfair Display',serif; font-size:24px; font-weight:700; color:${T.forest}; margin-bottom:8px; }
+.empty-state p { color:${T.moss}; font-size:14px; font-weight:400; margin-bottom:24px; max-width:300px; line-height:1.65; }
+.error-state { background:linear-gradient(135deg,rgba(224,106,34,0.05),rgba(184,82,24,0.03)); border:1px solid rgba(224,106,34,0.18); border-radius:var(--radius-lg); padding:28px 20px; text-align:center; }
+.error-state-icon { font-size:40px; margin-bottom:14px; }
 
 /* ─── NATURE DIVIDER ─── */
 .nature-divider { background:linear-gradient(180deg,${T.cream} 0%,${T.sand} 100%); padding:48px 0; border-top:1px solid rgba(107,158,122,0.15); border-bottom:1px solid rgba(107,158,122,0.15); position:relative; overflow:hidden; }
@@ -938,20 +938,20 @@ a, button, [role="button"] { touch-action: manipulation; }
 .nd-pattern { position:absolute; inset:0; opacity:0.04; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath d='M50 5 C30 25 20 45 50 65 C80 45 70 25 50 5Z' fill='%231A3A2A'/%3E%3C/svg%3E"); background-size:50px 50px; }
 
 /* ─── FAQ ACCORDION ─── */
-.faq-item { background:white; border-radius:14px; overflow:hidden; border:1.5px solid rgba(107,158,122,0.14); margin-bottom:10px; transition:border-color 0.3s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s, transform 0.22s; }
-@media (hover: hover) { .faq-item:hover, .faq-item:focus-within { border-color:${T.sage}; box-shadow:0 6px 24px rgba(74,124,89,0.12); transform:translateX(3px); } }
-.faq-item.faq-open { border-color:${T.sage}; box-shadow:0 6px 24px rgba(74,124,89,0.12); }
-.faq-q { width:100%; background:none; border:none; cursor:pointer; padding:18px 20px; display:flex; justify-content:space-between; align-items:center; gap:12px; text-align:left; transition:background 0.22s; min-height:var(--touch-min); }
-.faq-item.faq-open .faq-q, .faq-item:hover .faq-q { background:rgba(74,124,89,0.04); }
+.faq-item { background:white; border-radius:12px; overflow:hidden; border:1.5px solid rgba(61,114,84,0.1); margin-bottom:8px; transition:border-color 0.28s, box-shadow 0.28s, transform 0.22s; box-shadow:var(--shadow-card); }
+@media (hover: hover) { .faq-item:hover, .faq-item:focus-within { border-color:rgba(61,114,84,0.28); box-shadow:var(--shadow-md); transform:translateX(2px); } }
+.faq-item.faq-open { border-color:rgba(61,114,84,0.32); box-shadow:var(--shadow-md); }
+.faq-q { width:100%; background:none; border:none; cursor:pointer; padding:18px 20px; display:flex; justify-content:space-between; align-items:center; gap:12px; text-align:left; transition:background 0.2s; min-height:var(--touch-min); }
+.faq-item.faq-open .faq-q, .faq-item:hover .faq-q { background:rgba(61,114,84,0.03); }
 .faq-q-text { font-size:14px; font-weight:600; color:${T.forest}; line-height:1.4; transition:color 0.2s; }
 .faq-item.faq-open .faq-q-text, .faq-item:hover .faq-q-text { color:${T.leaf}; }
-.faq-icon { width:24px; height:24px; border-radius:50%; background:rgba(107,158,122,0.1); border:1.5px solid rgba(107,158,122,0.2); display:flex; align-items:center; justify-content:center; color:${T.moss}; font-size:16px; flex-shrink:0; transition:transform 0.32s cubic-bezier(0.22,1,0.36,1), background 0.22s, border-color 0.22s, color 0.22s; }
+.faq-icon { width:24px; height:24px; border-radius:50%; background:rgba(61,114,84,0.08); border:1.5px solid rgba(61,114,84,0.18); display:flex; align-items:center; justify-content:center; color:${T.moss}; font-size:16px; flex-shrink:0; transition:transform 0.32s cubic-bezier(0.22,1,0.36,1), background 0.22s, border-color 0.22s, color 0.22s; }
 .faq-item.faq-open .faq-icon, .faq-item:hover .faq-icon { transform:rotate(45deg); background:${T.sage}; border-color:${T.sage}; color:white; }
 .faq-ans { display:grid; grid-template-rows:0fr; transition:grid-template-rows 0.38s cubic-bezier(0.4,0,0.2,1); }
 .faq-ans.open { grid-template-rows:1fr; }
 .faq-ans-inner { overflow:hidden; opacity:0; transform:translateY(-4px); transition:opacity 0.28s 0.04s ease, transform 0.32s 0.04s cubic-bezier(0.22,1,0.36,1); }
 .faq-ans.open .faq-ans-inner { opacity:1; transform:translateY(0); }
-.faq-ans-inner p { margin:0 18px 16px; font-size:13px; color:${T.earth}; font-weight:300; line-height:1.8; padding:10px 14px; background:rgba(74,124,89,0.03); border-left:3px solid rgba(74,124,89,0.2); border-radius:0 8px 8px 0; }
+.faq-ans-inner p { margin:0 18px 16px; font-size:13px; color:${T.earth}; font-weight:400; line-height:1.75; padding:12px 14px; background:rgba(61,114,84,0.03); border-left:3px solid rgba(61,114,84,0.22); border-radius:0 8px 8px 0; }
 
 /* ─── PAGE HERO BANNERS ─── */
 .page-banner { position:relative; min-height:260px; display:flex; align-items:center; overflow:hidden; }
@@ -961,10 +961,10 @@ a, button, [role="button"] { touch-action: manipulation; }
 .page-banner-overlay { position:absolute; inset:0; z-index:1; }
 .page-banner-content { position:relative; z-index:2; width:100%; padding:90px 0 60px; animation:fadeUp 0.6s cubic-bezier(0.22,1,0.36,1) both; }
 @media (min-width: ${BP.md}px) { .page-banner-content { padding:110px 0 78px; } }
-.page-banner-eyebrow { font-size:10px; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:${T.fern}; display:inline-flex; align-items:center; gap:8px; margin-bottom:12px; }
+.page-banner-eyebrow { font-size:10px; font-weight:600; letter-spacing:0.18em; text-transform:uppercase; color:${T.fern}; display:inline-flex; align-items:center; gap:8px; margin-bottom:12px; }
 .page-banner-eyebrow::before { content:''; display:inline-block; width:20px; height:1.5px; background:${T.fern}; border-radius:2px; }
-.page-banner-h1 { font-family:'Cormorant Garamond',serif; font-size:clamp(32px,6vw,68px); font-weight:700; color:white; line-height:1.0; margin-bottom:12px; text-shadow:0 4px 24px rgba(0,0,0,0.35); }
-.page-banner-sub { font-size:clamp(13px,1.8vw,17px); color:rgba(220,237,220,0.92); font-weight:300; line-height:1.65; max-width:480px; }
+.page-banner-h1 { font-family:'Playfair Display',serif; font-size:clamp(30px,5.5vw,68px); font-weight:900; color:white; line-height:1.0; margin-bottom:12px; text-shadow:0 4px 28px rgba(0,0,0,0.28); letter-spacing:-0.01em; }
+.page-banner-sub { font-size:clamp(13px,1.8vw,16px); color:rgba(210,232,215,0.9); font-weight:400; line-height:1.65; max-width:480px; }
 
 /* ─── TRACK PAGE ─── */
 .track-steps { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:24px; position:relative; gap:2px; }
@@ -985,67 +985,66 @@ a, button, [role="button"] { touch-action: manipulation; }
 .dark-toggle.on .dark-toggle-ball { transform:translateX(18px); }
 
 /* ─── DARK MODE ─── */
-body.dark-mode { background:#0f1f18 !important; color:#e8f0e8 !important; }
+body.dark-mode { background:#0d1c13 !important; color:#e4ede5 !important; }
 body.dark-mode .navbar.scrolled,
-body.dark-mode .navbar.solid { background:rgba(10,21,16,0.97) !important; border-bottom-color:rgba(143,186,153,0.15) !important; }
-body.dark-mode .nav-logo { color:#e8f5e8 !important; }
-body.dark-mode .navbar.scrolled .nav-logo, body.dark-mode .navbar.solid .nav-logo { color:#c8e8c8 !important; }
-body.dark-mode .nav-link { color:rgba(200,223,197,0.85) !important; }
-body.dark-mode .navbar.solid .nav-link, body.dark-mode .navbar.scrolled .nav-link { color:rgba(200,223,197,0.85) !important; }
-body.dark-mode .nav-link:hover, body.dark-mode .nav-link.active { color:#e8f5e8 !important; background:rgba(143,186,153,0.12) !important; }
+body.dark-mode .navbar.solid { background:rgba(8,18,11,0.97) !important; border-bottom-color:rgba(132,181,152,0.14) !important; }
+body.dark-mode .nav-logo { color:#e4f0e4 !important; }
+body.dark-mode .navbar.scrolled .nav-logo, body.dark-mode .navbar.solid .nav-logo { color:#c4e0c4 !important; }
+body.dark-mode .nav-link { color:rgba(189,216,196,0.85) !important; }
+body.dark-mode .navbar.solid .nav-link, body.dark-mode .navbar.scrolled .nav-link { color:rgba(189,216,196,0.85) !important; }
+body.dark-mode .nav-link:hover, body.dark-mode .nav-link.active { color:#e4f0e4 !important; background:rgba(132,181,152,0.1) !important; }
 body.dark-mode .navbar.scrolled .nav-btn-sm, body.dark-mode .navbar.solid .nav-btn-sm { background:${T.sage} !important; }
 body.dark-mode .navbar.scrolled .nav-cart, body.dark-mode .navbar.solid .nav-cart { background:${T.sage} !important; }
 body.dark-mode .rest-card, body.dark-mode .trending-card, body.dark-mode .menu-item-card,
-body.dark-mode .cart-item, body.dark-mode .faq-item, body.dark-mode .skel-card, body.dark-mode .skel-menu-card { background:#192d22 !important; border-color:rgba(143,186,153,0.12) !important; }
-body.dark-mode .faq-item.faq-open { background:#1e3628 !important; border-color:${T.sage} !important; }
-body.dark-mode .faq-q-text { color:#d4ebd4 !important; }
+body.dark-mode .cart-item, body.dark-mode .faq-item, body.dark-mode .skel-card, body.dark-mode .skel-menu-card { background:#152418 !important; border-color:rgba(132,181,152,0.10) !important; }
+body.dark-mode .faq-item.faq-open { background:#1b3022 !important; border-color:${T.sage} !important; }
+body.dark-mode .faq-q-text { color:#c8e4c8 !important; }
 body.dark-mode .faq-item.faq-open .faq-q-text { color:${T.fern} !important; }
-body.dark-mode .faq-ans-inner p { color:#8fba99 !important; background:rgba(74,124,89,0.06) !important; }
+body.dark-mode .faq-ans-inner p { color:#84b598 !important; background:rgba(61,114,84,0.06) !important; }
 body.dark-mode .rest-name, body.dark-mode .trending-name, body.dark-mode .menu-item-name,
-body.dark-mode .section-title, body.dark-mode h1, body.dark-mode h2, body.dark-mode h3 { color:#d4ebd4 !important; }
-body.dark-mode .rest-cuisine, body.dark-mode .section-sub, body.dark-mode .menu-item-desc { color:#7aab8a !important; }
-body.dark-mode .field { background:#1e3628 !important; color:#e8f0e8 !important; border-color:rgba(143,186,153,0.12) !important; }
-body.dark-mode .chip { background:#192d22 !important; color:#8fba99 !important; border-color:rgba(143,186,153,0.12) !important; }
-body.dark-mode .cart-summary { background:#192d22 !important; }
-body.dark-mode .mob-nav { background:rgba(10,21,16,0.97) !important; border-color:rgba(143,186,153,0.15) !important; }
-body.dark-mode .mob-btn { color:#7aab8a !important; }
-body.dark-mode .mob-btn.active { color:#c8e8c8 !important; }
-body.dark-mode .footer { background:#070f0b !important; }
-body.dark-mode .skel { background:linear-gradient(90deg,#1a2e20 25%,#223a28 50%,#1a2e20 75%) !important; background-size:800px 100% !important; }
-body.dark-mode .offer-card { background:#192d22 !important; }
-body.dark-mode .checkout-section { background:#192d22 !important; border-color:rgba(143,186,153,0.12) !important; }
-body.dark-mode .btn-outline { border-color:rgba(143,186,153,0.35) !important; color:${T.fern} !important; }
-body.dark-mode .btn-outline:hover { background:rgba(143,186,153,0.1) !important; color:#d4ebd4 !important; }
+body.dark-mode .section-title, body.dark-mode h1, body.dark-mode h2, body.dark-mode h3 { color:#c8e0c8 !important; }
+body.dark-mode .rest-cuisine, body.dark-mode .section-sub, body.dark-mode .menu-item-desc { color:#6ea880 !important; }
+body.dark-mode .field { background:#1b3022 !important; color:#e4ede5 !important; border-color:rgba(132,181,152,0.12) !important; }
+body.dark-mode .chip { background:#152418 !important; color:#84b598 !important; border-color:rgba(132,181,152,0.12) !important; }
+body.dark-mode .cart-summary { background:#152418 !important; }
+body.dark-mode .mob-nav { background:rgba(8,18,11,0.97) !important; border-color:rgba(132,181,152,0.12) !important; }
+body.dark-mode .mob-btn { color:#6ea880 !important; }
+body.dark-mode .mob-btn.active { color:#c4e0c4 !important; }
+body.dark-mode .footer { background:#060e09 !important; }
+body.dark-mode .skel { background:linear-gradient(90deg,#152418 25%,#1d3526 50%,#152418 75%) !important; background-size:800px 100% !important; }
+body.dark-mode .offer-card { background:#152418 !important; }
+body.dark-mode .checkout-section { background:#152418 !important; border-color:rgba(132,181,152,0.10) !important; }
+body.dark-mode .btn-outline { border-color:rgba(132,181,152,0.32) !important; color:${T.fern} !important; }
+body.dark-mode .btn-outline:hover { background:rgba(132,181,152,0.08) !important; color:#c8e0c8 !important; }
 
 /* ─── FOOTER ─── */
-.footer { background:${T.forest}; color:rgba(200,223,197,0.8); padding:40px 0 0; position:relative; overflow:hidden; }
-@media (min-width: ${BP.md}px) { .footer { padding: 56px 0 0; } }
+.footer { background:${T.forest}; color:rgba(189,216,196,0.78); padding:44px 0 0; position:relative; overflow:hidden; }
+@media (min-width: ${BP.md}px) { .footer { padding: 60px 0 0; } }
 .footer-leaves { position:absolute; inset:0; pointer-events:none; overflow:hidden; opacity:0.04; }
 .footer-leaf { position:absolute; animation:footerFloat linear infinite; }
-.footer-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; padding-bottom:32px; align-items:start; }
-@media (min-width: ${BP.md}px) { .footer-grid { grid-template-columns:1.7fr 1fr 1fr 1fr; gap:40px; padding-bottom:40px; } }
-.footer-brand { font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:700; color:white; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
-.footer-title { font-size:10px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:${T.fern}; margin-bottom:14px; padding-bottom:7px; border-bottom:1px solid rgba(200,223,197,0.1); }
-.footer-link { display:block; font-size:12px; font-weight:300; margin-bottom:8px; cursor:pointer; transition:color 0.2s; color:rgba(200,223,197,0.7); background:none; border:none; text-align:left; font-family:inherit; padding:2px 0; min-height:28px; }
+.footer-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; padding-bottom:36px; align-items:start; }
+@media (min-width: ${BP.md}px) { .footer-grid { grid-template-columns:1.7fr 1fr 1fr 1fr; gap:44px; padding-bottom:44px; } }
+.footer-brand { font-family:'Playfair Display',serif; font-size:22px; font-weight:700; color:white; margin-bottom:9px; display:flex; align-items:center; gap:8px; letter-spacing:-0.01em; }
+.footer-title { font-size:10px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:${T.fern}; margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid rgba(189,216,196,0.1); }
+.footer-link { display:block; font-size:12px; font-weight:400; margin-bottom:8px; cursor:pointer; transition:color 0.2s; color:rgba(189,216,196,0.68); background:none; border:none; text-align:left; font-family:inherit; padding:2px 0; min-height:28px; }
 @media (hover: hover) { .footer-link:hover { color:white; } }
-.footer-bar { border-top:1px solid rgba(200,223,197,0.1); padding:16px 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+.footer-bar { border-top:1px solid rgba(189,216,196,0.1); padding:16px 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
 
-/* ─── OFFERS GRID ─── */
-.offers-grid { display:grid; grid-template-columns:1fr; gap:14px; }
-@media (min-width: ${BP.md}px) { .offers-grid { grid-template-columns:repeat(2,1fr); gap:20px; } }
-.offer-card { background:white; border-radius:var(--radius-lg); padding:22px; box-shadow:var(--shadow-sm); border:1px solid rgba(107,158,122,0.1); transition:all 0.28s; }
+.offers-grid { display:grid; grid-template-columns:1fr; gap:12px; }
+@media (min-width: ${BP.md}px) { .offers-grid { grid-template-columns:repeat(2,1fr); gap:18px; } }
+.offer-card { background:white; border-radius:var(--radius-lg); padding:22px; box-shadow:var(--shadow-card); border:1px solid rgba(61,114,84,0.08); transition:all 0.28s; }
 @media (min-width: ${BP.md}px) { .offer-card { padding: 28px; } }
 @media (hover: hover) { .offer-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-lg); } }
-.offer-code { display:inline-block; background:${T.sand}; border:1.5px dashed rgba(107,158,122,0.4); border-radius:8px; padding:5px 12px; font-size:12px; font-weight:700; letter-spacing:0.1em; color:${T.forest}; margin-bottom:12px; }
+.offer-code { display:inline-block; background:${T.sand}; border:1.5px dashed rgba(61,114,84,0.35); border-radius:8px; padding:5px 13px; font-size:12px; font-weight:700; letter-spacing:0.1em; color:${T.forest}; margin-bottom:12px; }
 
 /* ─── CHECKOUT ─── */
 .checkout-layout { display:grid; grid-template-columns:1fr; gap:20px; }
 @media (min-width: ${BP.md}px) { .checkout-layout { grid-template-columns:1fr 360px; gap:28px; } }
 @media (min-width: ${BP.lg}px) { .checkout-layout { grid-template-columns:1fr 380px; gap:32px; } }
-.checkout-section { background:white; border-radius:var(--radius-lg); padding:20px; box-shadow:var(--shadow-sm); border:1px solid rgba(107,158,122,0.1); margin-bottom:16px; }
-@media (min-width: ${BP.md}px) { .checkout-section { padding: 28px; margin-bottom:20px; } }
-.checkout-section h3 { font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:700; color:${T.forest}; margin-bottom:18px; display:flex; align-items:center; gap:10px; }
-@media (min-width: ${BP.md}px) { .checkout-section h3 { font-size:22px; } }
+.checkout-section { background:white; border-radius:var(--radius-lg); padding:20px; box-shadow:var(--shadow-card); border:1px solid rgba(61,114,84,0.07); margin-bottom:14px; }
+@media (min-width: ${BP.md}px) { .checkout-section { padding: 28px; margin-bottom:18px; } }
+.checkout-section h3 { font-family:'Playfair Display',serif; font-size:19px; font-weight:700; color:${T.forest}; margin-bottom:18px; display:flex; align-items:center; gap:10px; }
+@media (min-width: ${BP.md}px) { .checkout-section h3 { font-size:21px; } }
 .form-row { display:grid; grid-template-columns:1fr; gap:14px; }
 @media (min-width: ${BP.sm}px) { .form-row { grid-template-columns:1fr 1fr; gap:16px; } }
 .form-group { margin-bottom:14px; }
@@ -1318,7 +1317,7 @@ function ErrorState({ message, onRetry }) {
   return (
     <div className="error-state">
       <div className="error-state-icon">⚠️</div>
-      <h3 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:22, color:T.forest, marginBottom:8 }}>
+      <h3 style={{ fontFamily:'Playfair Display,serif', fontSize:22, color:T.forest, marginBottom:8 }}>
         Something went wrong
       </h3>
       <p style={{ color:T.moss, fontSize:13, marginBottom:20 }}>{message}</p>
@@ -1343,7 +1342,7 @@ function AddressModal({ onSave, onClose }) {
       <div className="addr-modal">
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
           <div>
-            <h2 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:26, fontWeight:700, color:T.forest }}>📍 Add Delivery Address</h2>
+            <h2 style={{ fontFamily:'Playfair Display,serif', fontSize:26, fontWeight:700, color:T.forest }}>📍 Add Delivery Address</h2>
             <p style={{ color:T.moss, fontSize:13, marginTop:4 }}>We need your address to deliver your order</p>
           </div>
           <button onClick={onClose} style={{ background:'none', border:'none', cursor:'pointer', fontSize:22, color:T.moss }}>×</button>
@@ -1677,7 +1676,7 @@ function BannerCarousel({ go }) {
             <div className="banner-overlay">
               <div className="banner-content">
                 <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:s.color, marginBottom:10 }}>🍃 Terra Eats Special</div>
-                <h2 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:'clamp(24px,3.5vw,52px)', fontWeight:700, lineHeight:1.05, marginBottom:12, color:'white', textShadow:'0 2px 16px rgba(0,0,0,0.4)' }}>{s.title}</h2>
+                <h2 style={{ fontFamily:'Playfair Display,serif', fontSize:'clamp(24px,3.5vw,52px)', fontWeight:700, lineHeight:1.05, marginBottom:12, color:'white', textShadow:'0 2px 16px rgba(0,0,0,0.4)' }}>{s.title}</h2>
                 <p style={{ fontSize:14, color:'rgba(255,255,255,0.80)', fontWeight:300, marginBottom:24, lineHeight:1.6 }}>{s.sub}</p>
                 <button onClick={() => go('explore')} className="btn-ripple"
                   style={{ background:s.color, color:'white', border:'none', borderRadius:12, padding:'13px 28px', fontSize:13, fontWeight:700, cursor:'pointer', letterSpacing:'0.04em', transition:'all 0.2s', position:'relative', overflow:'hidden' }}
@@ -1869,7 +1868,7 @@ function HomePage({ go, addToCart, goRestaurant, goDish }) {
           {activeCat && catRests.length > 0 && (
             <div style={{ marginTop:40 }} className="animate-fade-up">
               <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:24 }}>
-                <h3 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:26, fontWeight:700, color:T.forest }}>Restaurants offering {activeCat}</h3>
+                <h3 style={{ fontFamily:'Playfair Display,serif', fontSize:26, fontWeight:700, color:T.forest }}>Restaurants offering {activeCat}</h3>
                 <button className="btn-outline" style={{ padding:'9px 20px', fontSize:12 }} onClick={() => go('restaurants')}>See all →</button>
               </div>
               <div className="rest-grid">
@@ -1921,7 +1920,7 @@ function HomePage({ go, addToCart, goRestaurant, goDish }) {
         <div className="container" style={{ textAlign:'center', position:'relative', zIndex:1, padding:'72px var(--container-px)' }}>
           <Reveal>
             <div style={{ fontSize:44, marginBottom:14 }}>🌱</div>
-            <h2 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:'clamp(28px,4.5vw,64px)', fontWeight:700, color:'white', marginBottom:14, lineHeight:1.1 }}>
+            <h2 style={{ fontFamily:'Playfair Display,serif', fontSize:'clamp(28px,4.5vw,64px)', fontWeight:700, color:'white', marginBottom:14, lineHeight:1.1 }}>
               Order today,<br/><em style={{ fontStyle:'italic', color:T.fern }}>save the planet tomorrow</em>
             </h2>
             <p style={{ color:'rgba(220,240,220,0.92)', fontSize:'clamp(13px,1.6vw,17px)', fontWeight:300, marginBottom:32, maxWidth:480, margin:'0 auto 32px', lineHeight:1.7 }}>
@@ -2116,7 +2115,7 @@ function ExplorePage({ go, goRestaurant, initCat }) {
           <div className="container">
             <Reveal>
               <span className="section-label" style={{ color:T.fern }}>Discover</span>
-              <h1 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:'clamp(36px,5vw,60px)', fontWeight:700, color:'white', lineHeight:1.1, marginBottom:10, textShadow:'0 3px 20px rgba(0,0,0,0.4)' }}>
+              <h1 style={{ fontFamily:'Playfair Display,serif', fontSize:'clamp(36px,5vw,60px)', fontWeight:700, color:'white', lineHeight:1.1, marginBottom:10, textShadow:'0 3px 20px rgba(0,0,0,0.4)' }}>
                 Explore Restaurants
               </h1>
               <p style={{ color:T.mist, fontSize:15, fontWeight:300, marginBottom:32 }}>{RESTAURANTS.length} handpicked restaurants near you</p>
@@ -2205,7 +2204,7 @@ function RestaurantMenuPage({ restaurant, cart, addToCart, go }) {
               <img src={restaurant.img} alt={restaurant.name} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
             </div>
             <div style={{ flex:1 }}>
-              <h1 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:'clamp(28px,4vw,42px)', fontWeight:700, color:'white', marginBottom:8, textShadow:'0 2px 12px rgba(0,0,0,0.3)' }}>{restaurant.name}</h1>
+              <h1 style={{ fontFamily:'Playfair Display,serif', fontSize:'clamp(28px,4vw,42px)', fontWeight:700, color:'white', marginBottom:8, textShadow:'0 2px 12px rgba(0,0,0,0.3)' }}>{restaurant.name}</h1>
               <div style={{ color:T.mist, fontSize:13, display:'flex', alignItems:'center', gap:16, flexWrap:'wrap' }}>
                 <Stars r={restaurant.rating} />
                 <span>⏱ {restaurant.time} min</span>
@@ -2329,7 +2328,7 @@ function DishRecommendationsPage({ dishName, go, goRestaurant, addToCart }) {
               onClick={() => go('explore')}
             >← Back to Explore</button>
             <span className="section-label" style={{ color:T.fern }}>Dish Search</span>
-            <h1 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:'clamp(32px,4.5vw,56px)', fontWeight:700, color:'white', lineHeight:1.1, marginBottom:10 }}>{dishName}</h1>
+            <h1 style={{ fontFamily:'Playfair Display,serif', fontSize:'clamp(32px,4.5vw,56px)', fontWeight:700, color:'white', lineHeight:1.1, marginBottom:10 }}>{dishName}</h1>
             <p style={{ color:T.mist, fontSize:14, fontWeight:300 }}>Found at {restaurants.length} restaurant{restaurants.length !== 1 ? 's' : ''} near you</p>
           </Reveal>
         </div>
@@ -2346,7 +2345,7 @@ function DishRecommendationsPage({ dishName, go, goRestaurant, addToCart }) {
           ) : (
             <>
               <Reveal>
-                <h2 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:28, color:T.forest, marginBottom:24 }}>Available at {restaurants.length} restaurant{restaurants.length > 1 ? 's' : ''}</h2>
+                <h2 style={{ fontFamily:'Playfair Display,serif', fontSize:28, color:T.forest, marginBottom:24 }}>Available at {restaurants.length} restaurant{restaurants.length > 1 ? 's' : ''}</h2>
               </Reveal>
               <div className="rest-grid">
                 {dishItems.map((item, i) => (
@@ -2361,7 +2360,7 @@ function DishRecommendationsPage({ dishName, go, goRestaurant, addToCart }) {
                         <div className="rest-cuisine" style={{ cursor:'pointer', color:T.sage }} onClick={() => goRestaurant(item.restId)}>🏪 {item.restName}</div>
                         <div style={{ fontSize:12, color:T.moss, marginBottom:12 }}>{item.desc}</div>
                         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                          <div style={{ fontFamily:'Cormorant Garamond,serif', fontSize:22, fontWeight:700, color:T.leaf }}>₹{item.price}</div>
+                          <div style={{ fontFamily:'Playfair Display,serif', fontSize:22, fontWeight:700, color:T.leaf }}>₹{item.price}</div>
                           <button
                             className="btn-ripple"
                             style={{ background: added[item.id] ? '#4CAF50' : T.forest, color:'white', border:'none', borderRadius:8, padding:'8px 16px', fontSize:12, fontWeight:700, cursor:'pointer', transition:'all 0.2s', position:'relative', overflow:'hidden' }}
@@ -2449,7 +2448,7 @@ function CartPage({ cart, setCart, go }) {
           <div style={{ padding:'64px 0 72px', position:'relative', zIndex:1, width:'100%' }}>
             <div className="container">
               <span className="section-label" style={{ color:T.fern }}>Checkout</span>
-              <h1 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:'clamp(30px,4vw,52px)', fontWeight:700, color:'white', lineHeight:1.1, textShadow:'0 3px 20px rgba(0,0,0,0.4)' }}>Your Cart</h1>
+              <h1 style={{ fontFamily:'Playfair Display,serif', fontSize:'clamp(30px,4vw,52px)', fontWeight:700, color:'white', lineHeight:1.1, textShadow:'0 3px 20px rgba(0,0,0,0.4)' }}>Your Cart</h1>
               <p style={{ color:T.mist, fontSize:14, marginTop:8 }}>{cart.reduce((s, c) => s + c.qty, 0)} items ready to order</p>
             </div>
           </div>
@@ -2476,13 +2475,13 @@ function CartPage({ cart, setCart, go }) {
                       <span style={{ fontWeight:700, fontSize:15, minWidth:24, textAlign:'center' }}>{item.qty}</span>
                       <button className="qty-btn" onClick={() => chQ(item.id, 1)}>+</button>
                     </div>
-                    <div style={{ fontFamily:'Cormorant Garamond,serif', fontSize:20, fontWeight:700, color:T.leaf, minWidth:60, textAlign:'right' }}>₹{item.price * item.qty}</div>
+                    <div style={{ fontFamily:'Playfair Display,serif', fontSize:20, fontWeight:700, color:T.leaf, minWidth:60, textAlign:'right' }}>₹{item.price * item.qty}</div>
                   </div>
                 ))}
               </div>
 
               <div className="cart-summary">
-                <h3 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:22, fontWeight:700, color:T.forest, marginBottom:20 }}>Order Summary</h3>
+                <h3 style={{ fontFamily:'Playfair Display,serif', fontSize:22, fontWeight:700, color:T.forest, marginBottom:20 }}>Order Summary</h3>
                 <div style={{ marginBottom:20 }}>
                   <div className="coupon-input-row">
                     <input className="field" placeholder="Promo code (try TERRA30)" value={promo}
@@ -2499,7 +2498,7 @@ function CartPage({ cart, setCart, go }) {
                     <span>{l}</span><span style={{ fontWeight: l === 'Discount' ? 700 : 400 }}>{v}</span>
                   </div>
                 ))}
-                <div style={{ borderTop:`1px solid rgba(107,158,122,0.15)`, paddingTop:16, marginTop:6, display:'flex', justifyContent:'space-between', fontFamily:'Cormorant Garamond,serif', fontSize:24, fontWeight:700, color:T.forest }}>
+                <div style={{ borderTop:`1px solid rgba(107,158,122,0.15)`, paddingTop:16, marginTop:6, display:'flex', justifyContent:'space-between', fontFamily:'Playfair Display,serif', fontSize:24, fontWeight:700, color:T.forest }}>
                   <span>Total</span><span>₹{total}</span>
                 </div>
                 <button className="btn-nature btn-ripple" style={{ width:'100%', marginTop:20, fontSize:15, padding:'16px' }} onClick={placeO}>
@@ -2553,7 +2552,7 @@ function OffersPage({ go }) {
                 <div className="offer-card">
                   <div style={{ width:48, height:48, borderRadius:12, background:`${offer.color}22`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, marginBottom:16 }}>💚</div>
                   <div className="offer-code">{offer.code}</div>
-                  <h3 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:22, fontWeight:700, color:T.forest, marginBottom:8 }}>{offer.title}</h3>
+                  <h3 style={{ fontFamily:'Playfair Display,serif', fontSize:22, fontWeight:700, color:T.forest, marginBottom:8 }}>{offer.title}</h3>
                   <p style={{ fontSize:13, color:T.moss, marginBottom:8, fontWeight:300 }}>{offer.desc}</p>
                   <div style={{ fontSize:12, fontWeight:700, color:offer.color, marginBottom:4 }}>{offer.saving}</div>
                   <div style={{ fontSize:11, color:T.moss, marginBottom:16 }}>⏱ {offer.expires}</div>
@@ -2621,7 +2620,7 @@ function TrackPage({ go }) {
                 {TRACK_STEPS[step].icon}
               </div>
               <div>
-                <div style={{ fontFamily:'Cormorant Garamond,serif', fontSize:20, fontWeight:700, color:T.forest }}>{TRACK_STEPS[step].label}</div>
+                <div style={{ fontFamily:'Playfair Display,serif', fontSize:20, fontWeight:700, color:T.forest }}>{TRACK_STEPS[step].label}</div>
                 <div style={{ fontSize:13, color:T.moss, fontWeight:300 }}>{TRACK_STEPS[step].desc}</div>
               </div>
               {step < 3 && (
@@ -2638,14 +2637,14 @@ function TrackPage({ go }) {
             {step === 3 && (
               <div style={{ marginTop:20, textAlign:'center' }}>
                 <div style={{ fontSize:48, marginBottom:8, animation:'bounceIn 0.5s ease' }}>🎉</div>
-                <div style={{ fontFamily:'Cormorant Garamond,serif', fontSize:24, fontWeight:700, color:T.forest, marginBottom:6 }}>Enjoy your meal!</div>
+                <div style={{ fontFamily:'Playfair Display,serif', fontSize:24, fontWeight:700, color:T.forest, marginBottom:6 }}>Enjoy your meal!</div>
                 <button className="btn-nature btn-ripple" onClick={() => go('home')}>Order Again →</button>
               </div>
             )}
           </div>
 
           <div style={{ background:'white', borderRadius:20, padding:32, boxShadow:`0 4px 20px ${T.shadow}`, border:`1px solid rgba(107,158,122,0.1)` }}>
-            <h3 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:20, fontWeight:700, color:T.forest, marginBottom:16 }}>🗺️ Live Map</h3>
+            <h3 style={{ fontFamily:'Playfair Display,serif', fontSize:20, fontWeight:700, color:T.forest, marginBottom:16 }}>🗺️ Live Map</h3>
             <div className="realistic-map">
               <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15626.14!2d76.6488!3d12.3053!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3baf6b4e6b5d5555%3A0x1!2sMG+Road%2C+Mysuru!5e0!3m2!1sen!2sin!4v1710000000000!5m2!1sen!2sin"
                 width="100%" height="100%" style={{ border:'none', display:'block' }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" title="Delivery map"
@@ -2701,7 +2700,7 @@ function HelpPage({ go }) {
               {/* decorative circle */}
               <div style={{ position:'absolute', top:-40, right:-40, width:160, height:160, borderRadius:'50%', background:'rgba(255,255,255,0.04)', pointerEvents:'none' }} />
               <div style={{ fontSize:40, marginBottom:14 }}>💬</div>
-              <h3 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:26, fontWeight:700, marginBottom:10, lineHeight:1.2 }}>
+              <h3 style={{ fontFamily:'Playfair Display,serif', fontSize:26, fontWeight:700, marginBottom:10, lineHeight:1.2 }}>
                 Still need help?
               </h3>
               <p style={{ fontSize:14, color:T.mist, marginBottom:24, fontWeight:300, lineHeight:1.65, maxWidth:360, margin:'0 auto 24px' }}>
@@ -2755,7 +2754,7 @@ function AboutPage({ go }) {
         <div className="container" style={{ padding:'120px 28px', position:'relative', zIndex:1 }}>
           <Reveal>
             <span className="section-label" style={{ color:T.fern }}>Our Story</span>
-            <h1 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:'clamp(42px,6vw,76px)', fontWeight:700, color:'white', lineHeight:1.0, marginBottom:16, textShadow:'0 3px 24px rgba(0,0,0,0.4)' }}>
+            <h1 style={{ fontFamily:'Playfair Display,serif', fontSize:'clamp(42px,6vw,76px)', fontWeight:700, color:'white', lineHeight:1.0, marginBottom:16, textShadow:'0 3px 24px rgba(0,0,0,0.4)' }}>
               Food with a<br/><em style={{ fontStyle:'italic', color:T.fern }}>soul</em>
             </h1>
             <p style={{ color:'rgba(220,240,220,0.90)', fontSize:17, fontWeight:300, maxWidth:520, lineHeight:1.7 }}>
@@ -2777,7 +2776,7 @@ function AboutPage({ go }) {
               <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:20, marginTop:36 }}>
                 {[['12K+','Trees Planted'],['500+','Partners'],['50K+','Happy Customers']].map(([n, l]) => (
                   <div key={l} style={{ textAlign:'center', padding:'20px 16px', background:T.snow, borderRadius:16, border:`1px solid rgba(107,158,122,0.12)` }}>
-                    <div style={{ fontFamily:'Cormorant Garamond,serif', fontSize:32, fontWeight:700, color:T.sage }}>{n}</div>
+                    <div style={{ fontFamily:'Playfair Display,serif', fontSize:32, fontWeight:700, color:T.sage }}>{n}</div>
                     <div style={{ fontSize:11, color:T.moss, marginTop:4, fontWeight:500 }}>{l}</div>
                   </div>
                 ))}
@@ -2816,7 +2815,7 @@ function AboutPage({ go }) {
                     <div style={{ position:'absolute', bottom:16, right:16, fontSize:28 }}>{chef.emoji}</div>
                   </div>
                   <div style={{ padding:'22px 24px 26px' }}>
-                    <div style={{ fontFamily:'Cormorant Garamond,serif', fontSize:22, fontWeight:700, color:T.forest }}>{chef.name}</div>
+                    <div style={{ fontFamily:'Playfair Display,serif', fontSize:22, fontWeight:700, color:T.forest }}>{chef.name}</div>
                     <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:T.sage, margin:'6px 0 10px' }}>{chef.specialty}</div>
                     <div style={{ fontSize:11, color:T.moss, marginBottom:12 }}>🏅 {chef.exp}</div>
                     <p style={{ fontSize:13, color:T.earth, lineHeight:1.7, fontWeight:300 }}>{chef.bio}</p>
@@ -2853,7 +2852,7 @@ function CheckoutPage({ go, cart }) {
   if (done) return (
     <div className="page" style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:'80vh', textAlign:'center', padding:24 }}>
       <div style={{ fontSize:80, marginBottom:20, animation:'bounceIn 0.5s ease' }}>🎉</div>
-      <h2 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:36, fontWeight:700, color:T.forest, marginBottom:10 }}>Order Placed!</h2>
+      <h2 style={{ fontFamily:'Playfair Display,serif', fontSize:36, fontWeight:700, color:T.forest, marginBottom:10 }}>Order Placed!</h2>
       <p style={{ color:T.moss, fontSize:15, fontWeight:300, marginBottom:8 }}>Your food is being prepared with love.</p>
       <p style={{ color:T.moss, fontSize:13, marginBottom:32 }}>Order #TER-2025-8847 · Estimated delivery: 30 min</p>
       <div style={{ display:'flex', gap:12 }}>
@@ -2869,7 +2868,7 @@ function CheckoutPage({ go, cart }) {
         <div className="container">
           <Reveal>
             <span className="section-label" style={{ color:T.fern }}>Final Step</span>
-            <h1 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:'clamp(30px,4vw,52px)', fontWeight:700, color:'white' }}>Checkout</h1>
+            <h1 style={{ fontFamily:'Playfair Display,serif', fontSize:'clamp(30px,4vw,52px)', fontWeight:700, color:'white' }}>Checkout</h1>
           </Reveal>
         </div>
       </div>
@@ -2910,7 +2909,7 @@ function CheckoutPage({ go, cart }) {
             </div>
             <div>
               <div className="cart-summary" style={{ position:'sticky', top:88 }}>
-                <h3 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:22, fontWeight:700, color:T.forest, marginBottom:20 }}>Order Summary</h3>
+                <h3 style={{ fontFamily:'Playfair Display,serif', fontSize:22, fontWeight:700, color:T.forest, marginBottom:20 }}>Order Summary</h3>
                 {cart.slice(0, 3).map(item => (
                   <div key={item.id} style={{ display:'flex', justifyContent:'space-between', marginBottom:10, fontSize:13, color:T.forest }}>
                     <span>{item.name} ×{item.qty}</span>
@@ -2923,7 +2922,7 @@ function CheckoutPage({ go, cart }) {
                     <div key={l} style={{ display:'flex', justifyContent:'space-between', marginBottom:8, fontSize:13, color:T.moss }}><span>{l}</span><span>{v}</span></div>
                   ))}
                 </div>
-                <div style={{ borderTop:`1px solid rgba(107,158,122,0.15)`, paddingTop:16, display:'flex', justifyContent:'space-between', fontFamily:'Cormorant Garamond,serif', fontSize:24, fontWeight:700, color:T.forest }}>
+                <div style={{ borderTop:`1px solid rgba(107,158,122,0.15)`, paddingTop:16, display:'flex', justifyContent:'space-between', fontFamily:'Playfair Display,serif', fontSize:24, fontWeight:700, color:T.forest }}>
                   <span>Total</span><span>₹{total}</span>
                 </div>
                 <button className="btn-nature btn-ripple" style={{ width:'100%', marginTop:20, fontSize:15, padding:'16px', opacity: loading ? 0.8 : 1 }} onClick={placeOrder} disabled={loading}>
@@ -2967,14 +2966,14 @@ function LoginPage({ go }) {
           <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=90" alt="" style={{ width:'100%', height:'100%', objectFit:'cover', opacity:0.25 }} />
         </div>
         <div style={{ position:'relative', zIndex:1, color:'white' }}>
-          <div style={{ fontFamily:'Cormorant Garamond,serif', fontSize:36, fontWeight:700, marginBottom:16 }}>🌿 Terra Eats</div>
-          <h2 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:28, fontWeight:700, marginBottom:12, lineHeight:1.2 }}>Food that feels good,<br/><em>for you & the planet.</em></h2>
+          <div style={{ fontFamily:'Playfair Display,serif', fontSize:36, fontWeight:700, marginBottom:16 }}>🌿 Terra Eats</div>
+          <h2 style={{ fontFamily:'Playfair Display,serif', fontSize:28, fontWeight:700, marginBottom:12, lineHeight:1.2 }}>Food that feels good,<br/><em>for you & the planet.</em></h2>
           <p style={{ fontSize:14, opacity:0.8, fontWeight:300, lineHeight:1.7, maxWidth:340 }}>Join 50,000+ eco-conscious food lovers who choose seasonal, sustainable, and utterly delicious.</p>
         </div>
       </div>
       <div className="login-form-side">
         <div className="login-form">
-          <h2 style={{ fontFamily:'Cormorant Garamond,serif', fontSize:32, fontWeight:700, color:T.forest, marginBottom:6 }}>Welcome back</h2>
+          <h2 style={{ fontFamily:'Playfair Display,serif', fontSize:32, fontWeight:700, color:T.forest, marginBottom:6 }}>Welcome back</h2>
           <p style={{ color:T.moss, fontSize:14, marginBottom:32, fontWeight:300 }}>Sign in to continue ordering</p>
           {[['Full Name','name','text','Chef Priya Sharma'],['Email Address','email','email','you@example.com'],['Password','pass','password','••••••••']].map(([label, key, type, ph]) => (
             <div key={key} style={{ marginBottom:18 }}>
