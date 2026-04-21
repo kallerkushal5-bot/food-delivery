@@ -1116,6 +1116,277 @@ button:focus-visible { outline:2px solid ${T.sage}; outline-offset:3px; }
 .d0{animation-delay:0ms}.d1{animation-delay:60ms}.d2{animation-delay:120ms}
 .d3{animation-delay:180ms}.d4{animation-delay:240ms}.d5{animation-delay:300ms}
 .d6{animation-delay:360ms}.d7{animation-delay:420ms}
+
+/* ─── CONTACT PAGE ─────────────────────────────────────────────── */
+@keyframes contactFadeUp {
+  from { opacity:0; transform:translateY(28px); }
+  to   { opacity:1; transform:none; }
+}
+@keyframes contactLeafDrift {
+  0%   { transform: translateY(0px) rotate(0deg); opacity:0.12; }
+  50%  { transform: translateY(-18px) rotate(8deg); opacity:0.22; }
+  100% { transform: translateY(0px) rotate(0deg); opacity:0.12; }
+}
+@keyframes spinnerRing {
+  to { transform: rotate(360deg); }
+}
+@keyframes successPop {
+  0%   { transform: scale(0.4); opacity:0; }
+  60%  { transform: scale(1.1); opacity:1; }
+  80%  { transform: scale(0.96); }
+  100% { transform: scale(1); opacity:1; }
+}
+@keyframes checkDraw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes shimmerBtn {
+  0%   { left: -80%; }
+  100% { left: 120%; }
+}
+@keyframes contactGlow {
+  0%,100% { box-shadow: 0 0 0 0 rgba(61,114,84,0); }
+  50%      { box-shadow: 0 0 18px 2px rgba(61,114,84,0.18); }
+}
+
+/* Page wrapper */
+.contact-page {
+  min-height: 100vh;
+  padding-top: var(--nav-h);
+  padding-bottom: calc(var(--mob-nav-h) + env(safe-area-inset-bottom, 0px) + 32px);
+  background: ${T.cream};
+  position: relative;
+  overflow: hidden;
+}
+@media (min-width: ${BP.lg}px) { .contact-page { padding-bottom: 64px; } }
+
+/* Subtle botanical bg pattern */
+.contact-bg-pattern {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    radial-gradient(circle at 8% 12%, rgba(94,148,114,0.10) 0%, transparent 38%),
+    radial-gradient(circle at 92% 80%, rgba(36,80,58,0.08) 0%, transparent 42%),
+    radial-gradient(circle at 50% 50%, rgba(189,216,196,0.15) 0%, transparent 60%);
+}
+
+/* Floating leaf decorations */
+.contact-leaf {
+  position: absolute; pointer-events: none; z-index: 0; font-size: 64px; line-height: 1;
+  animation: contactLeafDrift 8s ease-in-out infinite;
+}
+.contact-leaf-1 { top: 8%; left: 3%; font-size: 80px; animation-duration: 9s; }
+.contact-leaf-2 { top: 22%; right: 2%; font-size: 56px; animation-duration: 11s; animation-delay: 2s; }
+.contact-leaf-3 { bottom: 28%; left: 1%; font-size: 48px; animation-duration: 13s; animation-delay: 4s; }
+.contact-leaf-4 { bottom: 12%; right: 4%; font-size: 70px; animation-duration: 10s; animation-delay: 1.5s; }
+
+/* Inner wrapper */
+.contact-inner {
+  position: relative; z-index: 1;
+  max-width: 860px; margin: 0 auto;
+  padding: 52px var(--container-px) 0;
+}
+@media (min-width: ${BP.md}px) { .contact-inner { padding-top: 68px; } }
+
+/* Hero header */
+.contact-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+  color: ${T.sage}; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+}
+.contact-eyebrow::before {
+  content: ''; display: inline-block; width: 24px; height: 2px;
+  background: ${T.sage}; border-radius: 2px;
+}
+.contact-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(34px, 5.5vw, 60px); font-weight: 900;
+  color: ${T.forest}; line-height: 1.05; margin-bottom: 14px;
+  letter-spacing: -0.02em;
+}
+.contact-title em {
+  font-style: italic; color: ${T.sage};
+}
+.contact-subtitle {
+  font-size: clamp(14px, 1.5vw, 16px); color: ${T.earth};
+  font-weight: 300; line-height: 1.8; max-width: 480px; margin-bottom: 52px;
+}
+
+/* Centered form card */
+.contact-form-card {
+  background: white;
+  border: 1px solid rgba(107,158,122,0.15);
+  border-radius: 28px; padding: 36px 28px;
+  box-shadow: 0 8px 48px ${T.shadow}, 0 2px 12px rgba(22,46,33,0.05);
+  animation: contactFadeUp 0.55s cubic-bezier(0.22,1,0.36,1) both 0.08s;
+  max-width: 700px; margin: 0 auto;
+}
+@media (min-width: ${BP.md}px) { .contact-form-card { padding: 52px 56px; } }
+
+/* Decorative top bar on card */
+.contact-form-card::before {
+  content: ''; display: block; height: 4px; border-radius: 4px 4px 0 0;
+  background: linear-gradient(90deg, ${T.forest}, ${T.sage}, ${T.moss});
+  margin: -36px -28px 32px;
+  border-radius: 28px 28px 0 0;
+}
+@media (min-width: ${BP.md}px) {
+  .contact-form-card::before { margin: -52px -56px 36px; }
+}
+
+.contact-form-title {
+  font-family: 'Playfair Display', serif; font-size: clamp(22px, 2.8vw, 28px); font-weight: 700;
+  color: ${T.forest}; margin-bottom: 6px;
+}
+.contact-form-sub {
+  font-size: 14px; color: ${T.moss}; font-weight: 400; margin-bottom: 36px; line-height: 1.6;
+}
+
+/* Info chips below title */
+.contact-chips {
+  display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 36px;
+}
+.contact-chip {
+  display: flex; align-items: center; gap: 7px;
+  background: ${T.sand}; border: 1px solid rgba(107,158,122,0.18);
+  border-radius: 100px; padding: 7px 14px;
+  font-size: 12px; font-weight: 600; color: ${T.leaf};
+  letter-spacing: 0.02em;
+}
+
+/* Form fields */
+.contact-field-row {
+  display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 20px;
+}
+@media (min-width: ${BP.md}px) {
+  .contact-field-row.two-col { grid-template-columns: 1fr 1fr; }
+}
+
+.contact-field-wrap { display: flex; flex-direction: column; gap: 8px; }
+
+.contact-field-label {
+  font-size: 12px; font-weight: 700; color: ${T.moss};
+  letter-spacing: 0.09em; text-transform: uppercase;
+  display: flex; align-items: center; gap: 6px;
+}
+.contact-field-label .lbl-icon { font-size: 14px; }
+.contact-field-label .lbl-req { color: ${T.sunset}; font-size: 14px; font-weight: 700; line-height: 1; }
+
+.contact-field {
+  background: ${T.snow};
+  border: 1.5px solid rgba(107,158,122,0.22);
+  border-radius: 14px; padding: 13px 16px;
+  font-size: 15px; color: ${T.forest}; font-family: inherit;
+  transition: all 0.26s cubic-bezier(0.22,1,0.36,1);
+  outline: none; width: 100%; box-sizing: border-box;
+  -webkit-appearance: none;
+}
+.contact-field::placeholder { color: rgba(90,110,95,0.38); }
+.contact-field:hover {
+  border-color: rgba(61,114,84,0.38);
+}
+.contact-field:focus {
+  border-color: ${T.sage};
+  background: white;
+  box-shadow: 0 0 0 3px rgba(61,114,84,0.10);
+  animation: contactGlow 2s ease infinite;
+}
+.contact-field.error-field {
+  border-color: rgba(224,106,34,0.6); background: rgba(224,106,34,0.04);
+}
+.contact-field.error-field:focus {
+  box-shadow: 0 0 0 3px rgba(224,106,34,0.12);
+}
+.contact-field-error {
+  font-size: 11px; color: ${T.sunset}; display: flex; align-items: center; gap: 4px; font-weight: 600;
+}
+
+textarea.contact-field {
+  resize: vertical; min-height: 128px; line-height: 1.65;
+}
+
+/* Submit button */
+.contact-submit-btn {
+  width: 100%; padding: 17px 32px; border: none; border-radius: 16px;
+  font-size: 16px; font-weight: 700; letter-spacing: 0.04em; cursor: pointer;
+  font-family: inherit; position: relative; overflow: hidden;
+  background: linear-gradient(135deg, ${T.forest} 0%, ${T.leaf} 50%, ${T.sage} 100%);
+  color: white;
+  box-shadow: 0 6px 28px rgba(22,46,33,0.28), 0 2px 8px rgba(22,46,33,0.14);
+  transition: transform 0.22s cubic-bezier(0.22,1,0.36,1), box-shadow 0.22s, filter 0.22s;
+  min-height: 56px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin-top: 8px;
+}
+.contact-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 12px 40px rgba(22,46,33,0.36), 0 4px 12px rgba(22,46,33,0.18);
+  filter: brightness(1.06);
+}
+.contact-submit-btn:active:not(:disabled) { transform: scale(0.98); }
+.contact-submit-btn:disabled { opacity: 0.58; cursor: not-allowed; }
+
+.contact-submit-btn::before {
+  content: ''; position: absolute; top: 0; left: -80%; width: 60%; height: 100%;
+  background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%);
+  transform: skewX(-20deg); pointer-events: none;
+}
+.contact-submit-btn:hover:not(:disabled)::before { animation: shimmerBtn 0.72s ease; }
+
+/* Spinner */
+.contact-spinner {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 2.5px solid rgba(255,255,255,0.28);
+  border-top-color: white;
+  animation: spinnerRing 0.75s linear infinite;
+  flex-shrink: 0;
+}
+
+/* Success overlay */
+.contact-success-overlay {
+  position: fixed; inset: 0; z-index: 9000;
+  background: rgba(15,28,18,0.82); backdrop-filter: blur(16px);
+  display: flex; align-items: center; justify-content: center;
+  animation: fadeIn 0.3s ease both;
+}
+.contact-success-card {
+  background: white;
+  border: 1px solid rgba(94,148,114,0.22);
+  border-radius: 28px; padding: 48px 40px; text-align: center; max-width: 380px; width: 90%;
+  animation: successPop 0.55s cubic-bezier(0.22,1,0.36,1) both;
+  box-shadow: 0 24px 80px rgba(22,46,33,0.4), 0 0 60px rgba(37,211,102,0.06);
+}
+.contact-success-icon {
+  width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 24px;
+  background: linear-gradient(135deg, rgba(37,211,102,0.15), rgba(36,80,58,0.12));
+  border: 2px solid rgba(37,211,102,0.3);
+  display: flex; align-items: center; justify-content: center;
+}
+.contact-success-icon svg { overflow: visible; }
+.contact-success-title {
+  font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700;
+  color: ${T.forest}; margin-bottom: 10px;
+}
+.contact-success-sub {
+  font-size: 14px; color: ${T.moss}; line-height: 1.7; margin-bottom: 28px;
+}
+.contact-success-close {
+  background: linear-gradient(135deg, ${T.forest}, ${T.sage}); color: white;
+  border: none; border-radius: 14px; padding: 14px 36px;
+  font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit;
+  transition: all 0.22s; box-shadow: 0 6px 24px rgba(22,46,33,0.24);
+}
+.contact-success-close:hover { filter: brightness(1.1); transform: translateY(-2px); }
+
+/* Toast */
+.contact-toast {
+  position: fixed; bottom: calc(var(--mob-nav-h) + 24px); left: 50%; z-index: 8000;
+  transform: translateX(-50%);
+  background: ${T.forest}; backdrop-filter: blur(20px);
+  border: 1px solid rgba(94,148,114,0.3); border-radius: 14px;
+  padding: 14px 22px; color: white; font-size: 14px; font-weight: 500;
+  box-shadow: 0 8px 32px rgba(22,46,33,0.3);
+  animation: toastIn 0.35s cubic-bezier(0.22,1,0.36,1) both;
+  white-space: nowrap;
+}
+@media (min-width: ${BP.lg}px) { .contact-toast { bottom: 28px; } }
 `;
 
 
@@ -1423,7 +1694,7 @@ function Navbar({ page, go, cnt, user }) {
 
   const links = [
     {id:'home',label:'Home'},{id:'restaurants',label:'Restaurants'},{id:'explore',label:'Explore'},
-    {id:'offers',label:'Offers'},{id:'track',label:'Track'},{id:'help',label:'Help'},{id:'about',label:'About'},
+    {id:'offers',label:'Offers'},{id:'track',label:'Track'},{id:'help',label:'Help'},{id:'about',label:'About'},{id:'contact',label:'Contact'},
   ];
 
   // Class logic: transparent → scrolled (on home), always solid on other pages
@@ -1504,6 +1775,7 @@ const MobNav = memo(function MobNav({ page, go, cnt }) {
     { id:'restaurants', label:'Eats',    icon:'🏪' },
     { id:'explore',     label:'Explore', icon:'🔍' },
     { id:'offers',      label:'Offers',  icon:'🏷️' },
+    { id:'contact',     label:'Contact', icon:'💬' },
     { id:'cart',        label:'Cart',    icon:'🛒', badge: cnt },
   ];
   return (
@@ -1624,6 +1896,293 @@ function FaqItem({ faq, index }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   ── CONTACT / ORDER QUERY PAGE ────────────────────────────────
+   Ultra-premium dark glassmorphism contact page with WhatsApp
+   integration, neon glow inputs, animated orbs, toast + success.
+   ═══════════════════════════════════════════════════════════════ */
+const WA_NUMBER = "917349579312"; // ← your WhatsApp number (no + or spaces)
+
+function ContactPage({ go }) {
+  const [form, setForm] = useState({ name:'', email:'', mobile:'', query:'' });
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const validate = () => {
+    const e = {};
+    if (!form.name.trim()) e.name = 'Name is required';
+    if (!form.email.trim()) e.email = 'Email is required';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Enter a valid email address';
+    if (!form.mobile.trim()) e.mobile = 'Mobile number is required';
+    else if (!/^\d{10}$/.test(form.mobile.trim())) e.mobile = 'Mobile must be exactly 10 digits';
+    if (!form.query.trim()) e.query = 'Please describe your query';
+    return e;
+  };
+
+  // Live validation state to drive button disabled
+  const isValid = useMemo(() => {
+    return (
+      form.name.trim() &&
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email) &&
+      /^\d{10}$/.test(form.mobile.trim()) &&
+      form.query.trim()
+    );
+  }, [form]);
+
+  const handleChange = (field) => (e) => {
+    setForm(p => ({ ...p, [field]: e.target.value }));
+    if (errors[field]) setErrors(p => ({ ...p, [field]: undefined }));
+  };
+
+  const handleSubmit = () => {
+    const errs = validate();
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      showToast('⚠️ Please fill all required fields correctly');
+      return;
+    }
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      const message =
+`Hello Terra Eats! 🌿
+
+I have a new enquiry:
+
+👤 Name: ${form.name}
+📧 Email: ${form.email}
+📱 Mobile: ${form.mobile}
+💬 Query: ${form.query}`;
+      const encoded = encodeURIComponent(message);
+      window.open(`https://wa.me/${WA_NUMBER}?text=${encoded}`, '_blank');
+      setSuccess(true);
+    }, 1200);
+  };
+
+  const closeSuccess = () => {
+    setSuccess(false);
+    setForm({ name:'', email:'', mobile:'', query:'' });
+    setErrors({});
+  };
+
+  const FIELDS = [
+    { key:'name',   label:'Full Name',      icon:'👤', type:'text',  ph:'e.g. Priya Sharma',      autoC:'name',  half:true },
+    { key:'email',  label:'Email Address',  icon:'📧', type:'email', ph:'you@example.com',         autoC:'email', half:true },
+    { key:'mobile', label:'Mobile Number',  icon:'📱', type:'tel',   ph:'10-digit number',         autoC:'tel',   half:false },
+    { key:'query',  label:'Your Query',     icon:'💬', type:'textarea',ph:"Describe your order or question…", autoC:'off', half:false },
+  ];
+
+  return (
+    <div className="contact-page">
+      {/* Botanical background */}
+      <div className="contact-bg-pattern" />
+      <div className="contact-leaf contact-leaf-1" aria-hidden="true">🍃</div>
+      <div className="contact-leaf contact-leaf-2" aria-hidden="true">🌿</div>
+      <div className="contact-leaf contact-leaf-3" aria-hidden="true">🍂</div>
+      <div className="contact-leaf contact-leaf-4" aria-hidden="true">🌱</div>
+
+      <div className="contact-inner">
+        {/* Header */}
+        <Reveal>
+          <div style={{ textAlign:'center', maxWidth:600, margin:'0 auto' }}>
+            <div className="contact-eyebrow">Get In Touch</div>
+            <h1 className="contact-title">
+              We'd love to<br/><em>hear from you</em>
+            </h1>
+            <p className="contact-subtitle">
+              Have a question, special order, or feedback? Fill the form below and we'll respond on WhatsApp within minutes.
+            </p>
+          </div>
+        </Reveal>
+
+        {/* Info chips */}
+        <Reveal delay={0.06}>
+          <div className="contact-chips" style={{ justifyContent:'center' }}>
+            {[
+              { icon:'📍', text:'Mangaluru, Karnataka' },
+              { icon:'⏰', text:'10 AM – 11 PM, Daily' },
+              { icon:'⚡', text:'Avg reply: 5 minutes' },
+              { icon:'⭐', text:'4.9 rated service' },
+            ].map(c => (
+              <div key={c.text} className="contact-chip">
+                <span>{c.icon}</span>
+                <span>{c.text}</span>
+              </div>
+            ))}
+          </div>
+        </Reveal>
+
+        {/* Form Card */}
+        <Reveal delay={0.1}>
+          <div className="contact-form-card">
+            <div style={{ textAlign:'center', marginBottom:28 }}>
+              <div className="contact-form-title">Send us a Message</div>
+              <div className="contact-form-sub">
+                All fields are required. Fill in the details and we'll open WhatsApp with your message pre-filled.
+              </div>
+            </div>
+
+            {/* Name + Email row */}
+            <div className="contact-field-row two-col" style={{ marginBottom:20 }}>
+              {FIELDS.filter(f => f.half).map(f => (
+                <div className="contact-field-wrap" key={f.key}>
+                  <label className="contact-field-label">
+                    <span className="lbl-icon">{f.icon}</span>
+                    {f.label}
+                    <span className="lbl-req">*</span>
+                  </label>
+                  <input
+                    className={`contact-field${errors[f.key] ? ' error-field' : ''}`}
+                    type={f.type}
+                    placeholder={f.ph}
+                    value={form[f.key]}
+                    onChange={handleChange(f.key)}
+                    autoComplete={f.autoC}
+                  />
+                  {errors[f.key] && (
+                    <span className="contact-field-error">⚠ {errors[f.key]}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Mobile */}
+            <div className="contact-field-row" style={{ marginBottom:20 }}>
+              <div className="contact-field-wrap">
+                <label className="contact-field-label">
+                  <span className="lbl-icon">📱</span>
+                  Mobile Number
+                  <span className="lbl-req">*</span>
+                </label>
+                <input
+                  className={`contact-field${errors.mobile ? ' error-field' : ''}`}
+                  type="tel"
+                  placeholder="10-digit number (e.g. 9876543210)"
+                  value={form.mobile}
+                  onChange={handleChange('mobile')}
+                  autoComplete="tel"
+                  maxLength={10}
+                  inputMode="numeric"
+                />
+                {errors.mobile && <span className="contact-field-error">⚠ {errors.mobile}</span>}
+              </div>
+            </div>
+
+            {/* Query */}
+            <div className="contact-field-row" style={{ marginBottom:28 }}>
+              <div className="contact-field-wrap">
+                <label className="contact-field-label">
+                  <span className="lbl-icon">💬</span>
+                  Your Query
+                  <span className="lbl-req">*</span>
+                </label>
+                <textarea
+                  className={`contact-field${errors.query ? ' error-field' : ''}`}
+                  placeholder="Describe your order or question in detail — e.g. 'I'd like to order 2× Butter Chicken + Garlic Naan for delivery to MG Road…'"
+                  value={form.query}
+                  onChange={handleChange('query')}
+                  rows={5}
+                />
+                {errors.query && <span className="contact-field-error">⚠ {errors.query}</span>}
+              </div>
+            </div>
+
+            {/* Submit */}
+            <button
+              className="contact-submit-btn"
+              onClick={handleSubmit}
+              disabled={loading || !isValid}
+            >
+              {loading ? (
+                <>
+                  <span className="contact-spinner" />
+                  <span>Preparing your message…</span>
+                </>
+              ) : (
+                <>
+                  <span style={{ fontSize:20 }}>💬</span>
+                  <span>Send via WhatsApp</span>
+                  <span style={{ fontSize:16 }}>→</span>
+                </>
+              )}
+            </button>
+
+            <p style={{ textAlign:'center', fontSize:12, color:T.moss, marginTop:14, lineHeight:1.6, opacity:0.7 }}>
+              🔒 Your details are used only to pre-fill the WhatsApp message.
+            </p>
+
+            {/* Divider */}
+            <div style={{ display:'flex', alignItems:'center', gap:14, margin:'28px 0 22px', color:T.mist }}>
+              <div style={{ flex:1, height:1, background:`rgba(107,158,122,0.18)` }} />
+              <span style={{ fontSize:12, fontWeight:600, letterSpacing:'0.08em', color:T.moss }}>OR REACH US DIRECTLY</span>
+              <div style={{ flex:1, height:1, background:`rgba(107,158,122,0.18)` }} />
+            </div>
+
+            {/* Direct WhatsApp CTA */}
+            <a
+              href={`https://wa.me/${WA_NUMBER}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display:'flex', alignItems:'center', justifyContent:'center', gap:10,
+                padding:'14px 24px', borderRadius:14, textDecoration:'none',
+                background:`linear-gradient(135deg, rgba(37,211,102,0.12), rgba(18,140,126,0.10))`,
+                border:'1.5px solid rgba(37,211,102,0.28)',
+                color:T.leaf, fontWeight:700, fontSize:14, letterSpacing:'0.03em',
+                transition:'all 0.22s', cursor:'pointer',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background='linear-gradient(135deg,rgba(37,211,102,0.2),rgba(18,140,126,0.16))'; e.currentTarget.style.transform='translateY(-2px)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background='linear-gradient(135deg,rgba(37,211,102,0.12),rgba(18,140,126,0.10))'; e.currentTarget.style.transform=''; }}
+            >
+              <span style={{ fontSize:20 }}>💬</span>
+              <span>Chat directly on WhatsApp</span>
+            </a>
+          </div>
+        </Reveal>
+
+        <div style={{ height:64 }} />
+      </div>
+
+      {/* Success Modal */}
+      {success && (
+        <div className="contact-success-overlay" onClick={closeSuccess}>
+          <div className="contact-success-card" onClick={e => e.stopPropagation()}>
+            <div className="contact-success-icon">
+              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                <circle cx="20" cy="20" r="18" stroke="rgba(37,211,102,0.5)" strokeWidth="1.5"/>
+                <polyline
+                  points="12,21 18,27 29,14"
+                  stroke="#25d366" strokeWidth="2.5"
+                  strokeLinecap="round" strokeLinejoin="round"
+                  strokeDasharray="30" strokeDashoffset="30"
+                  style={{ animation:'checkDraw 0.5s ease 0.3s forwards' }}
+                />
+              </svg>
+            </div>
+            <div style={{ fontSize:36, marginBottom:10 }}>🌿</div>
+            <div className="contact-success-title">Message Sent!</div>
+            <p className="contact-success-sub">
+              WhatsApp has been opened with your message pre-filled. Our team will reply shortly!
+            </p>
+            <button className="contact-success-close" onClick={closeSuccess}>
+              ✓ Done
+            </button>
+          </div>
+        </div>
+      )}
+
+      {toast && <div className="contact-toast">{toast}</div>}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
    ── FOOTER ────────────────────────────────────────────────────
    ═══════════════════════════════════════════════════════════════ */
 function Footer({ go }) {
@@ -1652,7 +2211,7 @@ function Footer({ go }) {
             </div>
           </div>
           {[
-            { title:'Explore', links:[['Home','home'],['Restaurants','restaurants'],['Explore','explore'],['Offers','offers']] },
+            { title:'Explore', links:[['Home','home'],['Restaurants','restaurants'],['Explore','explore'],['Offers','offers'],['Contact Us','contact']] },
             { title:'Company', links:[['About Us','about'],['Our Chefs','about'],['Sustainability','about'],['Help','help']] },
             { title:'Account', links:[['Sign In','login'],['Track Order','track'],['My Cart','cart'],['Support','help']] },
           ].map(col => (
@@ -3229,6 +3788,7 @@ export default function App() {
       checkout:    <CheckoutPage    {...commonProps} />,
       login:       <LoginPage       {...commonProps} />,
       signup:      <SignupPage      {...commonProps} />,
+      contact:     <ContactPage     go={go} />,
     };
 
     return pages[page] || pages.home;
