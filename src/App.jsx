@@ -242,6 +242,21 @@ a, button, [role="button"] { touch-action: manipulation; }
   }
 }
 
+/* ─── PERFORMANCE: GPU-composited layers & layout containment ─── */
+.rest-card, .trending-card, .cat-item {
+  will-change: transform;
+  contain: layout style;
+  transform: translateZ(0); /* promote to own compositor layer */
+}
+/* Avoid will-change on too many static elements — only on interactive cards */
+.rest-card:hover, .trending-card:hover { will-change: transform, box-shadow; }
+
+/* ─── SMOOTH SCROLLING CONTAINERS: promote to own layer ─────── */
+.trending-scroll, .cat-carousel-wrap, .banner-slides {
+  will-change: transform;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* ─── SKELETON LOADER ─── */
 @keyframes shimmer {
   0%   { background-position: -400px 0; }
@@ -1154,6 +1169,21 @@ function useDarkMode() {
   return [dark, setDark];
 }
 
+/**
+ * useDebounce — delays a value update until the user stops typing.
+ * Prevents firing a filter/search on every keystroke.
+ * @param {any} value - The reactive value to debounce
+ * @param {number} delay - Milliseconds to wait (default 280ms)
+ */
+function useDebounce(value, delay = 280) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(id);
+  }, [value, delay]);
+  return debounced;
+}
+
 /** Debounced window size — avoid re-render on every resize pixel */
 function useIsMobile(breakpoint = 1024) {
   const [isMobile, setIsMobile] = useState(() =>
@@ -1374,15 +1404,21 @@ function Navbar({ page, go, cnt, user }) {
   const isHome = page === 'home';
 
   useEffect(() => {
+    let rafId = null;
     const fn = () => {
-      const y = window.scrollY;
-      setScrolled(y > 30);
-      setHidden(y > lastScrollY.current && y > 120);
-      lastScrollY.current = y;
+      // Cancel any pending frame — only process the latest scroll position
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const y = window.scrollY;
+        setScrolled(y > 30);
+        setHidden(y > lastScrollY.current && y > 120);
+        lastScrollY.current = y;
+        rafId = null;
+      });
     };
     setScrolled(window.scrollY > 30);
     window.addEventListener('scroll', fn, { passive: true });
-    return () => window.removeEventListener('scroll', fn);
+    return () => { window.removeEventListener('scroll', fn); if (rafId) cancelAnimationFrame(rafId); };
   }, []);
 
   const links = [
@@ -1672,7 +1708,7 @@ function BannerCarousel({ go }) {
       <div className="banner-slides" style={{ transform:`translateX(-${cur * 100}%)` }}>
         {BANNER_SLIDES.map((s, i) => (
           <div key={i} className={`banner-slide${cur === i ? ' active' : ''}`}>
-            <img src={s.img} alt={s.title} loading={i === 0 ? 'eager' : 'lazy'} />
+            <img src={s.img} alt={s.title} loading={i === 0 ? 'eager' : 'lazy'} decoding={i === 0 ? 'sync' : 'async'} fetchPriority={i === 0 ? 'high' : 'low'} />
             <div className="banner-overlay">
               <div className="banner-content">
                 <div style={{ fontSize:11, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:s.color, marginBottom:10 }}>🍃 Terra Eats Special</div>
@@ -1749,7 +1785,7 @@ function CategoryCarousel({ activeCat, onCatClick }) {
           {CATEGORIES.map(cat => (
             <div key={cat.label} className={`cat-item${activeCat === cat.label ? ' active' : ''}`} onClick={() => onCatClick(cat.label)}>
               <div className="cat-img-ring">
-                <img src={cat.img} alt={cat.label} loading="lazy" />
+                <img src={cat.img} alt={cat.label} loading="lazy" decoding="async" />
               </div>
               <span className="cat-label">{cat.emoji} {cat.label}</span>
             </div>
@@ -1949,7 +1985,7 @@ const RestCard = memo(function RestCard({ r, onClick }) {
       onKeyDown={e => e.key === 'Enter' && onClick()}
     >
       <div className="rest-img">
-        <img src={r.img} alt={r.name} loading="lazy" />
+        <LazyImg src={r.img} alt={r.name} style={{ width:'100%', height:'100%' }} />
         {r.badge    && <span className="rest-badge">{r.badge}</span>}
         {r.discount && <span className="rest-discount">{r.discount}</span>}
       </div>
@@ -1996,7 +2032,7 @@ const TrendingSection = memo(function TrendingSection({ addToCart, goRestaurant,
             <Reveal key={item.id} delay={i * 0.05}>
               <div className="trending-card">
                 <div className="trending-img" onClick={() => goDish && goDish(item.name)}>
-                  <img src={item.img} alt={item.name} loading="lazy" />
+                  <LazyImg src={item.img} alt={item.name} style={{ width:'100%', height:'100%' }} />
                   <span className="trending-tag">{item.tag}</span>
                   <div className="trending-veg" style={{ borderColor: item.veg ? '#2D7A22' : '#E53E3E', color: item.veg ? '#2D7A22' : '#E53E3E' }}>●</div>
                 </div>
@@ -2034,10 +2070,11 @@ const TrendingSection = memo(function TrendingSection({ addToCart, goRestaurant,
 function RestaurantsPage({ go, goRestaurant }) {
   const { loading, error, retry } = useAsyncLoad(900);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 280);   // ← only filter after 280ms idle
 
   const list = RESTAURANTS.filter(r =>
-    r.name.toLowerCase().includes(search.toLowerCase()) ||
-    r.cuisine.toLowerCase().includes(search.toLowerCase())
+    r.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+    r.cuisine.toLowerCase().includes(debouncedSearch.toLowerCase())
   );
 
   return (
@@ -2093,13 +2130,14 @@ function ExplorePage({ go, goRestaurant, initCat }) {
   const [filter, setFilter] = useState(initCat || 'All');
   const [sort,   setSort]   = useState('rating');
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 280);   // ← only filter after 280ms idle
   const { loading, error, retry } = useAsyncLoad(800);
   const filters = ['All','North Indian','American','Italian','Chinese','Japanese','South Indian','Desserts'];
 
   const list = RESTAURANTS
     .filter(r => {
       const mF = filter === 'All' || r.cuisine.toLowerCase().includes(filter.toLowerCase());
-      const mS = r.name.toLowerCase().includes(search.toLowerCase()) || r.cuisine.toLowerCase().includes(search.toLowerCase());
+      const mS = r.name.toLowerCase().includes(debouncedSearch.toLowerCase()) || r.cuisine.toLowerCase().includes(debouncedSearch.toLowerCase());
       return mF && mS;
     })
     .sort((a, b) => sort === 'rating' ? b.rating - a.rating : a.time.localeCompare(b.time));
@@ -2201,7 +2239,7 @@ function RestaurantMenuPage({ restaurant, cart, addToCart, go }) {
           >← Back</button>
           <div style={{ display:'flex', alignItems:'flex-start', gap:24 }}>
             <div style={{ width:100, height:100, borderRadius:16, overflow:'hidden', border:'3px solid rgba(200,223,197,0.3)', flexShrink:0 }}>
-              <img src={restaurant.img} alt={restaurant.name} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+              <img src={restaurant.img} alt={restaurant.name} loading="lazy" decoding="async" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
             </div>
             <div style={{ flex:1 }}>
               <h1 style={{ fontFamily:'Playfair Display,serif', fontSize:'clamp(28px,4vw,42px)', fontWeight:700, color:'white', marginBottom:8, textShadow:'0 2px 12px rgba(0,0,0,0.3)' }}>{restaurant.name}</h1>
@@ -2240,7 +2278,7 @@ function RestaurantMenuPage({ restaurant, cart, addToCart, go }) {
                   <Reveal key={item.id} delay={i * 0.05}>
                     <div className="menu-item-card">
                       <div className="menu-item-img">
-                        <img src={item.img} alt={item.name} loading="lazy" />
+                        <LazyImg src={item.img} alt={item.name} style={{ width:'100%', height:'100%' }} />
                         {item.badge && (
                           <div style={{ position:'absolute', top:8, left:8 }}>
                             <span className="menu-item-badge">{item.badge}</span>
@@ -2352,7 +2390,7 @@ function DishRecommendationsPage({ dishName, go, goRestaurant, addToCart }) {
                   <Reveal key={`${item.id}-${item.restId}`} delay={i * 0.07}>
                     <div className="rest-card" style={{ cursor:'default' }}>
                       <div className="rest-img" style={{ cursor:'pointer' }} onClick={() => goRestaurant(item.restId)}>
-                        <img src={item.img} alt={item.name} loading="lazy" />
+                        <LazyImg src={item.img} alt={item.name} style={{ width:'100%', height:'100%' }} />
                         {item.badge && <span className="rest-badge">{item.badge}</span>}
                       </div>
                       <div className="rest-body">
@@ -2748,7 +2786,7 @@ function AboutPage({ go }) {
     <div className="page">
       <div style={{ position:'relative', overflow:'hidden', minHeight:480, display:'flex', alignItems:'center' }}>
         <div style={{ position:'absolute', inset:0, zIndex:0 }}>
-          <img src="https://images.unsplash.com/photo-1466442929976-97f336a657be?w=1600&q=90" alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+          <img src="https://images.unsplash.com/photo-1466442929976-97f336a657be?w=1600&q=90" alt="" loading="lazy" decoding="async" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
           <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(10,35,20,0.88) 0%, rgba(26,58,42,0.72) 50%, rgba(10,35,20,0.60) 100%)' }} />
         </div>
         <div className="container" style={{ padding:'120px 28px', position:'relative', zIndex:1 }}>
@@ -2784,7 +2822,7 @@ function AboutPage({ go }) {
             </Reveal>
             <Reveal delay={0.1}>
               <div style={{ borderRadius:24, overflow:'hidden', boxShadow:`0 20px 60px ${T.shadowD}` }}>
-                <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=90" alt="Restaurant" style={{ width:'100%', height:440, objectFit:'cover' }} />
+                <LazyImg src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=90" alt="Restaurant" style={{ width:'100%', height:440 }} />
               </div>
             </Reveal>
           </div>
@@ -2807,10 +2845,7 @@ function AboutPage({ go }) {
                   onMouseLeave={e => { e.currentTarget.style.transform=''; e.currentTarget.style.boxShadow=`0 4px 24px ${T.shadow}`; }}
                 >
                   <div style={{ position:'relative', height:300, overflow:'hidden' }}>
-                    <img src={chef.img} alt={chef.name} style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'top', transition:'transform 0.5s' }}
-                      onMouseEnter={e => e.target.style.transform='scale(1.06)'}
-                      onMouseLeave={e => e.target.style.transform=''}
-                    />
+                    <LazyImg src={chef.img} alt={chef.name} style={{ width:'100%', height:'100%', transition:'transform 0.5s' }} />
                     <div style={{ position:'absolute', inset:0, background:'linear-gradient(to top, rgba(26,58,42,0.7) 0%, transparent 50%)' }} />
                     <div style={{ position:'absolute', bottom:16, right:16, fontSize:28 }}>{chef.emoji}</div>
                   </div>
@@ -2989,7 +3024,7 @@ function LoginPage({ go }) {
             {loading ? <span style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}><span className="spinner" style={{ width:18, height:18 }} /> Signing in…</span> : 'Sign In →'}
           </button>
           <p style={{ fontSize:13, color:T.moss, textAlign:'center' }}>Don't have an account?{' '}
-            <button style={{ background:'none', border:'none', color:T.sage, fontWeight:600, cursor:'pointer', fontSize:13 }} onClick={() => {}}>Sign up free</button>
+            <button style={{ background:'none', border:'none', color:T.sage, fontWeight:600, cursor:'pointer', fontSize:13 }} onClick={() => go('signup')}>Sign up free</button>
           </p>
           <button style={{ marginTop:16, background:'none', border:'none', color:T.moss, cursor:'pointer', fontSize:12, display:'block', textAlign:'center', width:'100%' }} onClick={() => go('home')}>← Back to home</button>
         </div>
@@ -2999,8 +3034,124 @@ function LoginPage({ go }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   ── APP ROOT ──────────────────────────────────────────────────
+   ── SIGNUP PAGE (FIX: was missing — "Sign up free" had no route)
    ═══════════════════════════════════════════════════════════════ */
+function SignupPage({ go }) {
+  const { setUser } = useAuth();
+  const [form, setForm]       = useState({ name:'', email:'', pass:'', confirm:'' });
+  const [err,  setErr]        = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const submit = () => {
+    if (!form.name.trim() || !form.email.trim() || !form.pass.trim() || !form.confirm.trim()) {
+      setErr('Please fill all fields'); return;
+    }
+    if (!form.email.includes('@')) { setErr('Enter a valid email'); return; }
+    if (form.pass.length < 6)      { setErr('Password must be at least 6 characters'); return; }
+    if (form.pass !== form.confirm) { setErr('Passwords do not match'); return; }
+    setLoading(true);
+    setTimeout(() => {
+      setUser({ name: form.name, email: form.email });
+      go('home');
+    }, 1000);
+  };
+
+  return (
+    <div className="login-page">
+      <div className="login-art">
+        <div style={{ position:'absolute', inset:0 }}>
+          <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=90" alt="" loading="lazy" style={{ width:'100%', height:'100%', objectFit:'cover', opacity:0.25 }} />
+        </div>
+        <div style={{ position:'relative', zIndex:1, color:'white' }}>
+          <div style={{ fontFamily:'Playfair Display,serif', fontSize:36, fontWeight:700, marginBottom:16 }}>🌿 Terra Eats</div>
+          <h2 style={{ fontFamily:'Playfair Display,serif', fontSize:28, fontWeight:700, marginBottom:12, lineHeight:1.2 }}>
+            Join the table.<br/><em>Eat better, live greener.</em>
+          </h2>
+          <p style={{ fontSize:14, opacity:0.8, fontWeight:300, lineHeight:1.7, maxWidth:340 }}>
+            Create your free account and unlock exclusive offers, order tracking, and personalised picks.
+          </p>
+        </div>
+      </div>
+      <div className="login-form-side">
+        <div className="login-form">
+          <h2 style={{ fontFamily:'Playfair Display,serif', fontSize:32, fontWeight:700, color:T.forest, marginBottom:6 }}>Create account</h2>
+          <p style={{ color:T.moss, fontSize:14, marginBottom:32, fontWeight:300 }}>It's free — forever 🌱</p>
+          {[
+            ['Full Name',        'name',    'text',     'Chef Priya Sharma'],
+            ['Email Address',    'email',   'email',    'you@example.com'],
+            ['Password',         'pass',    'password', '••••••••'],
+            ['Confirm Password', 'confirm', 'password', '••••••••'],
+          ].map(([label, key, type, ph]) => (
+            <div key={key} style={{ marginBottom:18 }}>
+              <label style={{ display:'block', fontSize:11, fontWeight:700, color:T.moss, letterSpacing:'0.08em', textTransform:'uppercase', marginBottom:7 }}>{label}</label>
+              <input
+                type={type} className="field" placeholder={ph} value={form[key]}
+                onChange={e => { setForm(f => ({ ...f, [key]: e.target.value })); setErr(''); }}
+                onKeyDown={e => e.key === 'Enter' && submit()}
+              />
+            </div>
+          ))}
+          {err && <p style={{ color:'#E53E3E', fontSize:12, marginBottom:16, fontWeight:600 }}>⚠️ {err}</p>}
+          <button
+            className="btn-nature btn-ripple"
+            style={{ width:'100%', fontSize:15, padding:'15px', marginBottom:16, opacity: loading ? 0.8 : 1 }}
+            onClick={submit} disabled={loading}
+          >
+            {loading
+              ? <span style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}><span className="spinner" style={{ width:18, height:18 }} /> Creating account…</span>
+              : 'Sign Up Free 🌿'}
+          </button>
+          <p style={{ fontSize:13, color:T.moss, textAlign:'center' }}>Already have an account?{' '}
+            <button style={{ background:'none', border:'none', color:T.sage, fontWeight:600, cursor:'pointer', fontSize:13 }} onClick={() => go('login')}>Sign in</button>
+          </p>
+          <button style={{ marginTop:16, background:'none', border:'none', color:T.moss, cursor:'pointer', fontSize:12, display:'block', textAlign:'center', width:'100%' }} onClick={() => go('home')}>← Back to home</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ── LAZY IMAGE — FIX: replaces bare <img> for scroll performance
+   Uses IntersectionObserver so off-screen images never load.
+   Renders a shimmer skeleton until the image enters the viewport.
+   ═══════════════════════════════════════════════════════════════ */
+const LazyImg = memo(function LazyImg({ src, alt, style, className, ...rest }) {
+  const [inView,  setInView]  = useState(false);
+  const [loaded,  setLoaded]  = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    // Use native loading="lazy" as first-class fallback
+    if (!('IntersectionObserver' in window)) { setInView(true); return; }
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setInView(true); obs.disconnect(); } },
+      { rootMargin: '200px' }   // start loading 200px before viewport entry
+    );
+    obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} style={{ position:'relative', overflow:'hidden', ...style }} className={className}>
+      {/* shimmer placeholder shown until image loads */}
+      {!loaded && <div className="skel" style={{ position:'absolute', inset:0, borderRadius:0 }} />}
+      {inView && (
+        <img
+          src={src} alt={alt}
+          loading="lazy"
+          decoding="async"
+          onLoad={() => setLoaded(true)}
+          style={{ width:'100%', height:'100%', objectFit:'cover', opacity: loaded ? 1 : 0, transition:'opacity 0.35s ease' }}
+          {...rest}
+        />
+      )}
+    </div>
+  );
+});
+
+
 const DEFAULT_CART = [];
 
 export default function App() {
@@ -3077,6 +3228,7 @@ export default function App() {
       cart:        <CartPage        {...commonProps} />,
       checkout:    <CheckoutPage    {...commonProps} />,
       login:       <LoginPage       {...commonProps} />,
+      signup:      <SignupPage      {...commonProps} />,
     };
 
     return pages[page] || pages.home;
@@ -3085,11 +3237,11 @@ export default function App() {
   return (
     <AuthContext.Provider value={{ user, setUser }}>
       <style>{CSS}</style>
-      {page !== 'login' && <Navbar page={page} go={go} cnt={cnt} user={user} />}
+      {page !== 'login' && page !== 'signup' && <Navbar page={page} go={go} cnt={cnt} user={user} />}
       <div key={page} className="page-enter">
         {renderPage()}
       </div>
-      {page !== 'login' && <MobNav page={page} go={go} cnt={cnt} />}
+      {page !== 'login' && page !== 'signup' && <MobNav page={page} go={go} cnt={cnt} />}
       {toast && <div className="toast" role="status" aria-live="polite">{toast}</div>}
     </AuthContext.Provider>
   );
